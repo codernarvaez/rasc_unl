@@ -17,14 +17,10 @@ class PushNotificationService {
     // -----------------------------------------------------------------
     // 1. OBTENER y DECODIFICAR el JSON desde el .env
     // -----------------------------------------------------------------
-    // Obtener la cadena JSON completa desde la variable de entorno
     final String serviceAccountJsonString = dotenv.env['FIREBASE_SERVICE_ACCOUNT_JSON']!;
     
-    // Decodificar la cadena en un mapa (Map<String, dynamic>)
     final Map<String, dynamic> serviceAccountJson = 
         jsonDecode(serviceAccountJsonString);
-
-    // El bloque anterior reemplaza todo el bloque JSON hardcodeado que causaba el problema.
     // -----------------------------------------------------------------
 
 
@@ -35,20 +31,16 @@ class PushNotificationService {
     ];
 
     http.Client client = await auth.clientViaServiceAccount(
-      auth.ServiceAccountCredentials.fromJson(serviceAccountJson), // Usa el mapa decodificado
+      auth.ServiceAccountCredentials.fromJson(serviceAccountJson), 
       scopes,
     );
-
-    // Obtain access Token
 
     auth.AccessCredentials credentials =
         await auth.obtainAccessCredentialsViaServiceAccount(
-      auth.ServiceAccountCredentials.fromJson(serviceAccountJson), // Usa el mapa decodificado
+      auth.ServiceAccountCredentials.fromJson(serviceAccountJson), 
       scopes,
       client,
     );
-
-    // close the http Client
 
     client.close();
 
@@ -60,13 +52,15 @@ class PushNotificationService {
     BuildContext context,
     String tripID,
   ) async {
-    // ⚠️ ATENCIÓN: Esta parte usa la clave de administrador para obtener el serverKey.
-    // Esta lógica DEBE ser movida a un Cloud Function para seguridad.
     final String serverKey = await getAccessToken(); 
     
-    // ⚠️ ATENCIÓN: El project ID sigue hardcodeado aquí. Lo ideal es moverlo al .env
-    const String fcmEndPoint =
-        'https://fcm.googleapis.com/v1/projects/flutter-taxi-app-b9ff5/messages:send'; 
+    // -----------------------------------------------------------------
+    // ✅ CORREGIDO: El project ID se obtiene del .env
+    // -----------------------------------------------------------------
+    final String projectId = dotenv.env['FIREBASE_PROJECT_ID_FCM']!;
+    final String fcmEndPoint =
+        'https://fcm.googleapis.com/v1/projects/$projectId/messages:send'; 
+    // -----------------------------------------------------------------
 
     String dropOffDestinationAddress =
         Provider.of<AppInfo>(context, listen: false)
@@ -85,7 +79,6 @@ class PushNotificationService {
     };
 
     Map titleBodyNotificationMap = {
-      // Asumiendo que 'userName' es una variable global o de contexto
       "title": "Nuevo viaje solicitada de: $userName", 
       "body":
           "Ubicación origen: $pickUpLocationAddress \nUbicación destino: $dropOffDestinationAddress",
