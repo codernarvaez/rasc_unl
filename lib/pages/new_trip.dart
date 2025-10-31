@@ -12,22 +12,22 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:ripple_wave/ripple_wave.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:unlrace_app/appInfo/app_info.dart';
-import 'package:unlrace_app/authentication/login_screen.dart';
-import 'package:unlrace_app/global/global_var.dart';
-import 'package:unlrace_app/global/trip.dart';
-import 'package:unlrace_app/methods/common_methods.dart';
+import 'package:unl_race/appInfo/app_info.dart';
+import 'package:unl_race/authentication/login_screen.dart';
+import 'package:unl_race/global/global_var.dart';
+import 'package:unl_race/global/trip.dart';
+import 'package:unl_race/methods/common_methods.dart';
 
-import 'package:unlrace_app/methods/manage_drivers_methods.dart';
-import 'package:unlrace_app/models/address_model.dart';
-import 'package:unlrace_app/models/direction_details.dart';
-import 'package:unlrace_app/models/online_nearby_drivers.dart';
-import 'package:unlrace_app/pages/home_page.dart';
-import 'package:unlrace_app/pages/trip_calification_driver_page.dart';
-import 'package:unlrace_app/widgets/info.dart';
-import 'package:unlrace_app/widgets/info_dialog.dart';
-import 'package:unlrace_app/widgets/loading_dialog.dart';
-import 'package:unlrace_app/widgets/payment_dialog.dart';
+import 'package:unl_race/methods/manage_drivers_methods.dart';
+import 'package:unl_race/models/address_model.dart';
+import 'package:unl_race/models/direction_details.dart';
+import 'package:unl_race/models/online_nearby_drivers.dart';
+import 'package:unl_race/pages/home_page.dart';
+import 'package:unl_race/pages/trip_calification_driver_page.dart';
+import 'package:unl_race/widgets/info.dart';
+import 'package:unl_race/widgets/info_dialog.dart';
+import 'package:unl_race/widgets/loading_dialog.dart';
+import 'package:unl_race/widgets/payment_dialog.dart';
 
 class NewTripPage extends StatefulWidget {
   final int selectedOption;
@@ -123,8 +123,9 @@ class _NewTripPageState extends State<NewTripPage> {
 
     if (!context.mounted) return;
 
-    await CommonMethods.convertGeoGraphicCoOrdinatesIntoHumanReadableAddress(
-        positionOfUserInLatLng, context);
+    // TODO: Arreglar esto
+    //await CommonMethods.convertGeoGraphicCoOrdinatesIntoHumanReadableAddress(
+    //     positionOfUserInLatLng, context);
 
     await getUserInfoAndCheckBlockStatus();
 
@@ -180,11 +181,14 @@ class _NewTripPageState extends State<NewTripPage> {
     var dropOffDestinationGeoGraphicsCoOrdenates = dropOffDestination;
 
     /// Direction API
-    var detailsFromDirectionAPI =
-        await CommonMethods.getDirectionDetailsFromAPI(
-      pickUpGeoGraphicsCoOrdenates,
-      dropOffDestinationGeoGraphicsCoOrdenates,
-    );
+  /// TODO: Arreglar esto
+    // var detailsFromDirectionAPI =
+    //     await CommonMethods.getDirectionDetailsFromAPI(
+    //   pickUpGeoGraphicsCoOrdenates,
+    //   dropOffDestinationGeoGraphicsCoOrdenates,
+    // );
+    var detailsFromDirectionAPI = null; //TODO: Remplazar
+
 
     if (detailsFromDirectionAPI == null) {
       if (!context.mounted) return;
@@ -796,10 +800,11 @@ class _NewTripPageState extends State<NewTripPage> {
       var userPickUpLocationLatLng = LatLng(
           currentPositionOfUser!.latitude, currentPositionOfUser!.longitude);
 
-      var directionDetailsPickUp =
-          await CommonMethods.getDirectionDetailsFromAPI(
-              driverCurrentLocationLatLng, userPickUpLocationLatLng);
-
+      // TODO: Arreglar esto
+      //var directionDetailsPickUp =
+      //     await CommonMethods.getDirectionDetailsFromAPI(
+      //         driverCurrentLocationLatLng, userPickUpLocationLatLng);
+      var directionDetailsPickUp = null; // Remplazar
       if (directionDetailsPickUp == null) {
         return;
       }
@@ -829,10 +834,11 @@ class _NewTripPageState extends State<NewTripPage> {
       var userDroOffLocationLatLng = LatLng(dropOffLocation!.latitudePosition!,
           dropOffLocation.longitudePosition!);
 
-      var directionDetailsPickUp =
-          await CommonMethods.getDirectionDetailsFromAPI(
-              driverCurrentLocationLatLng, userDroOffLocationLatLng);
-
+      // TODO: Arreglar esto 
+      //var directionDetailsPickUp =
+      //     await CommonMethods.getDirectionDetailsFromAPI(
+      //         driverCurrentLocationLatLng, userDroOffLocationLatLng);
+      var directionDetailsPickUp = null; //TODO: Remplazar
       if (directionDetailsPickUp == null) {
         return;
       }
@@ -1218,7 +1224,13 @@ class _NewTripPageState extends State<NewTripPage> {
               ),
               mapType: MapType.normal,
               myLocationEnabled: true,
-              initialCameraPosition: googlePlexInitialPosition,
+              initialCameraPosition: CameraPosition(
+                target: LatLng(
+                  currentPositionOfUser!.latitude,
+                  currentPositionOfUser!.longitude,
+                ),
+                zoom: 14,
+              ),// TODO: Remplazar con googlePlexInitialPosition,
               markers: markerSet,
               polylines: polylineSet,
               circles: circleSet,

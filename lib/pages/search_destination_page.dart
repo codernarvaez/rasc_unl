@@ -2,13 +2,13 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:unlrace_app/appInfo/app_info.dart';
-import 'package:unlrace_app/global/global_var.dart';
-import 'package:unlrace_app/methods/common_methods.dart';
-import 'package:unlrace_app/models/predictions_model.dart';
-import 'package:unlrace_app/pages/map_location_manual.dart';
+import 'package:unl_race/appInfo/app_info.dart';
+import 'package:unl_race/global/global_var.dart';
+import 'package:unl_race/methods/common_methods.dart';
+import 'package:unl_race/models/predictions_model.dart';
+import 'package:unl_race/pages/map_location_manual.dart';
 
-import 'package:unlrace_app/widgets/prediction_place_ui.dart';
+import 'package:unl_race/widgets/prediction_place_ui.dart';
 
 class SearchDestinationPage extends StatefulWidget {
   const SearchDestinationPage({super.key});
@@ -55,8 +55,10 @@ class _SearchDestinationPageState extends State<SearchDestinationPage> {
       String apiPlacesUrl =
           "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$locationName&key=$googleMapKey&components=country:$countryShortCode";
 
-      var responseFromPlacesAPI =
-          await CommonMethods.sendRequestToAPI(apiPlacesUrl);
+      //TODO: Arreglar esto 
+      //var responseFromPlacesAPI =
+      //     await CommonMethods.sendRequestToAPI(apiPlacesUrl);
+      var responseFromPlacesAPI = null; //TODO: Remplazar
 
       if (responseFromPlacesAPI == "error") {
         return;

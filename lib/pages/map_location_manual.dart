@@ -2,10 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:unlrace_app/appInfo/app_info.dart';
-import 'package:unlrace_app/methods/common_methods.dart';
-import 'package:unlrace_app/models/address_model.dart';
-import 'package:unlrace_app/widgets/loading_dialog.dart';
+import 'package:unl_race/appInfo/app_info.dart';
+import 'package:unl_race/methods/common_methods.dart';
+import 'package:unl_race/models/address_model.dart';
+import 'package:unl_race/widgets/loading_dialog.dart';
 
 class MapLocationManual extends StatefulWidget {
   final int selectedLocation;
@@ -124,13 +124,14 @@ class _MapLocationManualState extends State<MapLocationManual> {
                     },
                   );
 
-                  widget.selectedLocation == 0
-                      ? await CommonMethods
-                          .convertGeoGraphicCoOrdinatesIntoHumanReadableAddress(
-                              locationLatLng, context)
-                      : await CommonMethods
-                          .convertGeoGraphicCoOrdinatesIntoHumanReadableAddressForDropOffLocation(
-                              locationLatLng, context);
+                  // TODO: Arreglar esto
+                  //widget.selectedLocation == 0
+                  //     ? await CommonMethods
+                  //         .convertGeoGraphicCoOrdinatesIntoHumanReadableAddress(
+                  //             locationLatLng, context)
+                  //     : await CommonMethods
+                  //         .convertGeoGraphicCoOrdinatesIntoHumanReadableAddressForDropOffLocation(
+                  //             locationLatLng, context);
 
                   if (!mounted) {
                     return;
