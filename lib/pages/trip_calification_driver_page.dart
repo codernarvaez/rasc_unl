@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:unlrace_app/global/trip.dart';
+import 'package:unl_race/global/trip.dart';
 
 class TripCalificationDriverPage extends StatefulWidget {
   const TripCalificationDriverPage({super.key});

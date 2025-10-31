@@ -2,10 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
-import 'package:unlrace_app/authentication/login_screen.dart';
-import 'package:unlrace_app/authentication/signup_screen.dart';
-import 'package:unlrace_app/global/global_var.dart';
-import 'package:unlrace_app/methods/common_methods.dart';
+import 'package:unl_race/authentication/login_screen.dart';
+import 'package:unl_race/authentication/signup_screen.dart';
+import 'package:unl_race/global/global_var.dart';
+import 'package:unl_race/methods/common_methods.dart';
 
 class OptPage extends StatefulWidget {
   final String verificationId;

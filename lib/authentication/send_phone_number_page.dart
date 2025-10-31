@@ -2,11 +2,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
-import 'package:unlrace_app/authentication/login_screen.dart';
-import 'package:unlrace_app/authentication/opt_page.dart';
-import 'package:unlrace_app/global/global_var.dart';
+import 'package:unl_race/authentication/login_screen.dart';
+import 'package:unl_race/authentication/opt_page.dart';
+import 'package:unl_race/global/global_var.dart';
 
-import 'package:unlrace_app/methods/common_methods.dart';
+import 'package:unl_race/methods/common_methods.dart';
 
 class SendPhoneNumberPage extends StatefulWidget {
   const SendPhoneNumberPage({super.key});
