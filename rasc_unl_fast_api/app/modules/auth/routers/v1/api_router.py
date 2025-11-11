@@ -1,9 +1,10 @@
+from typing import Annotated, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
 
 from app.core.db.database import get_session
-from app.core.jwt.jwt import JWTManager, oauth2_scheme
+from app.core.jwt.jwt import JWTManager
+from app.modules.auth.dependencies import CurrentUser, AdminUser
 from app.modules.auth.repositories.user_repository import UserRepository
 from app.modules.auth.schemas.auth_schemas import (
     UserCreate,
@@ -18,68 +19,6 @@ from app.modules.auth.schemas.auth_schemas import (
 )
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
-
-
-# Dependency to get current user
-async def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    session: AsyncSession = Depends(get_session)
-):
-    """Get current authenticated user from token."""
-    jwt_manager = JWTManager()
-    
-    try:
-        payload = jwt_manager.decode(token)
-        
-        if payload.get("type") != "access":
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token type"
-            )
-        
-        jti = payload.get("jti")
-        if await jwt_manager.is_revoked(jti):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token has been revoked"
-            )
-        
-        user_id = int(payload.get("sub"))
-        repository = UserRepository(session)
-        user = await repository.get_by_id(user_id)
-        
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User not found"
-            )
-        
-        if not user.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="User is inactive"
-            )
-        
-        return user
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials"
-        )
-
-
-# Dependency to check if user is admin
-async def require_admin(current_user = Depends(get_current_user)):
-    """Require user to be administrator."""
-    if current_user.role != "administrator":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Administrator privileges required"
-        )
-    return current_user
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -217,7 +156,7 @@ async def refresh_token(
 @router.post("/logout", response_model=MessageResponse)
 async def logout(
     request: LogoutRequest,
-    current_user = Depends(get_current_user)
+    current_user: CurrentUser
 ):
     """Logout user by revoking tokens."""
     jwt_manager = JWTManager()
@@ -237,7 +176,7 @@ async def logout(
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_current_user_info(current_user = Depends(get_current_user)):
+async def get_current_user_info(current_user: CurrentUser):
     """Get current authenticated user information."""
     return current_user
 
@@ -245,8 +184,8 @@ async def get_current_user_info(current_user = Depends(get_current_user)):
 @router.put("/me", response_model=UserResponse)
 async def update_current_user(
     user_data: UserUpdate,
-    current_user = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Update current user information."""
     repository = UserRepository(session)
@@ -273,8 +212,8 @@ async def update_current_user(
 @router.put("/me/password", response_model=MessageResponse)
 async def update_current_user_password(
     password_data: UserUpdatePassword,
-    current_user = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Update current user password."""
     repository = UserRepository(session)
@@ -298,8 +237,8 @@ async def get_users(
     role: Optional[str] = None,
     is_active: Optional[bool] = None,
     search: Optional[str] = None,
-    current_user = Depends(require_admin),
-    session: AsyncSession = Depends(get_session)
+    current_user: AdminUser = None,
+    session: Annotated[AsyncSession, Depends(get_session)] = None
 ):
     """Get all users (admin only)."""
     repository = UserRepository(session)
@@ -316,8 +255,8 @@ async def get_users(
 @router.get("/users/{user_id}", response_model=UserResponse)
 async def get_user(
     user_id: int,
-    current_user = Depends(require_admin),
-    session: AsyncSession = Depends(get_session)
+    current_user: AdminUser,
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Get user by ID (admin only)."""
     repository = UserRepository(session)
@@ -336,8 +275,8 @@ async def get_user(
 async def update_user(
     user_id: int,
     user_data: UserUpdate,
-    current_user = Depends(require_admin),
-    session: AsyncSession = Depends(get_session)
+    current_user: AdminUser,
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Update user by ID (admin only)."""
     repository = UserRepository(session)
@@ -365,8 +304,8 @@ async def update_user(
 @router.delete("/users/{user_id}", response_model=MessageResponse)
 async def delete_user(
     user_id: int,
-    current_user = Depends(require_admin),
-    session: AsyncSession = Depends(get_session)
+    current_user: AdminUser,
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Delete user by ID (admin only)."""
     repository = UserRepository(session)
@@ -392,8 +331,8 @@ async def delete_user(
 @router.put("/users/{user_id}/deactivate", response_model=UserResponse)
 async def deactivate_user(
     user_id: int,
-    current_user = Depends(require_admin),
-    session: AsyncSession = Depends(get_session)
+    current_user: AdminUser,
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Deactivate user (admin only)."""
     repository = UserRepository(session)
@@ -419,8 +358,8 @@ async def deactivate_user(
 @router.put("/users/{user_id}/activate", response_model=UserResponse)
 async def activate_user(
     user_id: int,
-    current_user = Depends(require_admin),
-    session: AsyncSession = Depends(get_session)
+    current_user: AdminUser,
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Activate user (admin only)."""
     repository = UserRepository(session)

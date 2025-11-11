@@ -14,7 +14,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from app.core.config.enviroment import _SETTINGS
 from app.core.db.database import Base
-# from app.modules.auth.domain.models import AuthUserModel
+
+from app.modules.auth.models.user import User  # noqa: F401
 
 
 # this is the Alembic Config object, which provides
