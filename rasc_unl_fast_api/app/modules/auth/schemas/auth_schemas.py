@@ -8,6 +8,7 @@ class UserBase(BaseModel):
     email: EmailStr
     first_name: str = Field(..., min_length=1, max_length=100)
     last_name: str = Field(..., min_length=1, max_length=100)
+    dni: str = Field(..., min_length=10, max_length=13)
     role: str = Field(default=RoleEnum.COMPETITOR)
     is_active: bool = Field(default=True)
 
@@ -21,6 +22,7 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     first_name: Optional[str] = Field(None, min_length=1, max_length=100)
     last_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    dni: Optional[str] = Field(None, min_length=10, max_length=13)
     role: Optional[str] = None
     is_active: Optional[bool] = None
 

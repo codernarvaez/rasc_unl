@@ -36,6 +36,13 @@ async def register(
             detail="Email already registered"
         )
     
+    # Check if DNI already exists
+    if await repository.get_by_dni(user_data.dni):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="DNI already registered"
+        )
+    
     user = await repository.create(user_data)
     return user
 
@@ -205,6 +212,15 @@ async def update_current_user(
                 detail="Email already registered"
             )
     
+    # Check if DNI already exists (if being changed)
+    if user_data.dni and user_data.dni != current_user.dni:
+        existing_user = await repository.get_by_dni(user_data.dni)
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="DNI already registered"
+            )
+    
     updated_user = await repository.update(current_user.id, user_data)
     return updated_user
 
@@ -288,6 +304,15 @@ async def update_user(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered"
+            )
+    
+    # Check if DNI already exists (if being changed)
+    if user_data.dni:
+        existing_user = await repository.get_by_dni(user_data.dni)
+        if existing_user and existing_user.id != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="DNI already registered"
             )
     
     updated_user = await repository.update(user_id, user_data)

@@ -14,6 +14,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
+    dni = Column(String, unique=True, index=True, nullable=False)
     role = Column(Enum(RoleEnum), nullable=False, default=RoleEnum.COMPETITOR)
     is_active = Column(Boolean, default=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)

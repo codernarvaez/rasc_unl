@@ -19,6 +19,7 @@ class UserRepository:
             email=user_data.email,
             first_name=user_data.first_name,
             last_name=user_data.last_name,
+            dni=user_data.dni,
             password=hashed_password,
             role=RoleEnum(user_data.role),
             is_active=user_data.is_active
@@ -40,6 +41,13 @@ class UserRepository:
         """Get user by email."""
         result = await self.session.execute(
             select(User).where(User.email == email)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_dni(self, dni: str) -> Optional[User]:
+        """Get user by DNI."""
+        result = await self.session.execute(
+            select(User).where(User.dni == dni)
         )
         return result.scalar_one_or_none()
 
@@ -65,7 +73,8 @@ class UserRepository:
             search_filter = or_(
                 User.first_name.ilike(f"%{search}%"),
                 User.last_name.ilike(f"%{search}%"),
-                User.email.ilike(f"%{search}%")
+                User.email.ilike(f"%{search}%"),
+                User.dni.ilike(f"%{search}%")
             )
             query = query.where(search_filter)
         
