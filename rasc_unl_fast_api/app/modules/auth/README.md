@@ -21,9 +21,9 @@ Content-Type: application/json
   "first_name": "Juan",
   "last_name": "Pérez",
   "dni": "1234567890",
+  "date_of_birth": "1990-05-15",
   "email": "juan@example.com",
-  "password": "Password123",
-  "role": "COMPETITOR"  // o "ADMINISTRATOR"
+  "password": "Password123"
 }
 ```
 

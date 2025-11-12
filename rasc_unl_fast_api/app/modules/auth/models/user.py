@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, Integer, String, Boolean, Enum
+from sqlalchemy import Column, Integer, String, Boolean, Enum, Date
 from app.core.db.database import Base
 
 
@@ -15,6 +15,7 @@ class User(Base):
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
     dni = Column(String, unique=True, index=True, nullable=False)
+    date_of_birth = Column(Date, nullable=False)
     role = Column(Enum(RoleEnum), nullable=False, default=RoleEnum.COMPETITOR)
     is_active = Column(Boolean, default=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
