@@ -3,9 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db.database import get_session
-from app.core.jwt.jwt import JWTManager
 from app.modules.auth.dependencies import CurrentUser, AdminUser
-from app.modules.auth.repositories.user_repository import UserRepository
+from app.modules.auth.services import AuthService, UserService
 from app.modules.auth.schemas.auth_schemas import (
     UserCreate,
     UserUpdate,
@@ -27,23 +26,8 @@ async def register(
     session: AsyncSession = Depends(get_session)
 ):
     """Register a new user."""
-    repository = UserRepository(session)
-    
-    # Check if email already exists
-    if await repository.exists(user_data.email):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
-        )
-    
-    # Check if DNI already exists
-    if await repository.get_by_dni(user_data.dni):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="DNI already registered"
-        )
-    
-    user = await repository.create(user_data)
+    service = AuthService(session)
+    user = await service.register_user(user_data)
     return user
 
 
@@ -53,48 +37,9 @@ async def login(
     session: AsyncSession = Depends(get_session)
 ):
     """Login user and return access and refresh tokens."""
-    repository = UserRepository(session)
-    jwt_manager = JWTManager()
-    
-    # Get user by email
-    user = await repository.get_by_email(credentials.email)
-    
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
-        )
-    
-    # Verify password
-    if not await repository.verify_password(user, credentials.password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
-        )
-    
-    # Check if user is active
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is inactive"
-        )
-    
-    # Create tokens
-    access_token = jwt_manager.create_access_token(str(user.id))
-    refresh_token = jwt_manager.create_refresh_token(str(user.id))
-    
-    # Store refresh token
-    refresh_payload = jwt_manager.decode(refresh_token)
-    await jwt_manager.store_refresh(
-        refresh_payload["jti"],
-        str(user.id),
-        refresh_payload["exp"]
-    )
-    
-    return TokenResponse(
-        access_token=access_token,
-        refresh_token=refresh_token
-    )
+    service = AuthService(session)
+    tokens = await service.login(credentials)
+    return TokenResponse(**tokens)
 
 
 @router.post("/refresh", response_model=TokenResponse)
@@ -103,83 +48,21 @@ async def refresh_token(
     session: AsyncSession = Depends(get_session)
 ):
     """Refresh access token using refresh token."""
-    jwt_manager = JWTManager()
-    
-    try:
-        payload = jwt_manager.decode(request.refresh_token)
-        
-        if payload.get("type") != "refresh":
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token type"
-            )
-        
-        jti = payload.get("jti")
-        
-        # Consume refresh token (one-time use)
-        user_id = await jwt_manager.consume_refresh(jti)
-        if not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Refresh token already used or invalid"
-            )
-        
-        # Verify user still exists and is active
-        repository = UserRepository(session)
-        user = await repository.get_by_id(int(user_id))
-        
-        if not user or not user.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User not found or inactive"
-            )
-        
-        # Create new tokens
-        new_access_token = jwt_manager.create_access_token(user_id)
-        new_refresh_token = jwt_manager.create_refresh_token(user_id)
-        
-        # Store new refresh token
-        new_refresh_payload = jwt_manager.decode(new_refresh_token)
-        await jwt_manager.store_refresh(
-            new_refresh_payload["jti"],
-            user_id,
-            new_refresh_payload["exp"]
-        )
-        
-        return TokenResponse(
-            access_token=new_access_token,
-            refresh_token=new_refresh_token
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not refresh token"
-        )
+    service = AuthService(session)
+    tokens = await service.refresh_tokens(request.refresh_token)
+    return TokenResponse(**tokens)
 
 
 @router.post("/logout", response_model=MessageResponse)
 async def logout(
     request: LogoutRequest,
-    current_user: CurrentUser
+    current_user: CurrentUser,
+    session: AsyncSession = Depends(get_session)
 ):
     """Logout user by revoking tokens."""
-    jwt_manager = JWTManager()
-    
-    try:
-        # Revoke refresh token
-        refresh_payload = jwt_manager.decode(request.refresh_token)
-        await jwt_manager.consume_refresh(refresh_payload["jti"])
-        
-        return MessageResponse(message="Successfully logged out")
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Could not logout"
-        )
+    service = AuthService(session)
+    await service.logout(request.refresh_token)
+    return MessageResponse(message="Successfully logged out")
 
 
 @router.get("/me", response_model=UserResponse)
@@ -195,8 +78,6 @@ async def update_current_user(
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Update current user information."""
-    repository = UserRepository(session)
-    
     # Prevent role change by non-admin
     if user_data.role and current_user.role != "administrator":
         raise HTTPException(
@@ -204,24 +85,8 @@ async def update_current_user(
             detail="Cannot change own role"
         )
     
-    # Check if email already exists (if being changed)
-    if user_data.email and user_data.email != current_user.email:
-        if await repository.exists(user_data.email):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
-            )
-    
-    # Check if DNI already exists (if being changed)
-    if user_data.dni and user_data.dni != current_user.dni:
-        existing_user = await repository.get_by_dni(user_data.dni)
-        if existing_user:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="DNI already registered"
-            )
-    
-    updated_user = await repository.update(current_user.id, user_data)
+    service = UserService(session)
+    updated_user = await service.update_user(current_user.id, user_data)
     return updated_user
 
 
@@ -232,16 +97,12 @@ async def update_current_user_password(
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Update current user password."""
-    repository = UserRepository(session)
-    
-    # Verify current password
-    if not await repository.verify_password(current_user, password_data.current_password):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Current password is incorrect"
-        )
-    
-    await repository.update_password(current_user.id, password_data.new_password)
+    service = UserService(session)
+    await service.update_password(
+        current_user,
+        password_data.current_password,
+        password_data.new_password
+    )
     return MessageResponse(message="Password updated successfully")
 
 
@@ -257,8 +118,8 @@ async def get_users(
     session: Annotated[AsyncSession, Depends(get_session)] = None
 ):
     """Get all users (admin only)."""
-    repository = UserRepository(session)
-    users = await repository.get_all(
+    service = UserService(session)
+    users = await service.get_users(
         skip=skip,
         limit=limit,
         role=role,
@@ -275,15 +136,8 @@ async def get_user(
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Get user by ID (admin only)."""
-    repository = UserRepository(session)
-    user = await repository.get_by_id(user_id)
-    
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
+    service = UserService(session)
+    user = await service.get_user_by_id(user_id)
     return user
 
 
@@ -295,34 +149,8 @@ async def update_user(
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Update user by ID (admin only)."""
-    repository = UserRepository(session)
-    
-    # Check if email already exists (if being changed)
-    if user_data.email:
-        existing_user = await repository.get_by_email(user_data.email)
-        if existing_user and existing_user.id != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
-            )
-    
-    # Check if DNI already exists (if being changed)
-    if user_data.dni:
-        existing_user = await repository.get_by_dni(user_data.dni)
-        if existing_user and existing_user.id != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="DNI already registered"
-            )
-    
-    updated_user = await repository.update(user_id, user_data)
-    
-    if not updated_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
+    service = UserService(session)
+    updated_user = await service.update_user(user_id, user_data)
     return updated_user
 
 
@@ -333,23 +161,8 @@ async def delete_user(
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Delete user by ID (admin only)."""
-    repository = UserRepository(session)
-    
-    # Prevent deleting self
-    if user_id == current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot delete own account"
-        )
-    
-    deleted = await repository.delete(user_id)
-    
-    if not deleted:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
+    service = UserService(session)
+    await service.delete_user(user_id, current_user.id)
     return MessageResponse(message="User deleted successfully")
 
 
@@ -360,23 +173,8 @@ async def deactivate_user(
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Deactivate user (admin only)."""
-    repository = UserRepository(session)
-    
-    # Prevent deactivating self
-    if user_id == current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot deactivate own account"
-        )
-    
-    user = await repository.deactivate(user_id)
-    
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
+    service = UserService(session)
+    user = await service.deactivate_user(user_id, current_user.id)
     return user
 
 
@@ -387,14 +185,6 @@ async def activate_user(
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Activate user (admin only)."""
-    repository = UserRepository(session)
-    
-    user = await repository.activate(user_id)
-    
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
+    service = UserService(session)
+    user = await service.activate_user(user_id)
     return user
