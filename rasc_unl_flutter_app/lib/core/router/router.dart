@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rasc_unl_flutter_app/app/modules/auth/interfaces/pages/login_page.dart';
-import 'package:rasc_unl_flutter_app/app/modules/auth/interfaces/pages/register_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/auth/interfaces/pages/singup_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/rasc_unl_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/home_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/actions_page.dart';
 
 enum AppRouterNames {
   login,
@@ -14,6 +16,7 @@ enum AppRouterNames {
   userPreferences,
   userPrivacyAndSecurity,
   forgotPassword,
+  actions,
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -81,15 +84,15 @@ class RouterNotifier extends ChangeNotifier {
     //   name: AppRouterNames.forgotPassword.name,
     //   builder: (context, state) => const ForgotPasswordPage(),
     // ),
-    // GoRoute(
-    //   path: '/home',
-    //   name: AppRouterNames.home.name,
-    //   builder: (context, state) => const HomePage(),
-    // ),
-    // GoRoute(
-    //   path: '/profile-settings',
-    //   name: AppRouterNames.profileSettings.name,
-    //   builder: (context, state) => const ProfileSettingsPage(),
-    // ),
+    GoRoute(
+      path: '/home',
+      name: AppRouterNames.home.name,
+      builder: (context, state) => HomePage(),
+    ),
+    GoRoute(
+      path: '/actions',
+      name: AppRouterNames.actions.name,
+      builder: (context, state) => const ActionsPage(),
+    ),
   ];
 }

@@ -1,13 +1,16 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:rasc_unl_flutter_app/app/shared/interfaces/wirgets/connection_banner.dart';
 import 'package:rasc_unl_flutter_app/core/router/router.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart'; // ya lo tienes
+
+
+
+
 
 void main() async {
   // await dotenv.load(fileName: ".env");
-
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const ProviderScope(child: App()));
 }
@@ -15,23 +18,50 @@ void main() async {
 class App extends ConsumerWidget {
   const App({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final appRouter  = ref.watch(routerProvider);
-    
+    final appRouter = ref.watch(routerProvider);
+
     return MaterialApp.router(
       title: 'UNL RASC',
       debugShowCheckedModeBanner: false,
       routerConfig: appRouter,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSwatch(
+          primarySwatch: Colors.red,
+          accentColor: const Color(0xFFE1858B),
+        ).copyWith(
+          background: const Color(0xFFFFFFFF),
+        ),
+        textTheme: const TextTheme(
+          displayLarge: TextStyle(
+            color: Color(0xFF8B0000),
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+          ),
+          bodyLarge: TextStyle(
+            color: Color(0xFF2A2A2A),
+            fontSize: 16,
+          ),
+        ),
+        buttonTheme: const ButtonThemeData(
+          buttonColor: Color(0xFFD50000),
+          textTheme: ButtonTextTheme.primary,
+        ),
+      ),
       builder: (context, router) {
         return ScrollConfiguration(
           behavior: ScrollConfiguration.of(context).copyWith(
-            scrollbars: !kIsWeb && (Platform.isWindows || Platform.isLinux),
+            scrollbars: !kIsWeb,
           ),
-          child: router!,
+          child: Column(
+            children: [
+              const ConnectionBanner(),
+              Expanded(child: router!),
+            ],
+          ),
         );
       },
-    );  
+    );
   }
 }
