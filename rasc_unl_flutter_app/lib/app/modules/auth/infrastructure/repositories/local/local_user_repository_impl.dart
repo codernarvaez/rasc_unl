@@ -19,7 +19,9 @@ class LocalUserRepositoryImpl implements UserRepository {
             name: row.name,
             lastName: row.lastName,
             email: row.email,
-
+            rol: row.rol == 'ADMINISTRATOR' ? UserRoleType.ADMINISTRATOR : UserRoleType.COMPETITOR,
+            isActive: row.isActive,
+            birthDate: row.birthDate,
           ),
         )
         .toList();
@@ -37,6 +39,9 @@ class LocalUserRepositoryImpl implements UserRepository {
         name: queryResult.name,
         lastName: queryResult.lastName,
         email: queryResult.email,
+        rol: queryResult.rol == 'ADMINISTRATOR' ? UserRoleType.ADMINISTRATOR : UserRoleType.COMPETITOR,
+        isActive: queryResult.isActive,
+        birthDate: queryResult.birthDate,
       );
     }
     return null;
@@ -54,6 +59,9 @@ class LocalUserRepositoryImpl implements UserRepository {
         name: queryResult.name,
         lastName: queryResult.lastName,
         email: queryResult.email,
+        rol: queryResult.rol == 'ADMINISTRATOR' ? UserRoleType.ADMINISTRATOR : UserRoleType.COMPETITOR,
+        isActive: queryResult.isActive,
+        birthDate: queryResult.birthDate,
       );
     }
     return null;
@@ -67,6 +75,9 @@ class LocalUserRepositoryImpl implements UserRepository {
             name: user.name,
             lastName: user.lastName,
             email: user.email,
+            rol: Value(user.rol.name),
+            isActive: Value(user.isActive),
+            birthDate: Value(user.birthDate),
           ),
         );
   }
@@ -88,6 +99,9 @@ class LocalUserRepositoryImpl implements UserRepository {
             name: Value(user.name),
             lastName: Value(user.lastName),
             email: Value(user.email),
+            rol: Value(user.rol.name),
+            isActive: Value(user.isActive),
+            birthDate: Value(user.birthDate),
           ),
         );
   }

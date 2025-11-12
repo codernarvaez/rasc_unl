@@ -1,40 +1,53 @@
-import 'package:geolocator/geolocator.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 
-Future<Position> determinePrecisePosition() async {
-  bool serviceEnabled;
-  LocationPermission permission;
 
-  // 🔹 Verifica si el servicio está habilitado
-  serviceEnabled = await Geolocator.isLocationServiceEnabled();
-  if (!serviceEnabled) {
-    return Future.error('Los servicios de ubicación están deshabilitados.');
+bool validarCedulaEcuatoriana(String cedula) {
+  // Eliminar espacios en blanco
+  cedula = cedula.trim();
+  
+  // Verificar que tenga exactamente 10 dígitos
+  if (cedula.length != 10) {
+    return false;
   }
-
-  // 🔹 Verifica permisos
-  permission = await Geolocator.checkPermission();
-  if (permission == LocationPermission.denied) {
-    permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied) {
-      return Future.error('Los permisos de ubicación fueron denegados.');
+  
+  // Verificar que solo contenga números
+  if (!RegExp(r'^[0-9]+$').hasMatch(cedula)) {
+    return false;
+  }
+  
+  // Verificar que los dos primeros dígitos correspondan a una provincia válida (01-24)
+  int provincia = int.parse(cedula.substring(0, 2));
+  if (provincia < 1 || provincia > 24) {
+    return false;
+  }
+  
+  // Verificar el tercer dígito (debe ser menor a 6 para cédulas de personas naturales)
+  int tercerDigito = int.parse(cedula[2]);
+  if (tercerDigito > 5) {
+    return false;
+  }
+  
+  // Algoritmo de validación del dígito verificador (módulo 10)
+  List<int> coeficientes = [2, 1, 2, 1, 2, 1, 2, 1, 2];
+  int suma = 0;
+  
+  for (int i = 0; i < 9; i++) {
+    int digito = int.parse(cedula[i]);
+    int resultado = digito * coeficientes[i];
+    
+    // Si el resultado es mayor a 9, se suman sus dígitos
+    if (resultado > 9) {
+      resultado = resultado - 9;
     }
+    
+    suma += resultado;
   }
-
-  if (permission == LocationPermission.deniedForever) {
-    return Future.error(
-        'Los permisos de ubicación fueron denegados permanentemente.');
-  }
-
-  // 🔹 En web la precisión es menor, pero el código sigue siendo válido
-  final accuracy = kIsWeb
-      ? LocationAccuracy.low // web solo puede usar IP/Wi-Fi
-      : LocationAccuracy.bestForNavigation; // móvil usa GPS real
-
-  // 🔹 Obtiene la ubicación actual
-  final position = await Geolocator.getCurrentPosition(
-    desiredAccuracy: accuracy,
-    timeLimit: const Duration(seconds: 15),
-  );
-
-  return position;
+  
+  // Calcular el dígito verificador
+  int residuo = suma % 10;
+  int digitoVerificador = residuo == 0 ? 0 : 10 - residuo;
+  
+  // Comparar con el último dígito de la cédula
+  int ultimoDigito = int.parse(cedula[9]);
+  
+  return digitoVerificador == ultimoDigito;
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:rasc_unl_flutter_app/app/modules/auth/domain/models/user_model.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/forms/user_form_dialog.dart';
 import 'package:rasc_unl_flutter_app/app/modules/main_repository.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 
@@ -16,6 +18,37 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
   String _searchQuery = '';
   UserRole? _filterRole;
   bool? _filterActive;
+  List<UserData>? _usersList;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadUsers();
+    });
+  }
+
+  Future<void> _loadUsers() async {
+    setState(() => _isLoading = true);
+    try {
+      final repository = ref.read(rascUNLMainProvider);
+      final users = await _fetchUsers(repository);
+      if (mounted) {
+        setState(() {
+          _usersList = users;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _usersList = [];
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -25,16 +58,23 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
 
   Future<List<UserData>> _fetchUsers(MainRepository repository) async {
     final userModels = await repository.userRepository.getAllUsers();
-    return userModels.map((userModel) => UserData(
-      id: userModel.id,
-      dni: userModel.dni,
-      name: userModel.name,
-      lastName: userModel.lastName,
-      email: userModel.email,
-      rol: UserRole.user, // Mapear según corresponda
-      isActive: true, // Mapear según corresponda
-      birthDate: DateTime.now(), // Mapear según corresponda
-    )).toList();
+    return userModels.map((userModel) {
+      // Mapear UserRoleType a UserRole
+      final role = userModel.rol == UserRoleType.ADMINISTRATOR
+          ? UserRole.admin
+          : UserRole.user;
+      
+      return UserData(
+        id: userModel.id,
+        dni: userModel.dni,
+        name: userModel.name,
+        lastName: userModel.lastName,
+        email: userModel.email,
+        rol: role,
+        isActive: userModel.isActive,
+        birthDate: userModel.birthDate ?? DateTime.now(),
+      );
+    }).toList();
   }
 
   List<UserData> _filterUsers(List<UserData> users) {
@@ -92,65 +132,106 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
               _buildHeader(context),
               _buildSearchAndFilters(),
               Expanded(
-                child: FutureBuilder<List<UserData>>(
-                  future: repository != null ? _fetchUsers(repository) : Future.value([]),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(
+                child: _isLoading
+                    ? Center(
                         child: CircularProgressIndicator(
                           color: Color(0xFFD50000),
                         ),
-                      );
-                    } else if (snapshot.hasError) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.error_outline, size: 60, color: Colors.red),
-                            SizedBox(height: 16),
-                            Text(
-                              'Error al cargar usuarios',
-                              style: TextStyle(color: Colors.white, fontSize: 18),
+                      )
+                    : _usersList == null || _usersList!.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.people_outline, size: 60, color: Colors.white.withOpacity(0.3)),
+                                SizedBox(height: 16),
+                                Text(
+                                  'No se encontraron usuarios',
+                                  style: TextStyle(color: Colors.white, fontSize: 18),
+                                ),
+                              ],
                             ),
-                            SizedBox(height: 8),
-                            Text(
-                              '${snapshot.error}',
-                              style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      );
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.people_outline, size: 60, color: Colors.white.withOpacity(0.3)),
-                            SizedBox(height: 16),
-                            Text(
-                              'No se encontraron usuarios',
-                              style: TextStyle(color: Colors.white, fontSize: 18),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    final filteredUsers = _filterUsers(snapshot.data!);
-                    return Column(
-                      children: [
-                        _buildStats(snapshot.data!),
-                        SizedBox(height: 16),
-                        Expanded(child: _buildUsersList(filteredUsers)),
-                      ],
-                    );
-                  },
-                ),
+                          )
+                        : Builder(
+                            builder: (context) {
+                              final filteredUsers = _filterUsers(_usersList!);
+                              return Column(
+                                children: [
+                                  _buildStats(_usersList!),
+                                  SizedBox(height: 16),
+                                  Expanded(child: _buildUsersList(filteredUsers)),
+                                ],
+                              );
+                            },
+                          ),
               ),
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showCreateUserDialog(repository),
+        backgroundColor: Color(0xFFD50000),
+        icon: Icon(Icons.person_add, color: Colors.white),
+        label: Text(
+          'Crear Usuario',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+  void _showCreateUserDialog(MainRepository? repository) {
+    if (repository == null) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => UserFormDialog(
+        onSave: (formData) async {
+          try {
+            // Convertir el rol de string a UserRoleType enum
+            final roleType = formData.role == 'ADMINISTRATOR'
+                ? UserRoleType.ADMINISTRATOR
+                : UserRoleType.COMPETITOR;
+
+            final newUser = UserModel(
+              id: DateTime.now().millisecondsSinceEpoch,
+              dni: formData.dni,
+              name: formData.name,
+              lastName: formData.lastName,
+              email: formData.email,
+              rol: roleType,
+              isActive: true,
+              birthDate: formData.birthDate,
+            );
+
+            await repository.userRepository.insertUser(newUser);
+
+            Navigator.of(context).pop();
+
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Usuario creado exitosamente'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+              await _loadUsers(); // Recargar la lista desde la BD
+            }
+          } catch (e) {
+            Navigator.of(context).pop();
+            
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error al crear usuario: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        },
       ),
     );
   }
@@ -576,6 +657,8 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                     ),
                   ),
                 ),
+                SizedBox(height: 12),
+                IconButton(onPressed: () => _showDeleteConfirmation(user), icon: Icon(Icons.delete_forever, color: Colors.red[900])),
               ],
             ),
             SizedBox(height: 16),
@@ -647,46 +730,377 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
   }
 
   void _showRoleDialog(UserData user) {
+    MainRepository? repository;
+    try {
+      repository = ref.read(rascUNLMainProvider);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: Base de datos no disponible'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Color(0xFF2A2A2A),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Cambiar Rol',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Row(
+          children: [
+            Icon(Icons.swap_horiz, color: Color(0xFFD50000)),
+            SizedBox(width: 12),
+            Text(
+              'Cambiar Rol',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: UserRole.values.map((role) {
-            return RadioListTile<UserRole>(
-              title: Text(_getRoleLabel(role), style: TextStyle(color: Colors.white)),
-              value: role,
-              groupValue: user.rol,
-              activeColor: Color(0xFFD50000),
-              onChanged: (value) {
-                setState(() {
-                  user.rol = value!;
-                });
-                Navigator.pop(context);
+          children: [
+            _buildRoleOptionDialog(
+              UserRole.admin,
+              'Administrador',
+              'Acceso completo al sistema',
+              Icons.admin_panel_settings,
+              user.rol,
+              (role) async {
+                try {
+                  // Convertir UserRole a UserRoleType
+                  final roleType = role == UserRole.admin
+                      ? UserRoleType.ADMINISTRATOR
+                      : UserRoleType.COMPETITOR;
+
+                  final updatedUser = UserModel(
+                    id: user.id,
+                    dni: user.dni,
+                    name: user.name,
+                    lastName: user.lastName,
+                    email: user.email,
+                    rol: roleType,
+                    isActive: user.isActive,
+                    birthDate: user.birthDate,
+                  );
+
+                  await repository!.userRepository.updateUser(updatedUser);
+
+                  Navigator.pop(context);
+                  
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Rol actualizado exitosamente'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    await _loadUsers(); // Recargar la lista desde la BD
+                  }
+                } catch (e) {
+                  Navigator.pop(context);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error al actualizar rol: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
               },
-            );
-          }).toList(),
+            ),
+            SizedBox(height: 12),
+            _buildRoleOptionDialog(
+              UserRole.user,
+              'Competidor',
+              'Puede participar en competencias',
+              Icons.sports_score,
+              user.rol,
+              (role) async {
+                try {
+                  final roleType = role == UserRole.admin
+                      ? UserRoleType.ADMINISTRATOR
+                      : UserRoleType.COMPETITOR;
+
+                  final updatedUser = UserModel(
+                    id: user.id,
+                    dni: user.dni,
+                    name: user.name,
+                    lastName: user.lastName,
+                    email: user.email,
+                    rol: roleType,
+                    isActive: user.isActive,
+                    birthDate: user.birthDate,
+                  );
+
+                  await repository!.userRepository.updateUser(updatedUser);
+
+                  Navigator.pop(context);
+                  
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Rol actualizado exitosamente'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    await _loadUsers(); // Recargar la lista desde la BD
+                  }
+                } catch (e) {
+                  Navigator.pop(context);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error al actualizar rol: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
         ),
       ),
     );
   }
 
-  void _toggleUserStatus(UserData user) {
-    setState(() {
-      user.isActive = !user.isActive;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(user.isActive ? 'Usuario activado' : 'Usuario desactivado'),
-        backgroundColor: user.isActive ? Colors.green : Colors.red,
+  Widget _buildRoleOptionDialog(
+    UserRole value,
+    String title,
+    String description,
+    IconData icon,
+    UserRole currentRole,
+    Function(UserRole) onTap,
+  ) {
+    final isSelected = currentRole == value;
+    
+    return InkWell(
+      onTap: () => onTap(value),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Color(0xFFD50000).withOpacity(0.2)
+              : Colors.white.withOpacity(0.02),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? Color(0xFFD50000)
+                : Colors.white.withOpacity(0.1),
+            width: 2,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Color(0xFFD50000)
+                    : Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: Colors.white, size: 24),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              Icon(Icons.check_circle, color: Color(0xFFD50000), size: 28),
+          ],
+        ),
       ),
     );
+  }
+
+  void _toggleUserStatus(UserData user) async {
+    try {
+      final repository = ref.read(rascUNLMainProvider);
+
+      // Convertir UserRole a UserRoleType
+      final roleType = user.rol == UserRole.admin
+          ? UserRoleType.ADMINISTRATOR
+          : UserRoleType.COMPETITOR;
+
+      final updatedUser = UserModel(
+        id: user.id,
+        dni: user.dni,
+        name: user.name,
+        lastName: user.lastName,
+        email: user.email,
+        rol: roleType,
+        isActive: !user.isActive, // Invertir el estado
+        birthDate: user.birthDate,
+      );
+
+      await repository.userRepository.updateUser(updatedUser);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              !user.isActive ? 'Usuario activado exitosamente' : 'Usuario desactivado exitosamente',
+            ),
+            backgroundColor: !user.isActive ? Colors.green : Colors.orange,
+          ),
+        );
+        await _loadUsers(); // Recargar la lista desde la BD
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al actualizar estado: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showDeleteConfirmation(UserData user) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Color(0xFF2A2A2A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.warning, color: Colors.red),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                '¿Eliminar Usuario?',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Estás a punto de eliminar a:',
+              style: TextStyle(color: Colors.white.withOpacity(0.7)),
+            ),
+            SizedBox(height: 12),
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.withOpacity(0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${user.name} ${user.lastName}',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'DNI: ${user.dni}',
+                    style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                  ),
+                  Text(
+                    'Email: ${user.email}',
+                    style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              '⚠️ Esta acción no se puede deshacer. Se eliminarán todos los datos relacionados con este usuario.',
+              style: TextStyle(
+                color: Colors.red.withOpacity(0.9),
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancelar',
+              style: TextStyle(color: Colors.white.withOpacity(0.7)),
+            ),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteUser(user);
+            },
+            icon: Icon(Icons.delete_forever),
+            label: Text('Eliminar'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteUser(UserData user) async {
+    try {
+      final repository = ref.read(rascUNLMainProvider);
+
+      await repository.userRepository.deleteUser(user.id);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Usuario eliminado exitosamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        await _loadUsers(); // Recargar la lista desde la BD
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al eliminar usuario: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Color _getRoleColor(UserRole role) {

@@ -58,11 +58,3 @@ final localDatabaseProvider = FutureProvider<AppLocalDatabase>((ref) async {
 });
 
 
-void obtenerUbicacion() async {
-  try {
-    final pos = await determinePrecisePosition();
-    print('Lat: ${pos.latitude}, Lng: ${pos.longitude}, Precisión: ${pos.accuracy}m');
-  } catch (e) {
-    print('Error al obtener ubicación: $e');
-  }
-}
