@@ -1,62 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:rasc_unl_flutter_app/app/modules/main_repository.dart';
+import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 
 enum UserRole { admin, user, moderator }
 
-class ManageUsersPage extends StatefulWidget {
+class ManageUsersPage extends ConsumerStatefulWidget {
   @override
   _ManageUsersPageState createState() => _ManageUsersPageState();
 }
 
-class _ManageUsersPageState extends State<ManageUsersPage> {
+class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
   TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   UserRole? _filterRole;
   bool? _filterActive;
-
-  // Simulación de datos
-  List<UserData> users = [
-    UserData(
-      id: 1,
-      dni: '0912345678',
-      name: 'Juan',
-      lastName: 'Pérez',
-      email: 'juan.perez@email.com',
-      rol: UserRole.admin,
-      isActive: true,
-      birthDate: DateTime(1990, 5, 15),
-    ),
-    UserData(
-      id: 2,
-      dni: '0923456789',
-      name: 'María',
-      lastName: 'García',
-      email: 'maria.garcia@email.com',
-      rol: UserRole.user,
-      isActive: true,
-      birthDate: DateTime(1995, 8, 22),
-    ),
-    UserData(
-      id: 3,
-      dni: '0934567890',
-      name: 'Carlos',
-      lastName: 'López',
-      email: 'carlos.lopez@email.com',
-      rol: UserRole.moderator,
-      isActive: false,
-      birthDate: DateTime(1988, 3, 10),
-    ),
-    UserData(
-      id: 4,
-      dni: '0945678901',
-      name: 'Ana',
-      lastName: 'Martínez',
-      email: 'ana.martinez@email.com',
-      rol: UserRole.user,
-      isActive: true,
-      birthDate: DateTime(1992, 11, 5),
-    ),
-  ];
 
   @override
   void dispose() {
@@ -64,7 +23,21 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
     super.dispose();
   }
 
-  List<UserData> get filteredUsers {
+  Future<List<UserData>> _fetchUsers(MainRepository repository) async {
+    final userModels = await repository.userRepository.getAllUsers();
+    return userModels.map((userModel) => UserData(
+      id: userModel.id,
+      dni: userModel.dni,
+      name: userModel.name,
+      lastName: userModel.lastName,
+      email: userModel.email,
+      rol: UserRole.user, // Mapear según corresponda
+      isActive: true, // Mapear según corresponda
+      birthDate: DateTime.now(), // Mapear según corresponda
+    )).toList();
+  }
+
+  List<UserData> _filterUsers(List<UserData> users) {
     return users.where((user) {
       bool matchesSearch = _searchQuery.isEmpty ||
           user.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
@@ -81,6 +54,29 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
 
   @override
   Widget build(BuildContext context) {
+    MainRepository? repository;
+    
+    try {
+      repository = ref.watch(rascUNLMainProvider);
+    } catch (e) {
+      return Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF2A2A2A), Color(0xFF1A1A1A)],
+            ),
+          ),
+          child: Center(
+            child: CircularProgressIndicator(
+              color: Color(0xFFD50000),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -95,8 +91,63 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
             children: [
               _buildHeader(context),
               _buildSearchAndFilters(),
-              _buildStats(),
-              Expanded(child: _buildUsersList()),
+              Expanded(
+                child: FutureBuilder<List<UserData>>(
+                  future: repository != null ? _fetchUsers(repository) : Future.value([]),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFD50000),
+                        ),
+                      );
+                    } else if (snapshot.hasError) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.error_outline, size: 60, color: Colors.red),
+                            SizedBox(height: 16),
+                            Text(
+                              'Error al cargar usuarios',
+                              style: TextStyle(color: Colors.white, fontSize: 18),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              '${snapshot.error}',
+                              style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      );
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.people_outline, size: 60, color: Colors.white.withOpacity(0.3)),
+                            SizedBox(height: 16),
+                            Text(
+                              'No se encontraron usuarios',
+                              style: TextStyle(color: Colors.white, fontSize: 18),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    final filteredUsers = _filterUsers(snapshot.data!);
+                    return Column(
+                      children: [
+                        _buildStats(snapshot.data!),
+                        SizedBox(height: 16),
+                        Expanded(child: _buildUsersList(filteredUsers)),
+                      ],
+                    );
+                  },
+                ),
+              ),
             ],
           ),
         ),
@@ -105,40 +156,86 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    
     return Padding(
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.all(isMobile ? 12 : 20),
       child: Row(
         children: [
           IconButton(
             icon: Icon(Icons.arrow_back_ios, color: Colors.white),
-            onPressed: () => {
-              context.go('/home')
-            },
+            onPressed: () => context.go('/home'),
           ),
-          SizedBox(width: 8),
-          Text(
-            'Gestionar Usuarios',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+          SizedBox(width: isMobile ? 4 : 8),
+          Expanded(
+            child: Text(
+              'Gestionar Usuarios',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: isMobile ? 18 : 24,
+                fontWeight: FontWeight.bold,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
-          Spacer(),
+          SizedBox(width: 8),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 12, vertical: 6),
             decoration: BoxDecoration(
               color: Color(0xFFD50000).withOpacity(0.2),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: Color(0xFFD50000)),
             ),
-            child: Text(
-              '${users.length} usuarios',
-              style: TextStyle(
-                color: Color(0xFFD50000),
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
+            child: Builder(
+              builder: (context) {
+                try {
+                  final repo = ref.watch(rascUNLMainProvider);
+                  return FutureBuilder<List<UserData>>(
+                    future: _fetchUsers(repo),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Text(
+                          '...',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: isMobile ? 12 : 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      } else if (snapshot.hasError || !snapshot.hasData) {
+                        return Text(
+                          '0',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: isMobile ? 12 : 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      }
+
+                      return Text(
+                        '${snapshot.data!.length}',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: isMobile ? 12 : 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+                    },
+                  );
+                } catch (e) {
+                  return Text(
+                    '...',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: isMobile ? 12 : 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  );
+                }
+              },
             ),
           ),
         ],
@@ -147,8 +244,11 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
   }
 
   Widget _buildSearchAndFilters() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 20),
       child: Column(
         children: [
           Container(
@@ -286,12 +386,15 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
     );
   }
 
-  Widget _buildStats() {
+  Widget _buildStats(List<UserData> users) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    
     int activeUsers = users.where((u) => u.isActive).length;
     int admins = users.where((u) => u.rol == UserRole.admin).length;
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 20),
       child: Row(
         children: [
           Expanded(
@@ -353,10 +456,11 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
     );
   }
 
-  Widget _buildUsersList() {
-    List<UserData> displayUsers = filteredUsers;
-
-    if (displayUsers.isEmpty) {
+  Widget _buildUsersList(List<UserData> users) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    
+    if (users.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -373,15 +477,18 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
     }
 
     return ListView.builder(
-      padding: EdgeInsets.all(20),
-      itemCount: displayUsers.length,
+      padding: EdgeInsets.all(isMobile ? 12 : 20),
+      itemCount: users.length,
       itemBuilder: (context, index) {
-        return _buildUserCard(displayUsers[index]);
+        return _buildUserCard(users[index]);
       },
     );
   }
 
   Widget _buildUserCard(UserData user) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    
     return Container(
       margin: EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -402,15 +509,15 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.all(20),
+        padding: EdgeInsets.all(isMobile ? 12 : 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Container(
-                  width: 50,
-                  height: 50,
+                  width: isMobile ? 40 : 50,
+                  height: isMobile ? 40 : 50,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [Color(0xFFD50000), Color(0xFF8B0000)],
@@ -422,13 +529,13 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
                       '${user.name[0]}${user.lastName[0]}',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 20,
+                        fontSize: isMobile ? 16 : 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ),
-                SizedBox(width: 16),
+                SizedBox(width: isMobile ? 12 : 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -437,7 +544,7 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
                         '${user.name} ${user.lastName}',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 16,
+                          fontSize: isMobile ? 14 : 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -446,8 +553,9 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
                         user.email,
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.5),
-                          fontSize: 12,
+                          fontSize: isMobile ? 11 : 12,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),

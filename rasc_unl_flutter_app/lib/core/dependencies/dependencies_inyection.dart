@@ -29,15 +29,22 @@ final isOfflineModeProvider = Provider<bool>((ref) {
   return connection == InternetConnectionStatus.disconnected;
 });
 
-final competitionRepositoryProvider = Provider<MainRepository>((ref) {
+final rascUNLMainProvider = Provider<MainRepository>((ref) {
   final isOffline = ref.watch(isOfflineModeProvider);
-  final localDb = ref.watch(localDatabaseProvider).value;
+  final localDbAsync = ref.watch(localDatabaseProvider);
 
-  if (isOffline) {
-    return LocalRepository(localDb!);
-  } else {
-    return RemoteRepository();
-  }
+  // Si la base de datos aún no está lista, lanzamos un error que será manejado por AsyncValue
+  return localDbAsync.when(
+    data: (localDb) {
+      if (isOffline) {
+        return LocalRepository(localDb);
+      } else {
+        return RemoteRepository();
+      }
+    },
+    loading: () => throw Exception('Database is loading...'),
+    error: (error, stack) => throw error,
+  );
 });
 
 

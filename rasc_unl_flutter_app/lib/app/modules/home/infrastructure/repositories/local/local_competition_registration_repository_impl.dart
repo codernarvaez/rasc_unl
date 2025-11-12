@@ -69,12 +69,42 @@ class LocalCompetitionRegistrationRepositoryImpl implements CompetitionRegistrat
         );
   }
 
-
-
   @override
   Future<void> deleteRegistration(int id) async {
     await (_localDatabase.delete(_localDatabase.competitionRegistrationTable)
           ..where((tbl) => tbl.id.equals(id)))
         .go();
+  }
+
+  @override
+  Future<List<CompetitionRegistrationModel>> getRegistrationsByCompetenceId(int competenceId) async {
+    final queryResults = await (_localDatabase.select(_localDatabase.competitionRegistrationTable)
+          ..where((tbl) => tbl.competenceId.equals(competenceId)))
+        .get();
+
+    return queryResults.map((result) => CompetitionRegistrationModel(
+      id: result.id,
+      userDni: result.userDni,
+      competenceId: result.competenceId,
+      registrationNumber: result.registrationNumber,
+      externalId: result.externalId,
+      nTurns: result.nTurns,
+      time: Duration(milliseconds: result.time),
+    )).toList();
+  }
+
+  @override
+  Future<List<CompetitionRegistrationModel>> getAllRegistrations() async {
+    final queryResults = await _localDatabase.select(_localDatabase.competitionRegistrationTable).get();
+
+    return queryResults.map((result) => CompetitionRegistrationModel(
+      id: result.id,
+      userDni: result.userDni,
+      competenceId: result.competenceId,
+      registrationNumber: result.registrationNumber,
+      externalId: result.externalId,
+      nTurns: result.nTurns,
+      time: Duration(milliseconds: result.time),
+    )).toList();
   }
 }

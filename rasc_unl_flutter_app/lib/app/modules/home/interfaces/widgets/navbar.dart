@@ -2,7 +2,6 @@ import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
 class ModernNavBar extends ConsumerStatefulWidget
     implements PreferredSizeWidget {
   final String logoPath;
@@ -51,10 +50,7 @@ class _ModernNavBarState extends ConsumerState<ModernNavBar>
         backgroundColor: Color(0xFF2A2A2A),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: Colors.red.withOpacity(0.3),
-            width: 1,
-          ),
+          side: BorderSide(color: Colors.red.withOpacity(0.3), width: 1),
         ),
         title: Row(
           children: [
@@ -72,10 +68,7 @@ class _ModernNavBarState extends ConsumerState<ModernNavBar>
         ),
         content: Text(
           '¿Estás seguro que deseas cerrar sesión?',
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.8),
-            fontSize: 16,
-          ),
+          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 16),
         ),
         actions: [
           TextButton(
@@ -139,10 +132,7 @@ class _ModernNavBarState extends ConsumerState<ModernNavBar>
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF2A2A2A),
-            Color(0xFF1F1F1F),
-          ],
+          colors: [Color(0xFF2A2A2A), Color(0xFF1F1F1F)],
         ),
         boxShadow: [
           BoxShadow(
@@ -157,7 +147,7 @@ class _ModernNavBarState extends ConsumerState<ModernNavBar>
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               // Logo a la izquierda
               Hero(
@@ -165,78 +155,68 @@ class _ModernNavBarState extends ConsumerState<ModernNavBar>
                 child: Container(
                   width: 50,
                   height: 50,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFFD50000), Color(0xFF8B0000)],
-                    ),
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0xFFD50000).withOpacity(0.4),
-                        blurRadius: 15,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(100),
                     child: widget.logoPath.isNotEmpty
-                        ? Image.asset(
-                            widget.logoPath,
-                            fit: BoxFit.cover,
-                          )
-                        : Icon(
-                            Icons.flash_on,
-                            color: Colors.white,
-                            size: 28,
-                          ),
+                        ? Image.asset(widget.logoPath, fit: BoxFit.cover)
+                        : Icon(Icons.flash_on, color: Colors.white, size: 50),
                   ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              const Text(
+                'RASC UNL',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 1.2,
                 ),
               ),
 
-              // Botón de cerrar sesión a la derecha
-              ScaleTransition(
-                scale: _scaleAnimation,
-                child: GestureDetector(
-                  onTapDown: (_) => _animationController.forward(),
-                  onTapUp: (_) {
-                    _animationController.reverse();
-                    _showLogoutDialog();
-                  },
-                  onTapCancel: () => _animationController.reverse(),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Color(0xFFD50000).withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.logout_rounded,
-                          size: 22,
-                          color: Color(0xFFD50000),
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Cerrar sesión',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+              // // Botón de cerrar sesión a la derecha
+              // ScaleTransition(
+              //   scale: _scaleAnimation,
+              //   child: GestureDetector(
+              //     onTapDown: (_) => _animationController.forward(),
+              //     onTapUp: (_) {
+              //       _animationController.reverse();
+              //       _showLogoutDialog();
+              //     },
+              //     onTapCancel: () => _animationController.reverse(),
+              //     child: Container(
+              //       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              //       decoration: BoxDecoration(
+              //         color: Colors.white.withOpacity(0.05),
+              //         borderRadius: BorderRadius.circular(12),
+              //         border: Border.all(
+              //           color: Color(0xFFD50000).withOpacity(0.3),
+              //           width: 1,
+              //         ),
+              //       ),
+              //       child: Row(
+              //         mainAxisSize: MainAxisSize.min,
+              //         children: [
+              //           Icon(
+              //             Icons.logout_rounded,
+              //             size: 22,
+              //             color: Color(0xFFD50000),
+              //           ),
+              //           SizedBox(width: 8),
+              //           Text(
+              //             'Cerrar sesión',
+              //             style: TextStyle(
+              //               fontSize: 14,
+              //               fontWeight: FontWeight.w600,
+              //               color: Colors.white,
+              //               letterSpacing: 0.3,
+              //             ),
+              //           ),
+              //         ],
+              //       ),
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         ),
@@ -244,60 +224,3 @@ class _ModernNavBarState extends ConsumerState<ModernNavBar>
     );
   }
 }
-
-// // ============================================
-// // EJEMPLO DE USO COMPLETO
-// // ============================================
-// class NavigationExample extends ConsumerStatefulWidget {
-//   const NavigationExample({super.key});
-
-//   @override
-//   ConsumerState<NavigationExample> createState() => _NavigationExampleState();
-// }
-
-// class _NavigationExampleState extends ConsumerState<NavigationExample> {
-//   int _currentIndex = 0;
-
-//   final List<Widget> _pages = [
-//     Center(child: Text('Inicio', style: TextStyle(color: Colors.white, fontSize: 24))),
-//     Center(child: Text('Búsqueda', style: TextStyle(color: Colors.white, fontSize: 24))),
-//     Center(child: Text('Favoritos', style: TextStyle(color: Colors.white, fontSize: 24))),
-//     Center(child: Text('Perfil', style: TextStyle(color: Colors.white, fontSize: 24))),
-//   ];
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: ModernNavBar(
-//         logoPath: '', // Ruta del logo o vacío para usar icono predeterminado
-//       ),
-//       body: Container(
-//         decoration: BoxDecoration(
-//           gradient: LinearGradient(
-//             begin: Alignment.topCenter,
-//             end: Alignment.bottomCenter,
-//             colors: [
-//               Color(0xFF2A2A2A),
-//               Color(0xFF1A1A1A),
-//             ],
-//           ),
-//         ),
-//         child: _pages[_currentIndex],
-//       ),
-//       bottomNavigationBar: ButtonNavigatorBar(
-//         iconsList: const [
-//           Icons.home_rounded,
-//           Icons.search_rounded,
-//           Icons.favorite_rounded,
-//           Icons.person_rounded,
-//         ],
-//         initialIndex: _currentIndex,
-//         onTap: (index) {
-//           setState(() {
-//             _currentIndex = index;
-//           });
-//         },
-//       ),
-//     );
-//   }
-// }

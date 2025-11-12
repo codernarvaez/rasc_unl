@@ -5,5 +5,6 @@ abstract class UserRepository {
   Future<UserModel?> getUserById(int id);
   Future<UserModel?> getUserByDni(String dni);
   Future<void> insertUser(UserModel user);
+  Future<void> updateUser(UserModel user);
   Future<void> deleteUser(int id);
 }

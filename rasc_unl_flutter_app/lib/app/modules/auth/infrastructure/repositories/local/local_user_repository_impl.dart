@@ -1,3 +1,4 @@
+import "package:drift/drift.dart";
 import "package:rasc_unl_flutter_app/app/modules/auth/domain/models/user_model.dart";
 import "package:rasc_unl_flutter_app/app/modules/auth/domain/repositories/user_repository.dart";
 import "package:rasc_unl_flutter_app/database/local_database/app_local_database.dart";
@@ -75,6 +76,20 @@ class LocalUserRepositoryImpl implements UserRepository {
     await (_localDatabase.delete(_localDatabase.userTable)
           ..where((tbl) => tbl.id.equals(id)))
         .go();
+  }
+
+  @override
+  Future<void> updateUser(UserModel user) async {
+    await (_localDatabase.update(_localDatabase.userTable)
+          ..where((tbl) => tbl.id.equals(user.id)))
+        .write(
+          UserTableCompanion(
+            dni: Value(user.dni),
+            name: Value(user.name),
+            lastName: Value(user.lastName),
+            email: Value(user.email),
+          ),
+        );
   }
 
   

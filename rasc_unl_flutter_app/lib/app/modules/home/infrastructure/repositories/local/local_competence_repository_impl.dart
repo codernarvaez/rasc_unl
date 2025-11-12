@@ -71,4 +71,22 @@ class LocalCompetenceRepositoryImpl implements CompetenceRepository {
     }
     return null;
   }
+
+  @override
+  Future<void> updateCompetence(CompetenceModel competence) async {
+    await (_localDatabase.update(_localDatabase.competenceTable)
+          ..where((tbl) => tbl.id.equals(competence.id)))
+        .write(
+          CompetenceTableCompanion(
+            externalId: Value(competence.externalId),
+            name: Value(competence.name),
+            competitionDate: Value(competence.competitionDate),
+            nTurns: Value(competence.nTurns),
+            isActive: Value(competence.isActive),
+            createdBy: Value(competence.createdBy),
+            startCoordinates: Value(competence.startCoordinates),
+            finishCoordinates: Value(competence.finishCoordinates),
+          ),
+        );
+  }
 }

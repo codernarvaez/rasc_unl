@@ -15,11 +15,11 @@ class FloatingConnectionBanner extends ConsumerWidget {
         final isOnline = status == InternetConnectionStatus.connected;
 
         return AnimatedSlide(
-          offset: isOnline ? Offset.zero : const Offset(0, -1.5),
+          offset: Offset.zero,
           duration: const Duration(milliseconds: 400),
           curve: Curves.easeInOut,
           child: AnimatedOpacity(
-            opacity: isOnline ? 1 : 0,
+            opacity: 1  ,
             duration: const Duration(milliseconds: 300),
             child: Align(
               alignment: Alignment.topCenter,
@@ -34,7 +34,7 @@ class FloatingConnectionBanner extends ConsumerWidget {
                   ),
                   child: Material(
                     elevation: 6,
-                    color: isOnline ? Colors.green.shade600 : Colors.red.shade600,
+                    color: isOnline ? Colors.green.shade600 : const Color.fromARGB(255, 183, 76, 74),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 15,

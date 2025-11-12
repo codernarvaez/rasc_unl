@@ -1,3 +1,5 @@
+import 'package:rasc_unl_flutter_app/app/modules/auth/domain/repositories/user_repository.dart';
+import 'package:rasc_unl_flutter_app/app/modules/auth/infrastructure/repositories/local/local_user_repository_impl.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/infrastructure/repositories/local/local_competition_registration_repository_impl.dart';
 import 'package:rasc_unl_flutter_app/app/modules/main_repository.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/domain/repositories/competence_repository.dart';
@@ -16,5 +18,13 @@ class LocalRepository implements MainRepository {
   @override
   CompetitionRegistrationRepository get competitionRegistrationRepository => LocalCompetitionRegistrationRepositoryImpl(db);
 
+  @override
+  UserRepository get userRepository => LocalUserRepositoryImpl(db);
+
+  @override
+  Future<String> generateReport() async {
+    // Implementación para generar reportes en modo offline
+    return 'Reporte generado localmente.';
+  }
 
 }

@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rasc_unl_flutter_app/app/modules/auth/interfaces/pages/login_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/auth/interfaces/pages/singup_page.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/manage_competences.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/generate_reports_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/manage_competences_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/manage_users_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/rasc_unl_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/home_page.dart';
@@ -26,7 +27,8 @@ enum AppRouterNames {
   competenceDetails,
   availableCompetences,
   manageUsers,
-  manageCompetences
+  manageCompetences,
+  generateReports,
   
 }
 
@@ -133,5 +135,10 @@ class RouterNotifier extends ChangeNotifier {
       name: AppRouterNames.manageCompetences.name,
       builder: (context, state) => ManageCompetencesPage(),
     ),
+    GoRoute(
+      path: '/generate-reports',
+      name: AppRouterNames.generateReports.name,
+      builder: (context, state) => GenerateReportsPage()
+      )
   ];
 }
