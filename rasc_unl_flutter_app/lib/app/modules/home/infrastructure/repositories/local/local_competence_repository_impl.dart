@@ -3,10 +3,10 @@ import 'package:rasc_unl_flutter_app/app/modules/home/domain/models/competence_m
 import 'package:rasc_unl_flutter_app/app/modules/home/domain/repositories/competence_repository.dart';
 import 'package:rasc_unl_flutter_app/database/local_database/app_local_database.dart';
 
-class CompetenceRepositoryImpl implements CompetenceRepository {
+class LocalCompetenceRepositoryImpl implements CompetenceRepository {
   final AppLocalDatabase _localDatabase;
 
-  CompetenceRepositoryImpl(this._localDatabase);
+  LocalCompetenceRepositoryImpl(this._localDatabase);
 
   @override
   Future<void> createCompetence(CompetenceModel competence) async {

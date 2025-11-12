@@ -3,10 +3,10 @@ import 'package:rasc_unl_flutter_app/app/modules/home/domain/models/competition_
 import 'package:rasc_unl_flutter_app/app/modules/home/domain/repositories/competition_registration_repository.dart';
 import 'package:rasc_unl_flutter_app/database/local_database/app_local_database.dart';
 
-class CompetitionRegistrationRepositoryImpl implements CompetitionRegistrationRepository {
+class LocalCompetitionRegistrationRepositoryImpl implements CompetitionRegistrationRepository {
   final AppLocalDatabase _localDatabase;
 
-  CompetitionRegistrationRepositoryImpl(this._localDatabase);
+  LocalCompetitionRegistrationRepositoryImpl(this._localDatabase);
 
   @override
   Future<CompetitionRegistrationModel?> getRegistrationByUserDni(String userDni) async {
