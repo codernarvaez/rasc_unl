@@ -118,7 +118,7 @@ class _ActionsPageState extends State<ActionsPage> with SingleTickerProviderStat
                   subtitle: 'Ver mis registros de marcas',
                   gradient: [Color(0xFFD50000), Color(0xFF8B0000)],
                   onTap: () {
-                    context.go('/create-categories');
+                    context.go('/my-records');
                   },
                 ),
                 
@@ -130,7 +130,7 @@ class _ActionsPageState extends State<ActionsPage> with SingleTickerProviderStat
                   subtitle: 'Registrarme en nuevas competencias',
                   gradient: [Color(0xFFD50000).withOpacity(0.8), Color(0xFF8B0000).withOpacity(0.8)],
                   onTap: () {
-                    context.go('/create-brands');
+                    context.go('/competence-details');
                   },
                 ),
                 
@@ -183,21 +183,10 @@ class _ActionsPageState extends State<ActionsPage> with SingleTickerProviderStat
                   subtitle: 'Ver y administrar competencias disponibles',
                   gradient: [Color(0xFF424242), Color(0xFF212121)],
                   onTap: () {
-                    context.go('/manage-competitions');
+                    context.go('/manage-competences');
                   },
                 ),
                 
-                SizedBox(height: 12),
-                
-                _buildActionCard(
-                  icon: Icons.add_circle_outline,
-                  title: 'Registrar Nueva Competencia',
-                  subtitle: 'Crear y configurar nueva competencia',
-                  gradient: [Color(0xFF424242), Color(0xFF212121)],
-                  onTap: () {
-                    context.go('/manage-data');
-                  },
-                ),
                 
                 SizedBox(height: 12),
                 

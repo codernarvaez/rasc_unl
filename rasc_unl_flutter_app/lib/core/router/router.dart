@@ -3,9 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rasc_unl_flutter_app/app/modules/auth/interfaces/pages/login_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/auth/interfaces/pages/singup_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/manage_competences.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/manage_users_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/rasc_unl_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/home_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/actions_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/user/aviable_competences.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/user/competence_details.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/user/my_records_page.dart';
 
 enum AppRouterNames {
   login,
@@ -17,6 +22,12 @@ enum AppRouterNames {
   userPrivacyAndSecurity,
   forgotPassword,
   actions,
+  myRecords,
+  competenceDetails,
+  availableCompetences,
+  manageUsers,
+  manageCompetences
+  
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -93,6 +104,34 @@ class RouterNotifier extends ChangeNotifier {
       path: '/actions',
       name: AppRouterNames.actions.name,
       builder: (context, state) => const ActionsPage(),
+    ),
+    GoRoute(
+      path: '/my-records',
+      name: AppRouterNames.myRecords.name,
+      builder: (context, state) => MyRecordsPage(),
+    ),
+    GoRoute(
+      path: '/competence-details',
+      name: AppRouterNames.competenceDetails.name,
+      builder: (context, state) => CompetenceDetailsPage( 
+        competence: CompetenceData(name: 'Gran Premio 2024', competitionDate: DateTime(2024, 12, 15, 14, 0), nTurns: 10, isActive: true),
+      ),
+    ),
+
+    GoRoute(
+      path: '/available-competences',
+      name: AppRouterNames.availableCompetences.name,
+      builder: (context, state) => AvailableCompetencesPage(),
+    ),
+    GoRoute(
+      path: '/manage-users',
+      name: AppRouterNames.manageUsers.name,
+      builder: (context, state) => ManageUsersPage(),
+    ),
+    GoRoute(
+      path: '/manage-competences',
+      name: AppRouterNames.manageCompetences.name,
+      builder: (context, state) => ManageCompetencesPage(),
     ),
   ];
 }
