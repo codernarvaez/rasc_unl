@@ -10,8 +10,8 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
   id: (json['id'] as num).toInt(),
   dni: json['dni'] as String,
   rol:
-      $enumDecodeNullable(_$UserRoleEnumMap, json['rol']) ??
-      UserRole.COMPETITOR,
+      $enumDecodeNullable(_$UserRoleTypeEnumMap, json['rol']) ??
+      UserRoleType.COMPETITOR,
   name: json['name'] as String,
   lastName: json['last_name'] as String,
   email: json['email'] as String,
@@ -24,7 +24,7 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
 Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
   'id': instance.id,
   'dni': instance.dni,
-  'rol': _$UserRoleEnumMap[instance.rol]!,
+  'rol': _$UserRoleTypeEnumMap[instance.rol]!,
   'name': instance.name,
   'last_name': instance.lastName,
   'email': instance.email,
@@ -32,7 +32,7 @@ Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
   'birth_date': instance.birthDate?.toIso8601String(),
 };
 
-const _$UserRoleEnumMap = {
-  UserRole.ADMINISTRATOR: 'ADMINISTRATOR',
-  UserRole.COMPETITOR: 'COMPETITOR',
+const _$UserRoleTypeEnumMap = {
+  UserRoleType.ADMINISTRATOR: 'ADMINISTRATOR',
+  UserRoleType.COMPETITOR: 'COMPETITOR',
 };

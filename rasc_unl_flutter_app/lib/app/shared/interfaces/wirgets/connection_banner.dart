@@ -3,31 +3,62 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 
-class ConnectionBanner extends ConsumerWidget {
-  const ConnectionBanner({super.key});
+class FloatingConnectionBanner extends ConsumerWidget {
+  FloatingConnectionBanner({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final connection = ref.watch(connectionStatusProvider);
+    final connectionStatus = ref.watch(connectionStatusProvider);
 
-    return connection.when(
+    return connectionStatus.when(
       data: (status) {
-        final isOffline = status == InternetConnectionStatus.disconnected;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          color: isOffline ? Colors.red : Colors.green,
-          padding: const EdgeInsets.all(8),
-          width: double.infinity,
-          child: Center(
-            child: Text(
-              isOffline ? 'Sin conexión - Modo offline' : 'Conectado a Internet',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        final isOnline = status == InternetConnectionStatus.connected;
+
+        return AnimatedSlide(
+          offset: isOnline ? Offset.zero : const Offset(0, -1.5),
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+          child: AnimatedOpacity(
+            opacity: isOnline ? 1 : 0,
+            duration: const Duration(milliseconds: 300),
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 24),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                    bottomLeft: Radius.circular(24),
+                    bottomRight: Radius.circular(24),
+                  ),
+                  child: Material(
+                    elevation: 6,
+                    color: isOnline ? Colors.green.shade600 : Colors.red.shade600,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 15,
+                        vertical: 5,
+                      ),
+                      child: Text(
+                        isOnline ? '🟢 Online' : '🔴 Offline',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (error, stack) => const SizedBox.shrink(),
     );
   }
 }

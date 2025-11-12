@@ -6,7 +6,7 @@ part 'user_model.g.dart';
 class UserModel {
   final int id;
   final String dni;
-  final UserRole rol;
+  final UserRoleType rol;
   final String name;
   final String lastName;
   final String email;
@@ -16,7 +16,7 @@ class UserModel {
   UserModel({
     required this.id,
     required this.dni,
-    this.rol = UserRole.COMPETITOR,
+    this.rol = UserRoleType.COMPETITOR,
     required this.name,
     required this.lastName,
     required this.email,
@@ -30,7 +30,7 @@ class UserModel {
   Map<String, dynamic> toJson() => _$UserModelToJson(this);
 }
 
-enum UserRole {
+enum UserRoleType {
   ADMINISTRATOR,
   COMPETITOR,
 }
