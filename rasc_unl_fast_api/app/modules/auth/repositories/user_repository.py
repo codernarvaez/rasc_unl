@@ -20,9 +20,10 @@ class UserRepository:
             first_name=user_data.first_name,
             last_name=user_data.last_name,
             dni=user_data.dni,
+            date_of_birth=None,
             password=hashed_password,
-            role=RoleEnum(user_data.role),
-            is_active=user_data.is_active
+            role=RoleEnum.COMPETITOR,
+            is_active=True
         )
         
         self.session.add(user)

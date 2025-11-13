@@ -46,10 +46,13 @@ class UserService:
         )
     
     async def update_user(self, user_id: int, user_data: UserUpdate) -> User:
-        """Actualizar la información del usuario con validación.""" 
+        """Actualizar la información del usuario con validación."""
+        # Obtener solo los campos que fueron enviados en la solicitud
+        update_data = user_data.model_dump(exclude_unset=True)
+        
         # Check if email already exists (if being changed)
-        if user_data.email:
-            existing_user = await self.repository.get_by_email(user_data.email)
+        if "email" in update_data:
+            existing_user = await self.repository.get_by_email(update_data["email"])
             if existing_user and existing_user.id != user_id:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -57,8 +60,8 @@ class UserService:
                 )
         
         # Check if DNI already exists (if being changed)
-        if user_data.dni:
-            existing_user = await self.repository.get_by_dni(user_data.dni)
+        if "dni" in update_data:
+            existing_user = await self.repository.get_by_dni(update_data["dni"])
             if existing_user and existing_user.id != user_id:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
