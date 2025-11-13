@@ -233,4 +233,32 @@ class RemoteCompetitionRegistrationRepositoryImpl
       throw Exception('Error de conexión al obtener registros por DNI: $e');
     }
   }
+
+  @override
+  Future<void> updateRegistration(
+      CompetitionRegistrationModel registration) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$_baseUrl/api/v1/competencias/registro/${registration.id}'),
+        headers: _headers,
+        body: jsonEncode({
+          if (registration.externalId != null)
+            'external_id': registration.externalId,
+          if (registration.registrationNumber != null)
+            'registration_number': registration.registrationNumber,
+          if (registration.time != null)
+            'time': registration.time!.inMilliseconds,
+          if (registration.nTurns != null) 'n_turns': registration.nTurns,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        final errorData = jsonDecode(response.body);
+        throw Exception(
+            'Error al actualizar registro: ${errorData['detail'] ?? response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error de conexión al actualizar registro: $e');
+    }
+  }
 }

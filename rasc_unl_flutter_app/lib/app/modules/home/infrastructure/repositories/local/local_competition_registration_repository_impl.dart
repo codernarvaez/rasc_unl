@@ -143,4 +143,24 @@ class LocalCompetitionRegistrationRepositoryImpl implements CompetitionRegistrat
       time: result.time != null ? Duration(milliseconds: result.time!) : null,
     )).toList();
   }
+
+  @override
+  Future<void> updateRegistration(CompetitionRegistrationModel registration) async {
+    await (_localDatabase.update(_localDatabase.competitionRegistrationTable)
+          ..where((tbl) => tbl.id.equals(registration.id)))
+        .write(CompetitionRegistrationTableCompanion(
+          externalId: registration.externalId != null 
+              ? Value(registration.externalId) 
+              : const Value.absent(),
+          registrationNumber: registration.registrationNumber != null 
+              ? Value(registration.registrationNumber) 
+              : const Value.absent(),
+          time: registration.time != null 
+              ? Value(registration.time!.inMilliseconds) 
+              : const Value.absent(),
+          nTurns: registration.nTurns != null 
+              ? Value(registration.nTurns) 
+              : const Value.absent(),
+        ));
+  }
 }

@@ -529,6 +529,13 @@ Widget _buildTabBar() {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _buildActionButton(
+                            label: 'Ver Participantes',
+                            icon: Icons.groups,
+                            color: Color(0xFF2196F3),
+                            onPressed: () => context.push('/admin/competence-details/${competence.id}'),
+                          ),
+                          SizedBox(height: 8),
+                          _buildActionButton(
                             label: 'Editar',
                             icon: Icons.edit,
                             onPressed: () => _showCreateEditDialog(competence: competence),
@@ -546,12 +553,21 @@ Widget _buildTabBar() {
                         children: [
                           Expanded(
                             child: _buildActionButton(
+                              label: 'Participantes',
+                              icon: Icons.groups,
+                              color: Color(0xFF2196F3),
+                              onPressed: () => context.push('/admin/competence-details/${competence.id}'),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: _buildActionButton(
                               label: 'Editar',
                               icon: Icons.edit,
                               onPressed: () => _showCreateEditDialog(competence: competence),
                             ),
                           ),
-                          SizedBox(width: 12),
+                          SizedBox(width: 8),
                           Expanded(
                             child: _buildActionButton(
                               label: competence.isActive ? 'Desactivar' : 'Activar',

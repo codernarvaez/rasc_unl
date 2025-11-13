@@ -12,4 +12,5 @@ abstract class CompetitionRegistrationRepository {
   Future<List<CompetitionRegistrationModel>> getAllRegistrations();
   Future<CompetitionRegistrationModel?> getRegistrationByUserAndCompetence(String userDni, int competenceId);
   Future<List<CompetitionRegistrationModel>> getRegistrationsByUserDni(String userDni);
+  Future<void> updateRegistration(CompetitionRegistrationModel registration);
 }

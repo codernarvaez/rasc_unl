@@ -7,6 +7,7 @@ import 'package:rasc_unl_flutter_app/app/modules/auth/interfaces/pages/singup_pa
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/generate_reports_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/manage_competences_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/manage_users_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/admin_competence_details_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/rasc_unl_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/home_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/actions_page.dart';
@@ -160,6 +161,14 @@ class RouterNotifier extends ChangeNotifier {
       path: '/manage-competences',
       name: AppRouterNames.manageCompetences.name,
       builder: (context, state) => ManageCompetencesPage(),
+    ),
+    GoRoute(
+      path: '/admin/competence-details/:id',
+      name: 'adminCompetenceDetails',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return AdminCompetenceDetailsPage(competenceId: id);
+      },
     ),
     GoRoute(
       path: '/generate-reports',
