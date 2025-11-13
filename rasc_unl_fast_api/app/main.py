@@ -88,7 +88,7 @@ _APP = FastAPI(
         "La API Dalios"
     ),
     version=_SETTINGS.application_version,
-    docs_url='/doc',
+    docs_url='/docs',
     redoc_url='/redoc',
     contact={
         'name': 'Equipo de Desarrollo Dalios',
