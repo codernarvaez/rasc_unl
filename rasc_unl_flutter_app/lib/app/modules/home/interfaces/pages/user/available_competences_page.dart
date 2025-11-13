@@ -6,8 +6,10 @@ import 'package:rasc_unl_flutter_app/app/modules/home/domain/models/competition_
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 
 class AvailableCompetencesPage extends ConsumerStatefulWidget {
+  const AvailableCompetencesPage({super.key});
+
   @override
-  _AvailableCompetencesPageState createState() => _AvailableCompetencesPageState();
+  ConsumerState<AvailableCompetencesPage> createState() => _AvailableCompetencesPageState();
 }
 
 class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesPage> 
@@ -18,7 +20,6 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
   Map<int, bool> _userRegistrations = {};
   Map<int, int> _registrationCounts = {};
   bool _isLoading = true;
-  String? _currentUserDni;
 
   @override
   void initState() {
@@ -33,15 +34,35 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
     setState(() => _isLoading = true);
     try {
       final repository = ref.read(rascUNLMainProvider);
+      final currentUser = ref.read(currentUserProvider);
       
-      // Obtener todas las competencias activas
+      if (currentUser == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No hay usuario logueado'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          setState(() => _isLoading = false);
+        }
+        return;
+      }
+      
+      // Obtener todas las competencias
       final allCompetences = await repository.competenceRepository.getAllCompetences();
       final now = DateTime.now();
       
-      // Filtrar competencias activas (futuras o de hoy)
+      // Filtrar competencias activas (futuras hasta la fecha, incluyendo hoy)
       final active = allCompetences.where((comp) {
         if (comp.competitionDate == null) return false;
-        return comp.isActive && comp.competitionDate!.isAfter(now.subtract(Duration(days: 1)));
+        final compDate = DateTime(
+          comp.competitionDate!.year,
+          comp.competitionDate!.month,
+          comp.competitionDate!.day,
+        );
+        final today = DateTime(now.year, now.month, now.day);
+        return comp.isActive && (compDate.isAfter(today) || compDate.isAtSameMomentAs(today));
       }).toList();
       
       // Ordenar por fecha más cercana primero
@@ -50,24 +71,29 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
       // Competencias pasadas (pueden estar activas o no)
       final past = allCompetences.where((comp) {
         if (comp.competitionDate == null) return false;
-        return comp.competitionDate!.isBefore(now.subtract(Duration(days: 1)));
+        final compDate = DateTime(
+          comp.competitionDate!.year,
+          comp.competitionDate!.month,
+          comp.competitionDate!.day,
+        );
+        final today = DateTime(now.year, now.month, now.day);
+        return compDate.isBefore(today);
       }).toList();
       
       // Ordenar por fecha más reciente primero
       past.sort((a, b) => b.competitionDate!.compareTo(a.competitionDate!));
       
-      // Obtener todos los registros
+      // Obtener registros del usuario
+      final userRegistrations = await repository.competitionRegistrationRepository
+          .getRegistrationsByUserDni(currentUser.dni);
+      
+      // Contar registros por competencia
       final allRegistrations = await repository.competitionRegistrationRepository.getAllRegistrations();
       
-      // TODO: Obtener el DNI del usuario actual (por ahora usamos uno de prueba)
-      // En producción, deberías obtenerlo del usuario logueado
-      _currentUserDni = "1234567890"; // Reemplazar con el DNI real del usuario logueado
-      
-      // Contar registros por competencia y verificar si el usuario está registrado
       for (var comp in allCompetences) {
         final compRegistrations = allRegistrations.where((r) => r.competenceId == comp.id).toList();
         _registrationCounts[comp.id] = compRegistrations.length;
-        _userRegistrations[comp.id] = compRegistrations.any((r) => r.userDni == _currentUserDni);
+        _userRegistrations[comp.id] = userRegistrations.any((r) => r.competenceId == comp.id);
       }
       
       if (mounted) {
@@ -144,8 +170,10 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
       child: Row(
         children: [
           IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => context.pop(),
+            icon: Icon(Icons.arrow_back_ios, color: Colors.white),
+            onPressed: () => {
+              context.go('/home'),
+            },
           ),
           SizedBox(width: 12),
           Expanded(
@@ -158,13 +186,6 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
                     color: Colors.white,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'Selecciona una competencia para ver detalles',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
-                    fontSize: 14,
                   ),
                 ),
               ],
@@ -451,8 +472,7 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
   }
 
   void _showCompetenceDetails(CompetenceModel competence) {
-    // TODO: Navegar a la página de detalles
-    context.push('/user/competence-details', extra: competence);
+    context.push('/user/competence-details', extra: competence.id);
   }
 
   void _showRegistrationDialog(CompetenceModel competence) {
@@ -563,8 +583,37 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
   Future<void> _registerToCompetence(CompetenceModel competence) async {
     try {
       final repository = ref.read(rascUNLMainProvider);
+      final currentUser = ref.read(currentUserProvider);
       
-      // Generar número de registro único (en un escenario real, esto sería generado por el backend)
+      if (currentUser == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No hay usuario logueado'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+      
+      // Verificar si ya está registrado
+      final existing = await repository.competitionRegistrationRepository
+          .getRegistrationByUserAndCompetence(currentUser.dni, competence.id);
+      
+      if (existing != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Ya estás registrado en esta competencia'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+      
+      // Generar número de registro único
       final allRegistrations = await repository.competitionRegistrationRepository.getAllRegistrations();
       final existingNumbers = allRegistrations
           .where((r) => r.competenceId == competence.id)
@@ -582,7 +631,7 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
         externalId: '${DateTime.now().millisecondsSinceEpoch}',
         registrationNumber: newRegistrationNumber,
         time: Duration.zero, // Sin tiempo aún
-        userDni: _currentUserDni!,
+        userDni: currentUser.dni,
         nTurns: 0, // Sin vueltas completadas aún
         competenceId: competence.id,
       );

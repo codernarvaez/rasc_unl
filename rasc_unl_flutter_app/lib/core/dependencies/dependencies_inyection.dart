@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logger/web.dart';
+import 'package:rasc_unl_flutter_app/app/modules/auth/domain/models/user_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/local_repository.dart';
 import 'package:rasc_unl_flutter_app/app/modules/main_repository.dart';
 import 'package:rasc_unl_flutter_app/app/modules/remote_repository.dart';
@@ -28,6 +29,24 @@ final isOfflineModeProvider = Provider<bool>((ref) {
   final connection = ref.watch(connectionStatusProvider).value;
   return connection == InternetConnectionStatus.disconnected;
 });
+
+// Provider para el usuario actual logueado
+class CurrentUserNotifier extends Notifier<UserModel?> {
+  @override
+  UserModel? build() => null;
+
+  void setUser(UserModel user) {
+    state = user;
+  }
+
+  void clearUser() {
+    state = null;
+  }
+}
+
+final currentUserProvider = NotifierProvider<CurrentUserNotifier, UserModel?>(
+  () => CurrentUserNotifier(),
+);
 
 final rascUNLMainProvider = Provider<MainRepository>((ref) {
   final isOffline = ref.watch(isOfflineModeProvider);

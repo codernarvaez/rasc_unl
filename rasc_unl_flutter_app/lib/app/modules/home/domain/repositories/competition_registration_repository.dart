@@ -10,4 +10,6 @@ abstract class CompetitionRegistrationRepository {
   Future<void> deleteRegistration(int id);
   Future<List<CompetitionRegistrationModel>> getRegistrationsByCompetenceId(int competenceId);
   Future<List<CompetitionRegistrationModel>> getAllRegistrations();
+  Future<CompetitionRegistrationModel?> getRegistrationByUserAndCompetence(String userDni, int competenceId);
+  Future<List<CompetitionRegistrationModel>> getRegistrationsByUserDni(String userDni);
 }

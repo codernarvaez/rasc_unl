@@ -11,7 +11,8 @@ class RascUnlPage extends ConsumerStatefulWidget {
   _RascUnlPageState createState() => _RascUnlPageState();
 }
 
-class _RascUnlPageState extends ConsumerState<RascUnlPage> with SingleTickerProviderStateMixin {
+class _RascUnlPageState extends ConsumerState<RascUnlPage>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -24,9 +25,10 @@ class _RascUnlPageState extends ConsumerState<RascUnlPage> with SingleTickerProv
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
@@ -50,10 +52,7 @@ class _RascUnlPageState extends ConsumerState<RascUnlPage> with SingleTickerProv
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2A2A2A),
-              Color(0xFF1A1A1A),
-            ],
+            colors: [Color(0xFF2A2A2A), Color(0xFF1A1A1A)],
           ),
         ),
         child: SafeArea(
@@ -68,29 +67,40 @@ class _RascUnlPageState extends ConsumerState<RascUnlPage> with SingleTickerProv
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       // Logo/Icono central
-                      Container(
-                        width: 140,
-                        height: 140,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 30,
-                              offset: Offset(0, 10),
+                      Center(
+                        child: Container(
+                          width: 140,
+                          height: 140,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFFD50000), Color(0xFF8B0000)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.lightbulb_outline,
-                          size: 70,
-                          color: Color(0xFF667eea),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0xFFD50000).withOpacity(0.3),
+                                blurRadius: 20,
+                                spreadRadius: 3,
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(0.0),
+                            child: ClipOval(
+                              child: Image.asset(
+                                'assets/images/logo.png',
+                                fit:
+                                    BoxFit.cover, // o contain, depende del logo
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 40),
-                      
+
                       // Título
                       Text(
                         '¡Bienvenido!',
@@ -101,9 +111,9 @@ class _RascUnlPageState extends ConsumerState<RascUnlPage> with SingleTickerProv
                           letterSpacing: 1.2,
                         ),
                       ),
-                      
+
                       const SizedBox(height: 12),
-                      
+
                       // Subtítulo
                       Text(
                         'Comienza tu experiencia',
@@ -113,9 +123,9 @@ class _RascUnlPageState extends ConsumerState<RascUnlPage> with SingleTickerProv
                           letterSpacing: 0.5,
                         ),
                       ),
-                      
+
                       const SizedBox(height: 60),
-                      
+
                       // Botón de Iniciar Sesión
                       _buildPrimaryButton(
                         context,
@@ -124,9 +134,9 @@ class _RascUnlPageState extends ConsumerState<RascUnlPage> with SingleTickerProv
                           context.go('/login');
                         },
                       ),
-                      
+
                       const SizedBox(height: 16),
-                      
+
                       // Botón de Registro
                       _buildSecondaryButton(
                         context,
@@ -135,9 +145,8 @@ class _RascUnlPageState extends ConsumerState<RascUnlPage> with SingleTickerProv
                           context.go('/signup');
                         },
                       ),
-                      
+
                       const SizedBox(height: 40),
-                      
                     ],
                   ),
                 ),
@@ -149,7 +158,11 @@ class _RascUnlPageState extends ConsumerState<RascUnlPage> with SingleTickerProv
     );
   }
 
-  Widget _buildPrimaryButton(BuildContext context, {required String label, required VoidCallback onPressed}) {
+  Widget _buildPrimaryButton(
+    BuildContext context, {
+    required String label,
+    required VoidCallback onPressed,
+  }) {
     return SizedBox(
       width: double.infinity,
       height: 56,
@@ -176,7 +189,11 @@ class _RascUnlPageState extends ConsumerState<RascUnlPage> with SingleTickerProv
     );
   }
 
-  Widget _buildSecondaryButton(BuildContext context, {required String label, required VoidCallback onPressed}) {
+  Widget _buildSecondaryButton(
+    BuildContext context, {
+    required String label,
+    required VoidCallback onPressed,
+  }) {
     return SizedBox(
       width: double.infinity,
       height: 56,

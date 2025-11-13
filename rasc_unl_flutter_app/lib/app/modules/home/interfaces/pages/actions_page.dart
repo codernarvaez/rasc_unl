@@ -114,8 +114,8 @@ class _ActionsPageState extends State<ActionsPage> with SingleTickerProviderStat
                 
                 _buildActionCard(
                   icon: Icons.emoji_events_outlined,
-                  title: 'Mis Marcas en la RASC-UNL',
-                  subtitle: 'Ver mis registros de marcas',
+                  title: 'Mis Records RASC-UNL',
+                  subtitle: 'Ver mis logros y actividades registradas',
                   gradient: [Color(0xFFD50000), Color(0xFF8B0000)],
                   onTap: () {
                     context.go('/my-records');
@@ -130,7 +130,7 @@ class _ActionsPageState extends State<ActionsPage> with SingleTickerProviderStat
                   subtitle: 'Registrarme en nuevas competencias',
                   gradient: [Color(0xFFD50000).withOpacity(0.8), Color(0xFF8B0000).withOpacity(0.8)],
                   onTap: () {
-                    context.go('/competence-details');
+                    context.go('/available-competences');
                   },
                 ),
                 

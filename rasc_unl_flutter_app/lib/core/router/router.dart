@@ -10,7 +10,7 @@ import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/rasc_unl_
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/home_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/actions_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/user/available_competences_page.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/user/competence_details.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/user/components/competence_details_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/user/my_records_page.dart';
 
 enum AppRouterNames {
@@ -113,11 +113,31 @@ class RouterNotifier extends ChangeNotifier {
       builder: (context, state) => MyRecordsPage(),
     ),
     GoRoute(
-      path: '/competence-details',
+      path: '/user/competence-details',
       name: AppRouterNames.competenceDetails.name,
-      builder: (context, state) => CompetenceDetailsPage( 
-        competence: CompetenceData(name: 'Gran Premio 2024', competitionDate: DateTime(2024, 12, 15, 14, 0), nTurns: 10, isActive: true),
-      ),
+      builder: (context, state) {
+        final competenceId = state.extra as int?;
+        if (competenceId == null) {
+          return Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error, size: 64, color: Colors.red),
+                  SizedBox(height: 16),
+                  Text('Error: ID de competencia no proporcionado'),
+                  SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.go('/home'),
+                    child: Text('Volver al inicio'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        return CompetenceDetailsPage(competenceId: competenceId);
+      },
     ),
 
     GoRoute(

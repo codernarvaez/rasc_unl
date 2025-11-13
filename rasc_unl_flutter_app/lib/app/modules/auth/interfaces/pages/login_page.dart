@@ -6,7 +6,8 @@ class LoginPage extends StatefulWidget {
   _LoginPageState createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   bool _obscurePassword = true;
@@ -20,9 +21,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
     _controller.forward();
   }
 
@@ -43,12 +45,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2A2A2A),
-              Color(0xFF1A1A1A),
-            ],
+            colors: [Color(0xFF2A2A2A), Color(0xFF1A1A1A)],
           ),
-          
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -59,7 +57,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   SizedBox(height: 40),
-                  
+
                   // Botón de regreso
                   Align(
                     alignment: Alignment.centerLeft,
@@ -70,17 +68,19 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                       },
                     ),
                   ),
-                  
+
                   SizedBox(height: 20),
-                  
+
                   // Logo
                   Center(
                     child: Container(
-                      width: 100,
-                      height: 100,
+                      width: 110,
+                      height: 110,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [Color(0xFFD50000), Color(0xFF8B0000)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
                         shape: BoxShape.circle,
                         boxShadow: [
@@ -91,16 +91,20 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                           ),
                         ],
                       ),
-                      child: Icon(
-                        Icons.flash_on,
-                        size: 50,
-                        color: Colors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.all(0.0),
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            fit: BoxFit.cover, // o contain, depende del logo
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                  
+
                   SizedBox(height: 40),
-                  
+
                   // Título
                   Text(
                     'Bienvenido de nuevo',
@@ -111,9 +115,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  
+
                   SizedBox(height: 8),
-                  
+
                   Text(
                     'Inicia sesión para continuar',
                     style: TextStyle(
@@ -122,9 +126,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  
+
                   SizedBox(height: 48),
-                  
+
                   // Campo de email
                   _buildTextField(
                     controller: _emailController,
@@ -133,9 +137,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     icon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
                   ),
-                  
+
                   SizedBox(height: 20),
-                  
+
                   // Campo de contraseña
                   _buildTextField(
                     controller: _passwordController,
@@ -146,7 +150,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     obscureText: _obscurePassword,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                        _obscurePassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
                         color: Colors.white.withOpacity(0.5),
                       ),
                       onPressed: () {
@@ -156,9 +162,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                       },
                     ),
                   ),
-                  
+
                   SizedBox(height: 16),
-                  
+
                   // Olvidaste contraseña
                   Align(
                     alignment: Alignment.centerRight,
@@ -174,9 +180,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                       ),
                     ),
                   ),
-                  
+
                   SizedBox(height: 32),
-                  
+
                   // Botón de login
                   Container(
                     height: 56,
@@ -215,9 +221,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                       ),
                     ),
                   ),
-                  
+
                   SizedBox(height: 24),
-                  
+
                   // Divisor
                   // Row(
                   //   children: [
@@ -235,9 +241,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   //     Expanded(child: Divider(color: Colors.white.withOpacity(0.3))),
                   //   ],
                   // ),
-                  
+
                   // SizedBox(height: 24),
-                  
+
                   // // Botones sociales
                   // Row(
                   //   children: [
@@ -258,9 +264,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   //     ),
                   //   ],
                   // ),
-                  
                   SizedBox(height: 32),
-                  
+
                   // Registrarse
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -292,7 +297,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                       ),
                     ],
                   ),
-                  
+
                   SizedBox(height: 24),
                 ],
               ),
@@ -329,10 +334,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.1),
-              width: 1,
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
           ),
           child: TextField(
             controller: controller,
@@ -341,13 +343,14 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             style: TextStyle(color: Colors.white, fontSize: 16),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: TextStyle(
-                color: Colors.white.withOpacity(0.3),
-              ),
+              hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
               prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.5)),
               suffixIcon: suffixIcon,
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
             ),
           ),
         ),
@@ -365,9 +368,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
       child: TextButton(
         onPressed: onPressed,

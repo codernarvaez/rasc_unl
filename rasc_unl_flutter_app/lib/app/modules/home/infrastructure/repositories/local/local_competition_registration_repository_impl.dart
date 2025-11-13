@@ -107,4 +107,40 @@ class LocalCompetitionRegistrationRepositoryImpl implements CompetitionRegistrat
       time: Duration(milliseconds: result.time),
     )).toList();
   }
+
+  @override
+  Future<CompetitionRegistrationModel?> getRegistrationByUserAndCompetence(String userDni, int competenceId) async {
+    final queryResult = await (_localDatabase.select(_localDatabase.competitionRegistrationTable)
+          ..where((tbl) => tbl.userDni.equals(userDni) & tbl.competenceId.equals(competenceId)))
+        .getSingleOrNull();
+    if (queryResult != null) {
+      return CompetitionRegistrationModel(
+        id: queryResult.id,
+        userDni: queryResult.userDni,
+        competenceId: queryResult.competenceId,
+        registrationNumber: queryResult.registrationNumber,
+        externalId: queryResult.externalId,
+        nTurns: queryResult.nTurns,
+        time: Duration(milliseconds: queryResult.time),
+      );
+    }
+    return null;
+  }
+
+  @override
+  Future<List<CompetitionRegistrationModel>> getRegistrationsByUserDni(String userDni) async {
+    final queryResults = await (_localDatabase.select(_localDatabase.competitionRegistrationTable)
+          ..where((tbl) => tbl.userDni.equals(userDni)))
+        .get();
+
+    return queryResults.map((result) => CompetitionRegistrationModel(
+      id: result.id,
+      userDni: result.userDni,
+      competenceId: result.competenceId,
+      registrationNumber: result.registrationNumber,
+      externalId: result.externalId,
+      nTurns: result.nTurns,
+      time: Duration(milliseconds: result.time),
+    )).toList();
+  }
 }

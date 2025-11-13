@@ -42,5 +42,34 @@ class AppLocalDatabase extends _$AppLocalDatabase {
   AppLocalDatabase.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 1;
+
+  @override
+  MigrationStrategy get migration {
+    return MigrationStrategy(
+      onCreate: (Migrator m) async {
+        await m.createAll();
+      },
+      onUpgrade: (Migrator m, int from, int to) async {
+        // Migración de versión 1 a 2
+        if (from < 2) {
+          // Las migraciones automáticas de Drift se encargarán de actualizar el schema
+          // Si hay cambios específicos, puedes agregarlos aquí
+        }
+      },
+      beforeOpen: (details) async {
+        // Habilitar claves foráneas
+        await customStatement('PRAGMA foreign_keys = ON');
+        
+        // Verificar que la migración fue exitosa
+        if (details.hadUpgrade) {
+          logging.i('Base de datos migrada desde ${details.versionBefore} a ${details.versionNow}');
+        }
+        
+        if (details.wasCreated) {
+          logging.i('Base de datos creada por primera vez');
+        }
+      },
+    );
+  }
 }
