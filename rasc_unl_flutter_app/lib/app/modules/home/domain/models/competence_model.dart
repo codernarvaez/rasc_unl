@@ -9,6 +9,7 @@ class CompetenceModel {
   final String externalId;
   final String name;
   final DateTime? competitionDate;
+  final DateTime? competitionLimitForRegistrationDate;
   final int nTurns;
   final bool isActive;
   final String createdBy; // User DNI of the creator
@@ -21,6 +22,7 @@ class CompetenceModel {
     required this.externalId,
     required this.name,
     required this.competitionDate,
+    required this.competitionLimitForRegistrationDate,
     required this.nTurns,
     required this.isActive,
     required this.createdBy,

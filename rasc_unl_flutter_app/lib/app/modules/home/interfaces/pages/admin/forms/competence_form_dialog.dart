@@ -6,11 +6,8 @@ class CompetenceFormDialog extends StatefulWidget {
   final CompetenceModel? competence;
   final Function(CompetenceFormData) onSave;
 
-  const CompetenceFormDialog({
-    Key? key,
-    this.competence,
-    required this.onSave,
-  }) : super(key: key);
+  const CompetenceFormDialog({Key? key, this.competence, required this.onSave})
+    : super(key: key);
 
   @override
   State<CompetenceFormDialog> createState() => _CompetenceFormDialogState();
@@ -20,6 +17,7 @@ class CompetenceFormData {
   final String name;
   final int nTurns;
   final DateTime competitionDate;
+  final DateTime? competitionLimitForRegistrationDate;
   final bool isActive;
   final Map<String, List<double>> startCoordinates;
   final Map<String, List<double>> finishCoordinates;
@@ -28,6 +26,7 @@ class CompetenceFormData {
     required this.name,
     required this.nTurns,
     required this.competitionDate,
+    this.competitionLimitForRegistrationDate,
     required this.isActive,
     required this.startCoordinates,
     required this.finishCoordinates,
@@ -39,6 +38,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
   late TextEditingController _nameController;
   late TextEditingController _turnsController;
   late DateTime _selectedDate;
+  late DateTime? _registrationLimitDate;
   late bool _isActive;
 
   // Start line points
@@ -55,11 +55,15 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.competence?.name ?? '');
+    _nameController = TextEditingController(
+      text: widget.competence?.name ?? '',
+    );
     _turnsController = TextEditingController(
       text: widget.competence?.nTurns.toString() ?? '1',
     );
     _selectedDate = widget.competence?.competitionDate ?? DateTime.now();
+    _registrationLimitDate =
+        widget.competence?.competitionLimitForRegistrationDate;
     _isActive = widget.competence?.isActive ?? true;
 
     // Cargar coordenadas existentes si estamos editando
@@ -70,13 +74,13 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
 
   void _loadExistingCoordinates() {
     final comp = widget.competence!;
-    
+
     // Start coordinates: point_x = [lat1, lat2], point_y = [lon1, lon2]
     if (comp.startCoordinates.containsKey('point_x') &&
         comp.startCoordinates.containsKey('point_y')) {
       final lats = comp.startCoordinates['point_x']!;
       final lons = comp.startCoordinates['point_y']!;
-      
+
       if (lats.length >= 2 && lons.length >= 2) {
         _startPoint1 = Position(
           latitude: lats[0],
@@ -110,7 +114,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
         comp.finishCoordinates.containsKey('point_y')) {
       final lats = comp.finishCoordinates['point_x']!;
       final lons = comp.finishCoordinates['point_y']!;
-      
+
       if (lats.length >= 2 && lons.length >= 2) {
         _finishPoint1 = Position(
           latitude: lats[0],
@@ -140,10 +144,12 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
     }
 
     // Check if coordinates are the same
-    if (_startPoint1 != null && _finishPoint1 != null &&
+    if (_startPoint1 != null &&
+        _finishPoint1 != null &&
         _startPoint1!.latitude == _finishPoint1!.latitude &&
         _startPoint1!.longitude == _finishPoint1!.longitude &&
-        _startPoint2 != null && _finishPoint2 != null &&
+        _startPoint2 != null &&
+        _finishPoint2 != null &&
         _startPoint2!.latitude == _finishPoint2!.latitude &&
         _startPoint2!.longitude == _finishPoint2!.longitude) {
       _useSameFinish = true;
@@ -185,7 +191,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
     setState(() => _isLoading = true);
     try {
       final position = await _getCurrentLocation();
-      
+
       setState(() {
         if (type == 'start') {
           if (pointNumber == 1) {
@@ -193,7 +199,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
           } else {
             _startPoint2 = position;
           }
-          
+
           // Si useSameFinish está activado, copiar automáticamente
           if (_useSameFinish) {
             if (pointNumber == 1) {
@@ -223,10 +229,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -234,14 +237,17 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
     }
   }
 
-  Map<String, List<double>> _buildCoordinateMap(Position? point1, Position? point2) {
+  Map<String, List<double>> _buildCoordinateMap(
+    Position? point1,
+    Position? point2,
+  ) {
     if (point1 == null || point2 == null) {
       return {
         "point_x": [0.0, 0.0],
         "point_y": [0.0, 0.0],
       };
     }
-    
+
     return {
       "point_x": [point1.latitude, point2.latitude],
       "point_y": [point1.longitude, point2.longitude],
@@ -279,6 +285,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
       name: _nameController.text.trim(),
       nTurns: int.parse(_turnsController.text),
       competitionDate: _selectedDate,
+      competitionLimitForRegistrationDate: _registrationLimitDate,
       isActive: _isActive,
       startCoordinates: _buildCoordinateMap(_startPoint1, _startPoint2),
       finishCoordinates: _buildCoordinateMap(_finishPoint1, _finishPoint2),
@@ -311,7 +318,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
           children: [
             // Header
             _buildHeader(isMobile),
-            
+
             // Content
             Expanded(
               child: SingleChildScrollView(
@@ -329,7 +336,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
                 ),
               ),
             ),
-            
+
             // Footer
             _buildFooter(isMobile),
           ],
@@ -358,7 +365,9 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
           SizedBox(width: 12),
           Expanded(
             child: Text(
-              widget.competence == null ? 'Nueva Competencia' : 'Editar Competencia',
+              widget.competence == null
+                  ? 'Nueva Competencia'
+                  : 'Editar Competencia',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: isMobile ? 18 : 22,
@@ -388,7 +397,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
           ),
         ),
         SizedBox(height: 16),
-        
+
         // Nombre
         _buildTextField(
           controller: _nameController,
@@ -423,7 +432,6 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
                     },
                   ),
                   SizedBox(height: 16),
-                  _buildDatePicker(),
                 ],
               )
             : Row(
@@ -438,7 +446,8 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
                         if (value == null || value.isEmpty) {
                           return 'Ingrese el número';
                         }
-                        if (int.tryParse(value) == null || int.parse(value) < 1) {
+                        if (int.tryParse(value) == null ||
+                            int.parse(value) < 1) {
                           return 'Debe ser mayor a 0';
                         }
                         return null;
@@ -449,6 +458,30 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
                   Expanded(child: _buildDatePicker()),
                 ],
               ),
+        SizedBox(height: 8),
+
+        // Fecha límite de registro
+        Text(
+          'Fecha de la competencia',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 8),
+        _buildDatePicker(),
+        SizedBox(height: 8),
+        Text(
+          'Fecha Límite de Registro',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 8),
+        _buildRegistrationLimitDatePicker(),
         SizedBox(height: 16),
 
         // Estado activo
@@ -458,7 +491,9 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
             style: TextStyle(color: Colors.white, fontSize: 14),
           ),
           subtitle: Text(
-            _isActive ? 'Los usuarios pueden inscribirse' : 'No visible para inscripciones',
+            _isActive
+                ? 'Los usuarios pueden inscribirse'
+                : 'No visible para inscripciones',
             style: TextStyle(color: Colors.white70, fontSize: 12),
           ),
           value: _isActive,
@@ -477,7 +512,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
       children: [
         Divider(color: Colors.white.withOpacity(0.2)),
         SizedBox(height: 16),
-        
+
         Row(
           children: [
             Icon(Icons.map, color: Color(0xFFD50000), size: 20),
@@ -495,10 +530,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
         SizedBox(height: 8),
         Text(
           'Capture 2 puntos para trazar cada línea (inicio y meta)',
-          style: TextStyle(
-            color: Colors.white70,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: Colors.white70, fontSize: 12),
         ),
         SizedBox(height: 16),
 
@@ -596,7 +628,10 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
         children: [
           Row(
             children: [
-              Icon(icon, color: (hasPoint1 && hasPoint2) ? color : Colors.white70),
+              Icon(
+                icon,
+                color: (hasPoint1 && hasPoint2) ? color : Colors.white70,
+              ),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -683,7 +718,9 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
               SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  position != null ? 'Punto $pointNumber capturado' : 'Punto $pointNumber',
+                  position != null
+                      ? 'Punto $pointNumber capturado'
+                      : 'Punto $pointNumber',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: isMobile ? 12 : 14,
@@ -771,7 +808,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
             );
           },
         );
-        
+
         if (date != null) {
           // Luego seleccionar hora
           if (mounted) {
@@ -790,7 +827,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
                 );
               },
             );
-            
+
             if (time != null) {
               setState(() {
                 _selectedDate = DateTime(
@@ -846,10 +883,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
                       SizedBox(width: 4),
                       Text(
                         '${_selectedDate.hour.toString().padLeft(2, '0')}:${_selectedDate.minute.toString().padLeft(2, '0')}',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
                       ),
                     ],
                   ),
@@ -857,6 +891,153 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
               ),
             ),
             Icon(Icons.edit, color: Colors.white70, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRegistrationLimitDatePicker() {
+    return InkWell(
+      onTap: () async {
+        // Calcular fecha inicial: si no hay límite, usar 1 día antes de la competencia
+        // pero no menor a hoy
+        final now = DateTime.now();
+        final defaultDate = _selectedDate.subtract(Duration(days: 1));
+        final initialDate =
+            _registrationLimitDate ??
+            (defaultDate.isBefore(now) ? now : defaultDate);
+
+        // Primero seleccionar fecha
+        final date = await showDatePicker(
+          context: context,
+          initialDate: initialDate,
+          firstDate: now,
+          lastDate: _selectedDate,
+          builder: (context, child) {
+            return Theme(
+              data: ThemeData.dark().copyWith(
+                colorScheme: ColorScheme.dark(
+                  primary: Color(0xFFD50000),
+                  surface: Color(0xFF2A2A2A),
+                ),
+              ),
+              child: child!,
+            );
+          },
+        );
+
+        if (date != null) {
+          // Luego seleccionar hora
+          if (mounted) {
+            final time = await showTimePicker(
+              context: context,
+              initialTime: _registrationLimitDate != null
+                  ? TimeOfDay.fromDateTime(_registrationLimitDate!)
+                  : TimeOfDay.now(),
+              builder: (context, child) {
+                return Theme(
+                  data: ThemeData.dark().copyWith(
+                    colorScheme: ColorScheme.dark(
+                      primary: Color(0xFFD50000),
+                      surface: Color(0xFF2A2A2A),
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
+            );
+
+            if (time != null) {
+              setState(() {
+                _registrationLimitDate = DateTime(
+                  date.year,
+                  date.month,
+                  date.day,
+                  time.hour,
+                  time.minute,
+                );
+              });
+            }
+          }
+        }
+      },
+      child: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: _registrationLimitDate != null
+                ? Colors.orange.withOpacity(0.5)
+                : Colors.white.withOpacity(0.2),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              _registrationLimitDate != null
+                  ? Icons.event_available
+                  : Icons.event_busy,
+              color: _registrationLimitDate != null
+                  ? Colors.orange
+                  : Colors.white70,
+              size: 20,
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _registrationLimitDate != null
+                        ? '${_registrationLimitDate!.day.toString().padLeft(2, '0')}/${_registrationLimitDate!.month.toString().padLeft(2, '0')}/${_registrationLimitDate!.year}'
+                        : 'Sin límite de registro',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  _registrationLimitDate != null
+                      ? Row(
+                          children: [
+                            Icon(
+                              Icons.access_time,
+                              color: Colors.white70,
+                              size: 14,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              '${_registrationLimitDate!.hour.toString().padLeft(2, '0')}:${_registrationLimitDate!.minute.toString().padLeft(2, '0')}',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Text(
+                          'Toca para establecer fecha límite',
+                          style: TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
+                ],
+              ),
+            ),
+            if (_registrationLimitDate != null)
+              IconButton(
+                icon: Icon(Icons.clear, color: Colors.red, size: 18),
+                onPressed: () {
+                  setState(() {
+                    _registrationLimitDate = null;
+                  });
+                },
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(),
+              )
+            else
+              Icon(Icons.edit, color: Colors.white70, size: 18),
           ],
         ),
       ),

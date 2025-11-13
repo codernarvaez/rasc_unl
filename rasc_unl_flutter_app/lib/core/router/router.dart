@@ -9,7 +9,7 @@ import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/man
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/rasc_unl_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/home_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/actions_page.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/user/aviable_competences.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/user/available_competences_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/user/competence_details.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/user/my_records_page.dart';
 

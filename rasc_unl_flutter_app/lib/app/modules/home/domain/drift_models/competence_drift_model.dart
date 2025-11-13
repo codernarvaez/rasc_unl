@@ -7,6 +7,7 @@ class CompetenceTable extends Table {
   TextColumn get externalId => text()();
   TextColumn get name => text()();
   DateTimeColumn get competitionDate => dateTime().nullable()();
+  DateTimeColumn get competitionLimitForRegistrationDate => dateTime().nullable()();
   IntColumn get nTurns => integer().withDefault(const Constant(0))();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   TextColumn get createdBy => text()();

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/init_home_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/user/init_run_clock.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/setting_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/actions_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/widgets/buttonNavigatorBar.dart';
@@ -21,7 +21,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> _pages = [
-      const InitHomePage(),
+      const InitRunClock(),
       const ActionsPage(),
       const SettingsPage(),
     ];

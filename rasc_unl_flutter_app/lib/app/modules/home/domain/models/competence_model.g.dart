@@ -14,6 +14,12 @@ CompetenceModel _$CompetenceModelFromJson(Map<String, dynamic> json) =>
       competitionDate: json['competition_date'] == null
           ? null
           : DateTime.parse(json['competition_date'] as String),
+      competitionLimitForRegistrationDate:
+          json['competition_limit_for_registration_date'] == null
+          ? null
+          : DateTime.parse(
+              json['competition_limit_for_registration_date'] as String,
+            ),
       nTurns: (json['n_turns'] as num).toInt(),
       isActive: json['is_active'] as bool,
       createdBy: json['created_by'] as String,
@@ -47,6 +53,9 @@ Map<String, dynamic> _$CompetenceModelToJson(CompetenceModel instance) =>
       'external_id': instance.externalId,
       'name': instance.name,
       'competition_date': instance.competitionDate?.toIso8601String(),
+      'competition_limit_for_registration_date': instance
+          .competitionLimitForRegistrationDate
+          ?.toIso8601String(),
       'n_turns': instance.nTurns,
       'is_active': instance.isActive,
       'created_by': instance.createdBy,

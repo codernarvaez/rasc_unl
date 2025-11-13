@@ -2,14 +2,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
-class InitHomePage extends StatefulWidget {
-  const InitHomePage({super.key});
+class InitRunClock extends StatefulWidget {
+  const InitRunClock({super.key});
 
   @override
-  State<InitHomePage> createState() => _InitHomePageState();
+  State<InitRunClock> createState() => _InitRunClockState();
 }
 
-class _InitHomePageState extends State<InitHomePage> with TickerProviderStateMixin {
+class _InitRunClockState extends State<InitRunClock> with TickerProviderStateMixin {
   Timer? _timer;
   int _elapsedMilliseconds = 0;
   DateTime? _startTime; // Esta viene de la configuración

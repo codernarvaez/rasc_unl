@@ -541,6 +541,17 @@ class $CompetenceTableTable extends CompetenceTable
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _competitionLimitForRegistrationDateMeta =
+      const VerificationMeta('competitionLimitForRegistrationDate');
+  @override
+  late final GeneratedColumn<DateTime> competitionLimitForRegistrationDate =
+      GeneratedColumn<DateTime>(
+        'competition_limit_for_registration_date',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _nTurnsMeta = const VerificationMeta('nTurns');
   @override
   late final GeneratedColumn<int> nTurns = GeneratedColumn<int>(
@@ -607,6 +618,7 @@ class $CompetenceTableTable extends CompetenceTable
     externalId,
     name,
     competitionDate,
+    competitionLimitForRegistrationDate,
     nTurns,
     isActive,
     createdBy,
@@ -650,6 +662,15 @@ class $CompetenceTableTable extends CompetenceTable
         competitionDate.isAcceptableOrUnknown(
           data['competition_date']!,
           _competitionDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('competition_limit_for_registration_date')) {
+      context.handle(
+        _competitionLimitForRegistrationDateMeta,
+        competitionLimitForRegistrationDate.isAcceptableOrUnknown(
+          data['competition_limit_for_registration_date']!,
+          _competitionLimitForRegistrationDateMeta,
         ),
       );
     }
@@ -698,6 +719,10 @@ class $CompetenceTableTable extends CompetenceTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}competition_date'],
       ),
+      competitionLimitForRegistrationDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}competition_limit_for_registration_date'],
+      ),
       nTurns: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}n_turns'],
@@ -744,6 +769,7 @@ class competence_drift_model extends DataClass
   final String externalId;
   final String name;
   final DateTime? competitionDate;
+  final DateTime? competitionLimitForRegistrationDate;
   final int nTurns;
   final bool isActive;
   final String createdBy;
@@ -754,6 +780,7 @@ class competence_drift_model extends DataClass
     required this.externalId,
     required this.name,
     this.competitionDate,
+    this.competitionLimitForRegistrationDate,
     required this.nTurns,
     required this.isActive,
     required this.createdBy,
@@ -768,6 +795,11 @@ class competence_drift_model extends DataClass
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || competitionDate != null) {
       map['competition_date'] = Variable<DateTime>(competitionDate);
+    }
+    if (!nullToAbsent || competitionLimitForRegistrationDate != null) {
+      map['competition_limit_for_registration_date'] = Variable<DateTime>(
+        competitionLimitForRegistrationDate,
+      );
     }
     map['n_turns'] = Variable<int>(nTurns);
     map['is_active'] = Variable<bool>(isActive);
@@ -797,6 +829,10 @@ class competence_drift_model extends DataClass
       competitionDate: competitionDate == null && nullToAbsent
           ? const Value.absent()
           : Value(competitionDate),
+      competitionLimitForRegistrationDate:
+          competitionLimitForRegistrationDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(competitionLimitForRegistrationDate),
       nTurns: Value(nTurns),
       isActive: Value(isActive),
       createdBy: Value(createdBy),
@@ -815,6 +851,9 @@ class competence_drift_model extends DataClass
       externalId: serializer.fromJson<String>(json['externalId']),
       name: serializer.fromJson<String>(json['name']),
       competitionDate: serializer.fromJson<DateTime?>(json['competitionDate']),
+      competitionLimitForRegistrationDate: serializer.fromJson<DateTime?>(
+        json['competitionLimitForRegistrationDate'],
+      ),
       nTurns: serializer.fromJson<int>(json['nTurns']),
       isActive: serializer.fromJson<bool>(json['isActive']),
       createdBy: serializer.fromJson<String>(json['createdBy']),
@@ -834,6 +873,9 @@ class competence_drift_model extends DataClass
       'externalId': serializer.toJson<String>(externalId),
       'name': serializer.toJson<String>(name),
       'competitionDate': serializer.toJson<DateTime?>(competitionDate),
+      'competitionLimitForRegistrationDate': serializer.toJson<DateTime?>(
+        competitionLimitForRegistrationDate,
+      ),
       'nTurns': serializer.toJson<int>(nTurns),
       'isActive': serializer.toJson<bool>(isActive),
       'createdBy': serializer.toJson<String>(createdBy),
@@ -851,6 +893,7 @@ class competence_drift_model extends DataClass
     String? externalId,
     String? name,
     Value<DateTime?> competitionDate = const Value.absent(),
+    Value<DateTime?> competitionLimitForRegistrationDate = const Value.absent(),
     int? nTurns,
     bool? isActive,
     String? createdBy,
@@ -863,6 +906,10 @@ class competence_drift_model extends DataClass
     competitionDate: competitionDate.present
         ? competitionDate.value
         : this.competitionDate,
+    competitionLimitForRegistrationDate:
+        competitionLimitForRegistrationDate.present
+        ? competitionLimitForRegistrationDate.value
+        : this.competitionLimitForRegistrationDate,
     nTurns: nTurns ?? this.nTurns,
     isActive: isActive ?? this.isActive,
     createdBy: createdBy ?? this.createdBy,
@@ -879,6 +926,10 @@ class competence_drift_model extends DataClass
       competitionDate: data.competitionDate.present
           ? data.competitionDate.value
           : this.competitionDate,
+      competitionLimitForRegistrationDate:
+          data.competitionLimitForRegistrationDate.present
+          ? data.competitionLimitForRegistrationDate.value
+          : this.competitionLimitForRegistrationDate,
       nTurns: data.nTurns.present ? data.nTurns.value : this.nTurns,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
       createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
@@ -898,6 +949,9 @@ class competence_drift_model extends DataClass
           ..write('externalId: $externalId, ')
           ..write('name: $name, ')
           ..write('competitionDate: $competitionDate, ')
+          ..write(
+            'competitionLimitForRegistrationDate: $competitionLimitForRegistrationDate, ',
+          )
           ..write('nTurns: $nTurns, ')
           ..write('isActive: $isActive, ')
           ..write('createdBy: $createdBy, ')
@@ -913,6 +967,7 @@ class competence_drift_model extends DataClass
     externalId,
     name,
     competitionDate,
+    competitionLimitForRegistrationDate,
     nTurns,
     isActive,
     createdBy,
@@ -927,6 +982,8 @@ class competence_drift_model extends DataClass
           other.externalId == this.externalId &&
           other.name == this.name &&
           other.competitionDate == this.competitionDate &&
+          other.competitionLimitForRegistrationDate ==
+              this.competitionLimitForRegistrationDate &&
           other.nTurns == this.nTurns &&
           other.isActive == this.isActive &&
           other.createdBy == this.createdBy &&
@@ -939,6 +996,7 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
   final Value<String> externalId;
   final Value<String> name;
   final Value<DateTime?> competitionDate;
+  final Value<DateTime?> competitionLimitForRegistrationDate;
   final Value<int> nTurns;
   final Value<bool> isActive;
   final Value<String> createdBy;
@@ -949,6 +1007,7 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     this.externalId = const Value.absent(),
     this.name = const Value.absent(),
     this.competitionDate = const Value.absent(),
+    this.competitionLimitForRegistrationDate = const Value.absent(),
     this.nTurns = const Value.absent(),
     this.isActive = const Value.absent(),
     this.createdBy = const Value.absent(),
@@ -960,6 +1019,7 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     required String externalId,
     required String name,
     this.competitionDate = const Value.absent(),
+    this.competitionLimitForRegistrationDate = const Value.absent(),
     this.nTurns = const Value.absent(),
     this.isActive = const Value.absent(),
     required String createdBy,
@@ -975,6 +1035,7 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     Expression<String>? externalId,
     Expression<String>? name,
     Expression<DateTime>? competitionDate,
+    Expression<DateTime>? competitionLimitForRegistrationDate,
     Expression<int>? nTurns,
     Expression<bool>? isActive,
     Expression<String>? createdBy,
@@ -986,6 +1047,9 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
       if (externalId != null) 'external_id': externalId,
       if (name != null) 'name': name,
       if (competitionDate != null) 'competition_date': competitionDate,
+      if (competitionLimitForRegistrationDate != null)
+        'competition_limit_for_registration_date':
+            competitionLimitForRegistrationDate,
       if (nTurns != null) 'n_turns': nTurns,
       if (isActive != null) 'is_active': isActive,
       if (createdBy != null) 'created_by': createdBy,
@@ -999,6 +1063,7 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     Value<String>? externalId,
     Value<String>? name,
     Value<DateTime?>? competitionDate,
+    Value<DateTime?>? competitionLimitForRegistrationDate,
     Value<int>? nTurns,
     Value<bool>? isActive,
     Value<String>? createdBy,
@@ -1010,6 +1075,9 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
       externalId: externalId ?? this.externalId,
       name: name ?? this.name,
       competitionDate: competitionDate ?? this.competitionDate,
+      competitionLimitForRegistrationDate:
+          competitionLimitForRegistrationDate ??
+          this.competitionLimitForRegistrationDate,
       nTurns: nTurns ?? this.nTurns,
       isActive: isActive ?? this.isActive,
       createdBy: createdBy ?? this.createdBy,
@@ -1032,6 +1100,11 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     }
     if (competitionDate.present) {
       map['competition_date'] = Variable<DateTime>(competitionDate.value);
+    }
+    if (competitionLimitForRegistrationDate.present) {
+      map['competition_limit_for_registration_date'] = Variable<DateTime>(
+        competitionLimitForRegistrationDate.value,
+      );
     }
     if (nTurns.present) {
       map['n_turns'] = Variable<int>(nTurns.value);
@@ -1066,6 +1139,9 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
           ..write('externalId: $externalId, ')
           ..write('name: $name, ')
           ..write('competitionDate: $competitionDate, ')
+          ..write(
+            'competitionLimitForRegistrationDate: $competitionLimitForRegistrationDate, ',
+          )
           ..write('nTurns: $nTurns, ')
           ..write('isActive: $isActive, ')
           ..write('createdBy: $createdBy, ')
@@ -1825,6 +1901,7 @@ typedef $$CompetenceTableTableCreateCompanionBuilder =
       required String externalId,
       required String name,
       Value<DateTime?> competitionDate,
+      Value<DateTime?> competitionLimitForRegistrationDate,
       Value<int> nTurns,
       Value<bool> isActive,
       required String createdBy,
@@ -1837,6 +1914,7 @@ typedef $$CompetenceTableTableUpdateCompanionBuilder =
       Value<String> externalId,
       Value<String> name,
       Value<DateTime?> competitionDate,
+      Value<DateTime?> competitionLimitForRegistrationDate,
       Value<int> nTurns,
       Value<bool> isActive,
       Value<String> createdBy,
@@ -1872,6 +1950,12 @@ class $$CompetenceTableTableFilterComposer
     column: $table.competitionDate,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get competitionLimitForRegistrationDate =>
+      $composableBuilder(
+        column: $table.competitionLimitForRegistrationDate,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<int> get nTurns => $composableBuilder(
     column: $table.nTurns,
@@ -1938,6 +2022,12 @@ class $$CompetenceTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get competitionLimitForRegistrationDate =>
+      $composableBuilder(
+        column: $table.competitionLimitForRegistrationDate,
+        builder: (column) => ColumnOrderings(column),
+      );
+
   ColumnOrderings<int> get nTurns => $composableBuilder(
     column: $table.nTurns,
     builder: (column) => ColumnOrderings(column),
@@ -1988,6 +2078,12 @@ class $$CompetenceTableTableAnnotationComposer
     column: $table.competitionDate,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get competitionLimitForRegistrationDate =>
+      $composableBuilder(
+        column: $table.competitionLimitForRegistrationDate,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<int> get nTurns =>
       $composableBuilder(column: $table.nTurns, builder: (column) => column);
@@ -2052,6 +2148,8 @@ class $$CompetenceTableTableTableManager
                 Value<String> externalId = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<DateTime?> competitionDate = const Value.absent(),
+                Value<DateTime?> competitionLimitForRegistrationDate =
+                    const Value.absent(),
                 Value<int> nTurns = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<String> createdBy = const Value.absent(),
@@ -2064,6 +2162,8 @@ class $$CompetenceTableTableTableManager
                 externalId: externalId,
                 name: name,
                 competitionDate: competitionDate,
+                competitionLimitForRegistrationDate:
+                    competitionLimitForRegistrationDate,
                 nTurns: nTurns,
                 isActive: isActive,
                 createdBy: createdBy,
@@ -2076,6 +2176,8 @@ class $$CompetenceTableTableTableManager
                 required String externalId,
                 required String name,
                 Value<DateTime?> competitionDate = const Value.absent(),
+                Value<DateTime?> competitionLimitForRegistrationDate =
+                    const Value.absent(),
                 Value<int> nTurns = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 required String createdBy,
@@ -2086,6 +2188,8 @@ class $$CompetenceTableTableTableManager
                 externalId: externalId,
                 name: name,
                 competitionDate: competitionDate,
+                competitionLimitForRegistrationDate:
+                    competitionLimitForRegistrationDate,
                 nTurns: nTurns,
                 isActive: isActive,
                 createdBy: createdBy,
