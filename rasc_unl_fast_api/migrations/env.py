@@ -14,7 +14,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from app.core.config.enviroment import _SETTINGS
 from app.core.db.database import Base
+# Importar todos los modelos para que Alembic los detecte
 # from app.modules.auth.domain.models import AuthUserModel
+from app.modules.competencias.domain.models import CompetenceModel, CompetitionRegistrationModel
 
 
 # this is the Alembic Config object, which provides
