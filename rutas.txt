@@ -1,0 +1,957 @@
+API Dalios (1.0.0)
+Download OpenAPI specification:Download
+
+Equipo de Desarrollo Dalios: dalios.solutions@gmail.com
+URL: https://dalios.solutions/
+La API Dalios
+
+Authentication V1
+Register
+Register a new user.
+
+Request Body schema: application/json
+required
+email
+required
+string <email> (Email)
+first_name
+required
+string (First Name) [ 1 .. 100 ] characters
+last_name
+required
+string (Last Name) [ 1 .. 100 ] characters
+dni
+required
+string (Dni) [ 10 .. 13 ] characters
+password
+required
+string (Password) [ 8 .. 100 ] characters
+Responses
+201 Successful Response
+422 Validation Error
+
+post
+/api/v1/auth/register
+Request samples
+Payload
+Content type
+application/json
+
+Copy
+{
+"email": "user@example.com",
+"first_name": "string",
+"last_name": "string",
+"dni": "stringstri",
+"password": "stringst"
+}
+Response samples
+201422
+Content type
+application/json
+
+Copy
+{
+"id": 0,
+"email": "user@example.com",
+"first_name": "string",
+"last_name": "string",
+"dni": "string",
+"date_of_birth": "2019-08-24",
+"role": "string",
+"is_active": true,
+"created_at": "2019-08-24T14:15:22Z",
+"updated_at": "2019-08-24T14:15:22Z"
+}
+Login
+Login user and return access and refresh tokens.
+
+OAuth2 compatible endpoint - uses 'username' field for email.
+
+Request Body schema: application/x-www-form-urlencoded
+required
+grant_type	
+Grant Type (string) or Grant Type (null) (Grant Type)
+username
+required
+string (Username)
+password
+required
+string <password> (Password)
+scope	
+string (Scope)
+Default: ""
+client_id	
+Client Id (string) or Client Id (null) (Client Id)
+client_secret	
+Client Secret (string) or Client Secret (null) <password> (Client Secret)
+Responses
+200 Successful Response
+422 Validation Error
+
+post
+/api/v1/auth/login
+Response samples
+200422
+Content type
+application/json
+
+Copy
+{
+"access_token": "string",
+"refresh_token": "string",
+"token_type": "bearer"
+}
+Refresh Token
+Refresh access token using refresh token.
+
+Request Body schema: application/json
+required
+refresh_token
+required
+string (Refresh Token)
+Responses
+200 Successful Response
+422 Validation Error
+
+post
+/api/v1/auth/refresh
+Request samples
+Payload
+Content type
+application/json
+
+Copy
+{
+"refresh_token": "string"
+}
+Response samples
+200422
+Content type
+application/json
+
+Copy
+{
+"access_token": "string",
+"refresh_token": "string",
+"token_type": "bearer"
+}
+Logout
+Logout user by revoking tokens.
+
+Authorizations:
+OAuth2PasswordBearer
+Request Body schema: application/json
+required
+refresh_token
+required
+string (Refresh Token)
+Responses
+200 Successful Response
+422 Validation Error
+
+post
+/api/v1/auth/logout
+Request samples
+Payload
+Content type
+application/json
+
+Copy
+{
+"refresh_token": "string"
+}
+Response samples
+200422
+Content type
+application/json
+
+Copy
+{
+"message": "string"
+}
+Get Current User Info
+Get current authenticated user information.
+
+Authorizations:
+OAuth2PasswordBearer
+Responses
+200 Successful Response
+
+get
+/api/v1/auth/me
+Response samples
+200
+Content type
+application/json
+
+Copy
+{
+"id": 0,
+"email": "user@example.com",
+"first_name": "string",
+"last_name": "string",
+"dni": "string",
+"date_of_birth": "2019-08-24",
+"role": "string",
+"is_active": true,
+"created_at": "2019-08-24T14:15:22Z",
+"updated_at": "2019-08-24T14:15:22Z"
+}
+Update Current User
+Update current user information (users can only update their own basic data).
+
+Authorizations:
+OAuth2PasswordBearer
+Request Body schema: application/json
+required
+first_name	
+First Name (string) or First Name (null) (First Name)
+last_name	
+Last Name (string) or Last Name (null) (Last Name)
+date_of_birth	
+Date Of Birth (string) or Date Of Birth (null) (Date Of Birth)
+Fecha de nacimiento (YYYY-MM-DD)
+
+Responses
+200 Successful Response
+422 Validation Error
+
+put
+/api/v1/auth/me
+Request samples
+Payload
+Content type
+application/json
+
+Copy
+{
+"first_name": "string",
+"last_name": "string",
+"date_of_birth": "2019-08-24"
+}
+Response samples
+200422
+Content type
+application/json
+
+Copy
+{
+"id": 0,
+"email": "user@example.com",
+"first_name": "string",
+"last_name": "string",
+"dni": "string",
+"date_of_birth": "2019-08-24",
+"role": "string",
+"is_active": true,
+"created_at": "2019-08-24T14:15:22Z",
+"updated_at": "2019-08-24T14:15:22Z"
+}
+Update Current User Password
+Update current user password.
+
+Authorizations:
+OAuth2PasswordBearer
+Request Body schema: application/json
+required
+current_password
+required
+string (Current Password) [ 8 .. 100 ] characters
+new_password
+required
+string (New Password) [ 8 .. 100 ] characters
+Responses
+200 Successful Response
+422 Validation Error
+
+put
+/api/v1/auth/me/password
+Request samples
+Payload
+Content type
+application/json
+
+Copy
+{
+"current_password": "stringst",
+"new_password": "stringst"
+}
+Response samples
+200422
+Content type
+application/json
+
+Copy
+{
+"message": "string"
+}
+Get Users
+Get all users (admin only).
+
+Authorizations:
+OAuth2PasswordBearer
+query Parameters
+skip	
+integer (Skip)
+Default: 0
+limit	
+integer (Limit)
+Default: 100
+role	
+string (RoleEnum)
+Enum: "ADMINISTRATOR" "COMPETITOR"
+is_active	
+Is Active (boolean) or Is Active (null) (Is Active)
+search	
+Search (string) or Search (null) (Search)
+Responses
+200 Successful Response
+422 Validation Error
+
+get
+/api/v1/auth/users
+Response samples
+200422
+Content type
+application/json
+
+Copy
+Expand allCollapse all
+[
+{
+"id": 0,
+"email": "user@example.com",
+"first_name": "string",
+"last_name": "string",
+"dni": "string",
+"date_of_birth": "2019-08-24",
+"role": "string",
+"is_active": true,
+"created_at": "2019-08-24T14:15:22Z",
+"updated_at": "2019-08-24T14:15:22Z"
+}
+]
+Get User
+Get user by ID (admin only).
+
+Authorizations:
+OAuth2PasswordBearer
+path Parameters
+user_id
+required
+integer (User Id)
+Responses
+200 Successful Response
+422 Validation Error
+
+get
+/api/v1/auth/users/{user_id}
+Response samples
+200422
+Content type
+application/json
+
+Copy
+{
+"id": 0,
+"email": "user@example.com",
+"first_name": "string",
+"last_name": "string",
+"dni": "string",
+"date_of_birth": "2019-08-24",
+"role": "string",
+"is_active": true,
+"created_at": "2019-08-24T14:15:22Z",
+"updated_at": "2019-08-24T14:15:22Z"
+}
+Update User
+Update user by ID (admin only - can update all fields including role and is_active).
+
+Authorizations:
+OAuth2PasswordBearer
+path Parameters
+user_id
+required
+integer (User Id)
+Request Body schema: application/json
+required
+first_name	
+First Name (string) or First Name (null) (First Name)
+last_name	
+Last Name (string) or Last Name (null) (Last Name)
+date_of_birth	
+Date Of Birth (string) or Date Of Birth (null) (Date Of Birth)
+Fecha de nacimiento (YYYY-MM-DD)
+
+role	
+RoleEnum (string) or null
+is_active	
+Is Active (boolean) or Is Active (null) (Is Active)
+Responses
+200 Successful Response
+422 Validation Error
+
+put
+/api/v1/auth/users/{user_id}
+Request samples
+Payload
+Content type
+application/json
+
+Copy
+{
+"first_name": "string",
+"last_name": "string",
+"date_of_birth": "2019-08-24",
+"role": "ADMINISTRATOR",
+"is_active": true
+}
+Response samples
+200422
+Content type
+application/json
+
+Copy
+{
+"id": 0,
+"email": "user@example.com",
+"first_name": "string",
+"last_name": "string",
+"dni": "string",
+"date_of_birth": "2019-08-24",
+"role": "string",
+"is_active": true,
+"created_at": "2019-08-24T14:15:22Z",
+"updated_at": "2019-08-24T14:15:22Z"
+}
+Delete User
+Delete user by ID (admin only).
+
+Authorizations:
+OAuth2PasswordBearer
+path Parameters
+user_id
+required
+integer (User Id)
+Responses
+200 Successful Response
+422 Validation Error
+
+delete
+/api/v1/auth/users/{user_id}
+Response samples
+200422
+Content type
+application/json
+
+Copy
+{
+"message": "string"
+}
+Deactivate User
+Deactivate user (admin only).
+
+Authorizations:
+OAuth2PasswordBearer
+path Parameters
+user_id
+required
+integer (User Id)
+Responses
+200 Successful Response
+422 Validation Error
+
+put
+/api/v1/auth/users/{user_id}/deactivate
+Response samples
+200422
+Content type
+application/json
+
+Copy
+{
+"id": 0,
+"email": "user@example.com",
+"first_name": "string",
+"last_name": "string",
+"dni": "string",
+"date_of_birth": "2019-08-24",
+"role": "string",
+"is_active": true,
+"created_at": "2019-08-24T14:15:22Z",
+"updated_at": "2019-08-24T14:15:22Z"
+}
+Activate User
+Activate user (admin only).
+
+Authorizations:
+OAuth2PasswordBearer
+path Parameters
+user_id
+required
+integer (User Id)
+Responses
+200 Successful Response
+422 Validation Error
+
+put
+/api/v1/auth/users/{user_id}/activate
+Response samples
+200422
+Content type
+application/json
+
+Copy
+{
+"id": 0,
+"email": "user@example.com",
+"first_name": "string",
+"last_name": "string",
+"dni": "string",
+"date_of_birth": "2019-08-24",
+"role": "string",
+"is_active": true,
+"created_at": "2019-08-24T14:15:22Z",
+"updated_at": "2019-08-24T14:15:22Z"
+}
+Competencias V1
+Create a new competence
+Creates a new competence in the system
+
+Request Body schema: application/json
+required
+name
+required
+string (Name) [ 1 .. 255 ] characters
+Nombre de la competencia
+
+competition_date
+required
+string <date> (Competition Date)
+Fecha de la competencia
+
+created_by
+required
+string (Created By) [ 1 .. 50 ] characters
+DNI del creador
+
+external_id	
+External Id (string) or External Id (null) (External Id)
+ID externo único
+
+competition_limit_for_registration_date	
+Competition Limit For Registration Date (string) or Competition Limit For Registration Date (null) (Competition Limit For Registration Date)
+Fecha límite de registro
+
+n_turns	
+N Turns (integer) or N Turns (null) (N Turns)
+Número de vueltas
+
+is_active	
+boolean (Is Active)
+Default: true
+Estado activo/inactivo
+
+start_coordinates	
+Start Coordinates (object) or Start Coordinates (null) (Start Coordinates)
+Coordenadas de inicio
+
+finish_coordinates	
+Finish Coordinates (object) or Finish Coordinates (null) (Finish Coordinates)
+Coordenadas de fin
+
+Responses
+201 Successful Response
+422 Validation Error
+
+post
+/api/v1/competencias/
+Request samples
+Payload
+Content type
+application/json
+
+Copy
+Expand allCollapse all
+{
+"name": "string",
+"competition_date": "2019-08-24",
+"created_by": "string",
+"external_id": "string",
+"competition_limit_for_registration_date": "2019-08-24",
+"n_turns": 0,
+"is_active": true,
+"start_coordinates": { },
+"finish_coordinates": { }
+}
+Response samples
+201422
+Content type
+application/json
+
+Copy
+Expand allCollapse all
+{
+"name": "string",
+"competition_date": "2019-08-24",
+"created_by": "string",
+"external_id": "string",
+"competition_limit_for_registration_date": "2019-08-24",
+"n_turns": 0,
+"is_active": true,
+"start_coordinates": { },
+"finish_coordinates": { },
+"id": 0,
+"created_at": "2019-08-24T14:15:22Z",
+"updated_at": "2019-08-24T14:15:22Z"
+}
+Get all competences
+Gets a paginated list of competences with optional filters
+
+query Parameters
+skip	
+integer (Skip) >= 0
+Default: 0
+Number of records to skip
+
+limit	
+integer (Limit) [ 1 .. 1000 ]
+Default: 100
+Maximum number of records to return
+
+is_active	
+Is Active (boolean) or Is Active (null) (Is Active)
+Filter by active/inactive status
+
+Responses
+200 Successful Response
+422 Validation Error
+
+get
+/api/v1/competencias/
+Response samples
+200422
+Content type
+application/json
+
+Copy
+Expand allCollapse all
+{
+"competences": [
+{}
+],
+"total": 0
+}
+Register user in a competence
+Creates a new user registration in a competence
+
+Request Body schema: application/json
+required
+user_dni
+required
+string (User Dni) [ 1 .. 50 ] characters
+DNI del usuario
+
+external_id	
+External Id (string) or External Id (null) (External Id)
+ID externo único
+
+registration_number	
+Registration Number (string) or Registration Number (null) (Registration Number)
+Número de registro único
+
+time	
+Time (integer) or Time (null) (Time)
+Tiempo en milisegundos
+
+n_turns	
+N Turns (integer) or N Turns (null) (N Turns)
+Default: 0
+Número de vueltas completadas
+
+competence_id
+required
+integer (Competence Id) > 0
+ID de la competencia
+
+Responses
+201 Successful Response
+422 Validation Error
+
+post
+/api/v1/competencias/registro
+Request samples
+Payload
+Content type
+application/json
+
+Copy
+{
+"user_dni": "string",
+"external_id": "string",
+"registration_number": "string",
+"time": 0,
+"n_turns": 0,
+"competence_id": 0
+}
+Response samples
+201422
+Content type
+application/json
+
+Copy
+{
+"user_dni": "string",
+"external_id": "string",
+"registration_number": "string",
+"time": 0,
+"n_turns": 0,
+"id": 0,
+"competence_id": 0,
+"created_at": "2019-08-24T14:15:22Z",
+"updated_at": "2019-08-24T14:15:22Z"
+}
+Get all registrations
+Gets a paginated list of registrations with optional filters
+
+query Parameters
+skip	
+integer (Skip) >= 0
+Default: 0
+Number of records to skip
+
+limit	
+integer (Limit) [ 1 .. 1000 ]
+Default: 100
+Maximum number of records to return
+
+competence_id	
+Competence Id (integer) or Competence Id (null) (Competence Id)
+Filter by competence ID
+
+user_dni	
+User Dni (string) or User Dni (null) (User Dni)
+Filter by user DNI
+
+Responses
+200 Successful Response
+422 Validation Error
+
+get
+/api/v1/competencias/registro
+Response samples
+200422
+Content type
+application/json
+
+Copy
+Expand allCollapse all
+{
+"competition_registrations": [
+{}
+],
+"total": 0
+}
+Update a registration
+Partially updates the data of a registration
+
+path Parameters
+registration_id
+required
+integer (Registration Id)
+Request Body schema: application/json
+required
+external_id	
+External Id (string) or External Id (null) (External Id)
+registration_number	
+Registration Number (string) or Registration Number (null) (Registration Number)
+time	
+Time (integer) or Time (null) (Time)
+n_turns	
+N Turns (integer) or N Turns (null) (N Turns)
+user_dni	
+User Dni (string) or User Dni (null) (User Dni)
+Responses
+200 Successful Response
+422 Validation Error
+
+patch
+/api/v1/competencias/registro/{registration_id}
+Request samples
+Payload
+Content type
+application/json
+
+Copy
+{
+"external_id": "string",
+"registration_number": "string",
+"time": 0,
+"n_turns": 0,
+"user_dni": "string"
+}
+Response samples
+200422
+Content type
+application/json
+
+Copy
+{
+"user_dni": "string",
+"external_id": "string",
+"registration_number": "string",
+"time": 0,
+"n_turns": 0,
+"id": 0,
+"competence_id": 0,
+"created_at": "2019-08-24T14:15:22Z",
+"updated_at": "2019-08-24T14:15:22Z"
+}
+Get a competence by ID
+Gets the details of a specific competence
+
+path Parameters
+competence_id
+required
+integer (Competence Id)
+Responses
+200 Successful Response
+422 Validation Error
+
+get
+/api/v1/competencias/{competence_id}
+Response samples
+200422
+Content type
+application/json
+
+Copy
+Expand allCollapse all
+{
+"name": "string",
+"competition_date": "2019-08-24",
+"created_by": "string",
+"external_id": "string",
+"competition_limit_for_registration_date": "2019-08-24",
+"n_turns": 0,
+"is_active": true,
+"start_coordinates": { },
+"finish_coordinates": { },
+"id": 0,
+"created_at": "2019-08-24T14:15:22Z",
+"updated_at": "2019-08-24T14:15:22Z"
+}
+Update a competence
+Partially updates the data of a competence
+
+path Parameters
+competence_id
+required
+integer (Competence Id)
+Request Body schema: application/json
+required
+external_id	
+External Id (string) or External Id (null) (External Id)
+name	
+Name (string) or Name (null) (Name)
+competition_date	
+Competition Date (string) or Competition Date (null) (Competition Date)
+competition_limit_for_registration_date	
+Competition Limit For Registration Date (string) or Competition Limit For Registration Date (null) (Competition Limit For Registration Date)
+n_turns	
+N Turns (integer) or N Turns (null) (N Turns)
+is_active	
+Is Active (boolean) or Is Active (null) (Is Active)
+created_by	
+Created By (string) or Created By (null) (Created By)
+start_coordinates	
+Start Coordinates (object) or Start Coordinates (null) (Start Coordinates)
+finish_coordinates	
+Finish Coordinates (object) or Finish Coordinates (null) (Finish Coordinates)
+Responses
+200 Successful Response
+422 Validation Error
+
+patch
+/api/v1/competencias/{competence_id}
+Request samples
+Payload
+Content type
+application/json
+
+Copy
+Expand allCollapse all
+{
+"external_id": "string",
+"name": "string",
+"competition_date": "2019-08-24",
+"competition_limit_for_registration_date": "2019-08-24",
+"n_turns": 0,
+"is_active": true,
+"created_by": "string",
+"start_coordinates": { },
+"finish_coordinates": { }
+}
+Response samples
+200422
+Content type
+application/json
+
+Copy
+Expand allCollapse all
+{
+"name": "string",
+"competition_date": "2019-08-24",
+"created_by": "string",
+"external_id": "string",
+"competition_limit_for_registration_date": "2019-08-24",
+"n_turns": 0,
+"is_active": true,
+"start_coordinates": { },
+"finish_coordinates": { },
+"id": 0,
+"created_at": "2019-08-24T14:15:22Z",
+"updated_at": "2019-08-24T14:15:22Z"
+}
+Get registrations of a competence
+Gets all registrations associated with a specific competence
+
+path Parameters
+competence_id
+required
+integer (Competence Id)
+query Parameters
+skip	
+integer (Skip) >= 0
+Default: 0
+Number of records to skip
+
+limit	
+integer (Limit) [ 1 .. 1000 ]
+Default: 100
+Maximum number of records to return
+
+Responses
+200 Successful Response
+422 Validation Error
+
+get
+/api/v1/competencias/{competence_id}/registros
+Response samples
+200422
+Content type
+application/json
+
+Copy
+Expand allCollapse all
+{
+"competition_registrations": [
+{}
+],
+"total": 0
+}
+Example V1
+Example Endpoint
+Responses
+200 Successful Response

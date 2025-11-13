@@ -22,6 +22,17 @@ class $UserTableTable extends UserTable
       'PRIMARY KEY AUTOINCREMENT',
     ),
   );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<int> remoteId = GeneratedColumn<int>(
+    'remote_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _dniMeta = const VerificationMeta('dni');
   @override
   late final GeneratedColumn<String> dni = GeneratedColumn<String>(
@@ -30,6 +41,7 @@ class $UserTableTable extends UserTable
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
   );
   static const VerificationMeta _rolMeta = const VerificationMeta('rol');
   @override
@@ -69,6 +81,7 @@ class $UserTableTable extends UserTable
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
   );
   static const VerificationMeta _isActiveMeta = const VerificationMeta(
     'isActive',
@@ -96,9 +109,60 @@ class $UserTableTable extends UserTable
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _lastSyncedAtMeta = const VerificationMeta(
+    'lastSyncedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastSyncedAt = GeneratedColumn<DateTime>(
+    'last_synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _needsSyncMeta = const VerificationMeta(
+    'needsSync',
+  );
+  @override
+  late final GeneratedColumn<bool> needsSync = GeneratedColumn<bool>(
+    'needs_sync',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("needs_sync" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    remoteId,
     dni,
     rol,
     name,
@@ -106,6 +170,10 @@ class $UserTableTable extends UserTable
     email,
     isActive,
     birthDate,
+    createdAt,
+    updatedAt,
+    lastSyncedAt,
+    needsSync,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -121,6 +189,12 @@ class $UserTableTable extends UserTable
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
     }
     if (data.containsKey('dni')) {
       context.handle(
@@ -172,6 +246,33 @@ class $UserTableTable extends UserTable
         birthDate.isAcceptableOrUnknown(data['birth_date']!, _birthDateMeta),
       );
     }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+        _lastSyncedAtMeta,
+        lastSyncedAt.isAcceptableOrUnknown(
+          data['last_synced_at']!,
+          _lastSyncedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('needs_sync')) {
+      context.handle(
+        _needsSyncMeta,
+        needsSync.isAcceptableOrUnknown(data['needs_sync']!, _needsSyncMeta),
+      );
+    }
     return context;
   }
 
@@ -185,6 +286,10 @@ class $UserTableTable extends UserTable
         DriftSqlType.int,
         data['${effectivePrefix}id'],
       )!,
+      remoteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}remote_id'],
+      ),
       dni: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}dni'],
@@ -213,6 +318,22 @@ class $UserTableTable extends UserTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}birth_date'],
       ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      lastSyncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_synced_at'],
+      ),
+      needsSync: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}needs_sync'],
+      )!,
     );
   }
 
@@ -225,6 +346,7 @@ class $UserTableTable extends UserTable
 class user_drift_model extends DataClass
     implements Insertable<user_drift_model> {
   final int id;
+  final int? remoteId;
   final String dni;
   final String rol;
   final String name;
@@ -232,8 +354,13 @@ class user_drift_model extends DataClass
   final String email;
   final bool isActive;
   final DateTime? birthDate;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? lastSyncedAt;
+  final bool needsSync;
   const user_drift_model({
     required this.id,
+    this.remoteId,
     required this.dni,
     required this.rol,
     required this.name,
@@ -241,11 +368,18 @@ class user_drift_model extends DataClass
     required this.email,
     required this.isActive,
     this.birthDate,
+    required this.createdAt,
+    required this.updatedAt,
+    this.lastSyncedAt,
+    required this.needsSync,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    if (!nullToAbsent || remoteId != null) {
+      map['remote_id'] = Variable<int>(remoteId);
+    }
     map['dni'] = Variable<String>(dni);
     map['rol'] = Variable<String>(rol);
     map['name'] = Variable<String>(name);
@@ -255,12 +389,21 @@ class user_drift_model extends DataClass
     if (!nullToAbsent || birthDate != null) {
       map['birth_date'] = Variable<DateTime>(birthDate);
     }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || lastSyncedAt != null) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt);
+    }
+    map['needs_sync'] = Variable<bool>(needsSync);
     return map;
   }
 
   UserTableCompanion toCompanion(bool nullToAbsent) {
     return UserTableCompanion(
       id: Value(id),
+      remoteId: remoteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remoteId),
       dni: Value(dni),
       rol: Value(rol),
       name: Value(name),
@@ -270,6 +413,12 @@ class user_drift_model extends DataClass
       birthDate: birthDate == null && nullToAbsent
           ? const Value.absent()
           : Value(birthDate),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      lastSyncedAt: lastSyncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncedAt),
+      needsSync: Value(needsSync),
     );
   }
 
@@ -280,6 +429,7 @@ class user_drift_model extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return user_drift_model(
       id: serializer.fromJson<int>(json['id']),
+      remoteId: serializer.fromJson<int?>(json['remoteId']),
       dni: serializer.fromJson<String>(json['dni']),
       rol: serializer.fromJson<String>(json['rol']),
       name: serializer.fromJson<String>(json['name']),
@@ -287,6 +437,10 @@ class user_drift_model extends DataClass
       email: serializer.fromJson<String>(json['email']),
       isActive: serializer.fromJson<bool>(json['isActive']),
       birthDate: serializer.fromJson<DateTime?>(json['birthDate']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      lastSyncedAt: serializer.fromJson<DateTime?>(json['lastSyncedAt']),
+      needsSync: serializer.fromJson<bool>(json['needsSync']),
     );
   }
   @override
@@ -294,6 +448,7 @@ class user_drift_model extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'remoteId': serializer.toJson<int?>(remoteId),
       'dni': serializer.toJson<String>(dni),
       'rol': serializer.toJson<String>(rol),
       'name': serializer.toJson<String>(name),
@@ -301,11 +456,16 @@ class user_drift_model extends DataClass
       'email': serializer.toJson<String>(email),
       'isActive': serializer.toJson<bool>(isActive),
       'birthDate': serializer.toJson<DateTime?>(birthDate),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'lastSyncedAt': serializer.toJson<DateTime?>(lastSyncedAt),
+      'needsSync': serializer.toJson<bool>(needsSync),
     };
   }
 
   user_drift_model copyWith({
     int? id,
+    Value<int?> remoteId = const Value.absent(),
     String? dni,
     String? rol,
     String? name,
@@ -313,8 +473,13 @@ class user_drift_model extends DataClass
     String? email,
     bool? isActive,
     Value<DateTime?> birthDate = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> lastSyncedAt = const Value.absent(),
+    bool? needsSync,
   }) => user_drift_model(
     id: id ?? this.id,
+    remoteId: remoteId.present ? remoteId.value : this.remoteId,
     dni: dni ?? this.dni,
     rol: rol ?? this.rol,
     name: name ?? this.name,
@@ -322,10 +487,15 @@ class user_drift_model extends DataClass
     email: email ?? this.email,
     isActive: isActive ?? this.isActive,
     birthDate: birthDate.present ? birthDate.value : this.birthDate,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+    needsSync: needsSync ?? this.needsSync,
   );
   user_drift_model copyWithCompanion(UserTableCompanion data) {
     return user_drift_model(
       id: data.id.present ? data.id.value : this.id,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
       dni: data.dni.present ? data.dni.value : this.dni,
       rol: data.rol.present ? data.rol.value : this.rol,
       name: data.name.present ? data.name.value : this.name,
@@ -333,6 +503,12 @@ class user_drift_model extends DataClass
       email: data.email.present ? data.email.value : this.email,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
       birthDate: data.birthDate.present ? data.birthDate.value : this.birthDate,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      lastSyncedAt: data.lastSyncedAt.present
+          ? data.lastSyncedAt.value
+          : this.lastSyncedAt,
+      needsSync: data.needsSync.present ? data.needsSync.value : this.needsSync,
     );
   }
 
@@ -340,36 +516,60 @@ class user_drift_model extends DataClass
   String toString() {
     return (StringBuffer('user_drift_model(')
           ..write('id: $id, ')
+          ..write('remoteId: $remoteId, ')
           ..write('dni: $dni, ')
           ..write('rol: $rol, ')
           ..write('name: $name, ')
           ..write('lastName: $lastName, ')
           ..write('email: $email, ')
           ..write('isActive: $isActive, ')
-          ..write('birthDate: $birthDate')
+          ..write('birthDate: $birthDate, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('needsSync: $needsSync')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, dni, rol, name, lastName, email, isActive, birthDate);
+  int get hashCode => Object.hash(
+    id,
+    remoteId,
+    dni,
+    rol,
+    name,
+    lastName,
+    email,
+    isActive,
+    birthDate,
+    createdAt,
+    updatedAt,
+    lastSyncedAt,
+    needsSync,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is user_drift_model &&
           other.id == this.id &&
+          other.remoteId == this.remoteId &&
           other.dni == this.dni &&
           other.rol == this.rol &&
           other.name == this.name &&
           other.lastName == this.lastName &&
           other.email == this.email &&
           other.isActive == this.isActive &&
-          other.birthDate == this.birthDate);
+          other.birthDate == this.birthDate &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.lastSyncedAt == this.lastSyncedAt &&
+          other.needsSync == this.needsSync);
 }
 
 class UserTableCompanion extends UpdateCompanion<user_drift_model> {
   final Value<int> id;
+  final Value<int?> remoteId;
   final Value<String> dni;
   final Value<String> rol;
   final Value<String> name;
@@ -377,8 +577,13 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
   final Value<String> email;
   final Value<bool> isActive;
   final Value<DateTime?> birthDate;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> lastSyncedAt;
+  final Value<bool> needsSync;
   const UserTableCompanion({
     this.id = const Value.absent(),
+    this.remoteId = const Value.absent(),
     this.dni = const Value.absent(),
     this.rol = const Value.absent(),
     this.name = const Value.absent(),
@@ -386,9 +591,14 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
     this.email = const Value.absent(),
     this.isActive = const Value.absent(),
     this.birthDate = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.needsSync = const Value.absent(),
   });
   UserTableCompanion.insert({
     this.id = const Value.absent(),
+    this.remoteId = const Value.absent(),
     required String dni,
     this.rol = const Value.absent(),
     required String name,
@@ -396,12 +606,17 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
     required String email,
     this.isActive = const Value.absent(),
     this.birthDate = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.needsSync = const Value.absent(),
   }) : dni = Value(dni),
        name = Value(name),
        lastName = Value(lastName),
        email = Value(email);
   static Insertable<user_drift_model> custom({
     Expression<int>? id,
+    Expression<int>? remoteId,
     Expression<String>? dni,
     Expression<String>? rol,
     Expression<String>? name,
@@ -409,9 +624,14 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
     Expression<String>? email,
     Expression<bool>? isActive,
     Expression<DateTime>? birthDate,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? lastSyncedAt,
+    Expression<bool>? needsSync,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (remoteId != null) 'remote_id': remoteId,
       if (dni != null) 'dni': dni,
       if (rol != null) 'rol': rol,
       if (name != null) 'name': name,
@@ -419,11 +639,16 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
       if (email != null) 'email': email,
       if (isActive != null) 'is_active': isActive,
       if (birthDate != null) 'birth_date': birthDate,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (needsSync != null) 'needs_sync': needsSync,
     });
   }
 
   UserTableCompanion copyWith({
     Value<int>? id,
+    Value<int?>? remoteId,
     Value<String>? dni,
     Value<String>? rol,
     Value<String>? name,
@@ -431,9 +656,14 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
     Value<String>? email,
     Value<bool>? isActive,
     Value<DateTime?>? birthDate,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? lastSyncedAt,
+    Value<bool>? needsSync,
   }) {
     return UserTableCompanion(
       id: id ?? this.id,
+      remoteId: remoteId ?? this.remoteId,
       dni: dni ?? this.dni,
       rol: rol ?? this.rol,
       name: name ?? this.name,
@@ -441,6 +671,10 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
       email: email ?? this.email,
       isActive: isActive ?? this.isActive,
       birthDate: birthDate ?? this.birthDate,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      needsSync: needsSync ?? this.needsSync,
     );
   }
 
@@ -449,6 +683,9 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<int>(remoteId.value);
     }
     if (dni.present) {
       map['dni'] = Variable<String>(dni.value);
@@ -471,6 +708,18 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
     if (birthDate.present) {
       map['birth_date'] = Variable<DateTime>(birthDate.value);
     }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt.value);
+    }
+    if (needsSync.present) {
+      map['needs_sync'] = Variable<bool>(needsSync.value);
+    }
     return map;
   }
 
@@ -478,13 +727,591 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
   String toString() {
     return (StringBuffer('UserTableCompanion(')
           ..write('id: $id, ')
+          ..write('remoteId: $remoteId, ')
           ..write('dni: $dni, ')
           ..write('rol: $rol, ')
           ..write('name: $name, ')
           ..write('lastName: $lastName, ')
           ..write('email: $email, ')
           ..write('isActive: $isActive, ')
-          ..write('birthDate: $birthDate')
+          ..write('birthDate: $birthDate, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('needsSync: $needsSync')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SessionTableTable extends SessionTable
+    with TableInfo<$SessionTableTable, SessionDriftModel> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SessionTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<int> userId = GeneratedColumn<int>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES user_table (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _dniMeta = const VerificationMeta('dni');
+  @override
+  late final GeneratedColumn<String> dni = GeneratedColumn<String>(
+    'dni',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _emailMeta = const VerificationMeta('email');
+  @override
+  late final GeneratedColumn<String> email = GeneratedColumn<String>(
+    'email',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastLoginAtMeta = const VerificationMeta(
+    'lastLoginAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastLoginAt = GeneratedColumn<DateTime>(
+    'last_login_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _accessTokenMeta = const VerificationMeta(
+    'accessToken',
+  );
+  @override
+  late final GeneratedColumn<String> accessToken = GeneratedColumn<String>(
+    'access_token',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _refreshTokenMeta = const VerificationMeta(
+    'refreshToken',
+  );
+  @override
+  late final GeneratedColumn<String> refreshToken = GeneratedColumn<String>(
+    'refresh_token',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tokenExpiresAtMeta = const VerificationMeta(
+    'tokenExpiresAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> tokenExpiresAt =
+      GeneratedColumn<DateTime>(
+        'token_expires_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    userId,
+    dni,
+    email,
+    lastLoginAt,
+    isActive,
+    accessToken,
+    refreshToken,
+    tokenExpiresAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'session_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SessionDriftModel> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('dni')) {
+      context.handle(
+        _dniMeta,
+        dni.isAcceptableOrUnknown(data['dni']!, _dniMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dniMeta);
+    }
+    if (data.containsKey('email')) {
+      context.handle(
+        _emailMeta,
+        email.isAcceptableOrUnknown(data['email']!, _emailMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_emailMeta);
+    }
+    if (data.containsKey('last_login_at')) {
+      context.handle(
+        _lastLoginAtMeta,
+        lastLoginAt.isAcceptableOrUnknown(
+          data['last_login_at']!,
+          _lastLoginAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('access_token')) {
+      context.handle(
+        _accessTokenMeta,
+        accessToken.isAcceptableOrUnknown(
+          data['access_token']!,
+          _accessTokenMeta,
+        ),
+      );
+    }
+    if (data.containsKey('refresh_token')) {
+      context.handle(
+        _refreshTokenMeta,
+        refreshToken.isAcceptableOrUnknown(
+          data['refresh_token']!,
+          _refreshTokenMeta,
+        ),
+      );
+    }
+    if (data.containsKey('token_expires_at')) {
+      context.handle(
+        _tokenExpiresAtMeta,
+        tokenExpiresAt.isAcceptableOrUnknown(
+          data['token_expires_at']!,
+          _tokenExpiresAtMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SessionDriftModel map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SessionDriftModel(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}user_id'],
+      )!,
+      dni: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}dni'],
+      )!,
+      email: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}email'],
+      )!,
+      lastLoginAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_login_at'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      accessToken: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}access_token'],
+      ),
+      refreshToken: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}refresh_token'],
+      ),
+      tokenExpiresAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}token_expires_at'],
+      ),
+    );
+  }
+
+  @override
+  $SessionTableTable createAlias(String alias) {
+    return $SessionTableTable(attachedDatabase, alias);
+  }
+}
+
+class SessionDriftModel extends DataClass
+    implements Insertable<SessionDriftModel> {
+  final int id;
+  final int userId;
+  final String dni;
+  final String email;
+  final DateTime lastLoginAt;
+  final bool isActive;
+  final String? accessToken;
+  final String? refreshToken;
+  final DateTime? tokenExpiresAt;
+  const SessionDriftModel({
+    required this.id,
+    required this.userId,
+    required this.dni,
+    required this.email,
+    required this.lastLoginAt,
+    required this.isActive,
+    this.accessToken,
+    this.refreshToken,
+    this.tokenExpiresAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['user_id'] = Variable<int>(userId);
+    map['dni'] = Variable<String>(dni);
+    map['email'] = Variable<String>(email);
+    map['last_login_at'] = Variable<DateTime>(lastLoginAt);
+    map['is_active'] = Variable<bool>(isActive);
+    if (!nullToAbsent || accessToken != null) {
+      map['access_token'] = Variable<String>(accessToken);
+    }
+    if (!nullToAbsent || refreshToken != null) {
+      map['refresh_token'] = Variable<String>(refreshToken);
+    }
+    if (!nullToAbsent || tokenExpiresAt != null) {
+      map['token_expires_at'] = Variable<DateTime>(tokenExpiresAt);
+    }
+    return map;
+  }
+
+  SessionTableCompanion toCompanion(bool nullToAbsent) {
+    return SessionTableCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      dni: Value(dni),
+      email: Value(email),
+      lastLoginAt: Value(lastLoginAt),
+      isActive: Value(isActive),
+      accessToken: accessToken == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accessToken),
+      refreshToken: refreshToken == null && nullToAbsent
+          ? const Value.absent()
+          : Value(refreshToken),
+      tokenExpiresAt: tokenExpiresAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tokenExpiresAt),
+    );
+  }
+
+  factory SessionDriftModel.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SessionDriftModel(
+      id: serializer.fromJson<int>(json['id']),
+      userId: serializer.fromJson<int>(json['userId']),
+      dni: serializer.fromJson<String>(json['dni']),
+      email: serializer.fromJson<String>(json['email']),
+      lastLoginAt: serializer.fromJson<DateTime>(json['lastLoginAt']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      accessToken: serializer.fromJson<String?>(json['accessToken']),
+      refreshToken: serializer.fromJson<String?>(json['refreshToken']),
+      tokenExpiresAt: serializer.fromJson<DateTime?>(json['tokenExpiresAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'userId': serializer.toJson<int>(userId),
+      'dni': serializer.toJson<String>(dni),
+      'email': serializer.toJson<String>(email),
+      'lastLoginAt': serializer.toJson<DateTime>(lastLoginAt),
+      'isActive': serializer.toJson<bool>(isActive),
+      'accessToken': serializer.toJson<String?>(accessToken),
+      'refreshToken': serializer.toJson<String?>(refreshToken),
+      'tokenExpiresAt': serializer.toJson<DateTime?>(tokenExpiresAt),
+    };
+  }
+
+  SessionDriftModel copyWith({
+    int? id,
+    int? userId,
+    String? dni,
+    String? email,
+    DateTime? lastLoginAt,
+    bool? isActive,
+    Value<String?> accessToken = const Value.absent(),
+    Value<String?> refreshToken = const Value.absent(),
+    Value<DateTime?> tokenExpiresAt = const Value.absent(),
+  }) => SessionDriftModel(
+    id: id ?? this.id,
+    userId: userId ?? this.userId,
+    dni: dni ?? this.dni,
+    email: email ?? this.email,
+    lastLoginAt: lastLoginAt ?? this.lastLoginAt,
+    isActive: isActive ?? this.isActive,
+    accessToken: accessToken.present ? accessToken.value : this.accessToken,
+    refreshToken: refreshToken.present ? refreshToken.value : this.refreshToken,
+    tokenExpiresAt: tokenExpiresAt.present
+        ? tokenExpiresAt.value
+        : this.tokenExpiresAt,
+  );
+  SessionDriftModel copyWithCompanion(SessionTableCompanion data) {
+    return SessionDriftModel(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      dni: data.dni.present ? data.dni.value : this.dni,
+      email: data.email.present ? data.email.value : this.email,
+      lastLoginAt: data.lastLoginAt.present
+          ? data.lastLoginAt.value
+          : this.lastLoginAt,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      accessToken: data.accessToken.present
+          ? data.accessToken.value
+          : this.accessToken,
+      refreshToken: data.refreshToken.present
+          ? data.refreshToken.value
+          : this.refreshToken,
+      tokenExpiresAt: data.tokenExpiresAt.present
+          ? data.tokenExpiresAt.value
+          : this.tokenExpiresAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SessionDriftModel(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('dni: $dni, ')
+          ..write('email: $email, ')
+          ..write('lastLoginAt: $lastLoginAt, ')
+          ..write('isActive: $isActive, ')
+          ..write('accessToken: $accessToken, ')
+          ..write('refreshToken: $refreshToken, ')
+          ..write('tokenExpiresAt: $tokenExpiresAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    userId,
+    dni,
+    email,
+    lastLoginAt,
+    isActive,
+    accessToken,
+    refreshToken,
+    tokenExpiresAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SessionDriftModel &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.dni == this.dni &&
+          other.email == this.email &&
+          other.lastLoginAt == this.lastLoginAt &&
+          other.isActive == this.isActive &&
+          other.accessToken == this.accessToken &&
+          other.refreshToken == this.refreshToken &&
+          other.tokenExpiresAt == this.tokenExpiresAt);
+}
+
+class SessionTableCompanion extends UpdateCompanion<SessionDriftModel> {
+  final Value<int> id;
+  final Value<int> userId;
+  final Value<String> dni;
+  final Value<String> email;
+  final Value<DateTime> lastLoginAt;
+  final Value<bool> isActive;
+  final Value<String?> accessToken;
+  final Value<String?> refreshToken;
+  final Value<DateTime?> tokenExpiresAt;
+  const SessionTableCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.dni = const Value.absent(),
+    this.email = const Value.absent(),
+    this.lastLoginAt = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.accessToken = const Value.absent(),
+    this.refreshToken = const Value.absent(),
+    this.tokenExpiresAt = const Value.absent(),
+  });
+  SessionTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int userId,
+    required String dni,
+    required String email,
+    this.lastLoginAt = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.accessToken = const Value.absent(),
+    this.refreshToken = const Value.absent(),
+    this.tokenExpiresAt = const Value.absent(),
+  }) : userId = Value(userId),
+       dni = Value(dni),
+       email = Value(email);
+  static Insertable<SessionDriftModel> custom({
+    Expression<int>? id,
+    Expression<int>? userId,
+    Expression<String>? dni,
+    Expression<String>? email,
+    Expression<DateTime>? lastLoginAt,
+    Expression<bool>? isActive,
+    Expression<String>? accessToken,
+    Expression<String>? refreshToken,
+    Expression<DateTime>? tokenExpiresAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (dni != null) 'dni': dni,
+      if (email != null) 'email': email,
+      if (lastLoginAt != null) 'last_login_at': lastLoginAt,
+      if (isActive != null) 'is_active': isActive,
+      if (accessToken != null) 'access_token': accessToken,
+      if (refreshToken != null) 'refresh_token': refreshToken,
+      if (tokenExpiresAt != null) 'token_expires_at': tokenExpiresAt,
+    });
+  }
+
+  SessionTableCompanion copyWith({
+    Value<int>? id,
+    Value<int>? userId,
+    Value<String>? dni,
+    Value<String>? email,
+    Value<DateTime>? lastLoginAt,
+    Value<bool>? isActive,
+    Value<String?>? accessToken,
+    Value<String?>? refreshToken,
+    Value<DateTime?>? tokenExpiresAt,
+  }) {
+    return SessionTableCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      dni: dni ?? this.dni,
+      email: email ?? this.email,
+      lastLoginAt: lastLoginAt ?? this.lastLoginAt,
+      isActive: isActive ?? this.isActive,
+      accessToken: accessToken ?? this.accessToken,
+      refreshToken: refreshToken ?? this.refreshToken,
+      tokenExpiresAt: tokenExpiresAt ?? this.tokenExpiresAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<int>(userId.value);
+    }
+    if (dni.present) {
+      map['dni'] = Variable<String>(dni.value);
+    }
+    if (email.present) {
+      map['email'] = Variable<String>(email.value);
+    }
+    if (lastLoginAt.present) {
+      map['last_login_at'] = Variable<DateTime>(lastLoginAt.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (accessToken.present) {
+      map['access_token'] = Variable<String>(accessToken.value);
+    }
+    if (refreshToken.present) {
+      map['refresh_token'] = Variable<String>(refreshToken.value);
+    }
+    if (tokenExpiresAt.present) {
+      map['token_expires_at'] = Variable<DateTime>(tokenExpiresAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SessionTableCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('dni: $dni, ')
+          ..write('email: $email, ')
+          ..write('lastLoginAt: $lastLoginAt, ')
+          ..write('isActive: $isActive, ')
+          ..write('accessToken: $accessToken, ')
+          ..write('refreshToken: $refreshToken, ')
+          ..write('tokenExpiresAt: $tokenExpiresAt')
           ..write(')'))
         .toString();
   }
@@ -1624,6 +2451,7 @@ abstract class _$AppLocalDatabase extends GeneratedDatabase {
   _$AppLocalDatabase(QueryExecutor e) : super(e);
   $AppLocalDatabaseManager get managers => $AppLocalDatabaseManager(this);
   late final $UserTableTable userTable = $UserTableTable(this);
+  late final $SessionTableTable sessionTable = $SessionTableTable(this);
   late final $CompetenceTableTable competenceTable = $CompetenceTableTable(
     this,
   );
@@ -1635,14 +2463,26 @@ abstract class _$AppLocalDatabase extends GeneratedDatabase {
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     userTable,
+    sessionTable,
     competenceTable,
     competitionRegistrationTable,
   ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'user_table',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('session_table', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
 typedef $$UserTableTableCreateCompanionBuilder =
     UserTableCompanion Function({
       Value<int> id,
+      Value<int?> remoteId,
       required String dni,
       Value<String> rol,
       required String name,
@@ -1650,10 +2490,15 @@ typedef $$UserTableTableCreateCompanionBuilder =
       required String email,
       Value<bool> isActive,
       Value<DateTime?> birthDate,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> lastSyncedAt,
+      Value<bool> needsSync,
     });
 typedef $$UserTableTableUpdateCompanionBuilder =
     UserTableCompanion Function({
       Value<int> id,
+      Value<int?> remoteId,
       Value<String> dni,
       Value<String> rol,
       Value<String> name,
@@ -1661,7 +2506,39 @@ typedef $$UserTableTableUpdateCompanionBuilder =
       Value<String> email,
       Value<bool> isActive,
       Value<DateTime?> birthDate,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> lastSyncedAt,
+      Value<bool> needsSync,
     });
+
+final class $$UserTableTableReferences
+    extends
+        BaseReferences<_$AppLocalDatabase, $UserTableTable, user_drift_model> {
+  $$UserTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$SessionTableTable, List<SessionDriftModel>>
+  _sessionTableRefsTable(_$AppLocalDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.sessionTable,
+        aliasName: $_aliasNameGenerator(
+          db.userTable.id,
+          db.sessionTable.userId,
+        ),
+      );
+
+  $$SessionTableTableProcessedTableManager get sessionTableRefs {
+    final manager = $$SessionTableTableTableManager(
+      $_db,
+      $_db.sessionTable,
+    ).filter((f) => f.userId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_sessionTableRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
 
 class $$UserTableTableFilterComposer
     extends Composer<_$AppLocalDatabase, $UserTableTable> {
@@ -1674,6 +2551,11 @@ class $$UserTableTableFilterComposer
   });
   ColumnFilters<int> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get remoteId => $composableBuilder(
+    column: $table.remoteId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1711,6 +2593,51 @@ class $$UserTableTableFilterComposer
     column: $table.birthDate,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get needsSync => $composableBuilder(
+    column: $table.needsSync,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> sessionTableRefs(
+    Expression<bool> Function($$SessionTableTableFilterComposer f) f,
+  ) {
+    final $$SessionTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.sessionTable,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SessionTableTableFilterComposer(
+            $db: $db,
+            $table: $db.sessionTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$UserTableTableOrderingComposer
@@ -1724,6 +2651,11 @@ class $$UserTableTableOrderingComposer
   });
   ColumnOrderings<int> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get remoteId => $composableBuilder(
+    column: $table.remoteId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -1761,6 +2693,26 @@ class $$UserTableTableOrderingComposer
     column: $table.birthDate,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get needsSync => $composableBuilder(
+    column: $table.needsSync,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$UserTableTableAnnotationComposer
@@ -1774,6 +2726,9 @@ class $$UserTableTableAnnotationComposer
   });
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
 
   GeneratedColumn<String> get dni =>
       $composableBuilder(column: $table.dni, builder: (column) => column);
@@ -1795,6 +2750,45 @@ class $$UserTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get birthDate =>
       $composableBuilder(column: $table.birthDate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get needsSync =>
+      $composableBuilder(column: $table.needsSync, builder: (column) => column);
+
+  Expression<T> sessionTableRefs<T extends Object>(
+    Expression<T> Function($$SessionTableTableAnnotationComposer a) f,
+  ) {
+    final $$SessionTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.sessionTable,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SessionTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.sessionTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$UserTableTableTableManager
@@ -1808,16 +2802,9 @@ class $$UserTableTableTableManager
           $$UserTableTableAnnotationComposer,
           $$UserTableTableCreateCompanionBuilder,
           $$UserTableTableUpdateCompanionBuilder,
-          (
-            user_drift_model,
-            BaseReferences<
-              _$AppLocalDatabase,
-              $UserTableTable,
-              user_drift_model
-            >,
-          ),
+          (user_drift_model, $$UserTableTableReferences),
           user_drift_model,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool sessionTableRefs})
         > {
   $$UserTableTableTableManager(_$AppLocalDatabase db, $UserTableTable table)
     : super(
@@ -1833,6 +2820,7 @@ class $$UserTableTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<int?> remoteId = const Value.absent(),
                 Value<String> dni = const Value.absent(),
                 Value<String> rol = const Value.absent(),
                 Value<String> name = const Value.absent(),
@@ -1840,8 +2828,13 @@ class $$UserTableTableTableManager
                 Value<String> email = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<DateTime?> birthDate = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> lastSyncedAt = const Value.absent(),
+                Value<bool> needsSync = const Value.absent(),
               }) => UserTableCompanion(
                 id: id,
+                remoteId: remoteId,
                 dni: dni,
                 rol: rol,
                 name: name,
@@ -1849,10 +2842,15 @@ class $$UserTableTableTableManager
                 email: email,
                 isActive: isActive,
                 birthDate: birthDate,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                lastSyncedAt: lastSyncedAt,
+                needsSync: needsSync,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<int?> remoteId = const Value.absent(),
                 required String dni,
                 Value<String> rol = const Value.absent(),
                 required String name,
@@ -1860,8 +2858,13 @@ class $$UserTableTableTableManager
                 required String email,
                 Value<bool> isActive = const Value.absent(),
                 Value<DateTime?> birthDate = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> lastSyncedAt = const Value.absent(),
+                Value<bool> needsSync = const Value.absent(),
               }) => UserTableCompanion.insert(
                 id: id,
+                remoteId: remoteId,
                 dni: dni,
                 rol: rol,
                 name: name,
@@ -1869,11 +2872,49 @@ class $$UserTableTableTableManager
                 email: email,
                 isActive: isActive,
                 birthDate: birthDate,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                lastSyncedAt: lastSyncedAt,
+                needsSync: needsSync,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$UserTableTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({sessionTableRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (sessionTableRefs) db.sessionTable],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (sessionTableRefs)
+                    await $_getPrefetchedData<
+                      user_drift_model,
+                      $UserTableTable,
+                      SessionDriftModel
+                    >(
+                      currentTable: table,
+                      referencedTable: $$UserTableTableReferences
+                          ._sessionTableRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$UserTableTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).sessionTableRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.userId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -1888,12 +2929,413 @@ typedef $$UserTableTableProcessedTableManager =
       $$UserTableTableAnnotationComposer,
       $$UserTableTableCreateCompanionBuilder,
       $$UserTableTableUpdateCompanionBuilder,
-      (
-        user_drift_model,
-        BaseReferences<_$AppLocalDatabase, $UserTableTable, user_drift_model>,
-      ),
+      (user_drift_model, $$UserTableTableReferences),
       user_drift_model,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool sessionTableRefs})
+    >;
+typedef $$SessionTableTableCreateCompanionBuilder =
+    SessionTableCompanion Function({
+      Value<int> id,
+      required int userId,
+      required String dni,
+      required String email,
+      Value<DateTime> lastLoginAt,
+      Value<bool> isActive,
+      Value<String?> accessToken,
+      Value<String?> refreshToken,
+      Value<DateTime?> tokenExpiresAt,
+    });
+typedef $$SessionTableTableUpdateCompanionBuilder =
+    SessionTableCompanion Function({
+      Value<int> id,
+      Value<int> userId,
+      Value<String> dni,
+      Value<String> email,
+      Value<DateTime> lastLoginAt,
+      Value<bool> isActive,
+      Value<String?> accessToken,
+      Value<String?> refreshToken,
+      Value<DateTime?> tokenExpiresAt,
+    });
+
+final class $$SessionTableTableReferences
+    extends
+        BaseReferences<
+          _$AppLocalDatabase,
+          $SessionTableTable,
+          SessionDriftModel
+        > {
+  $$SessionTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $UserTableTable _userIdTable(_$AppLocalDatabase db) =>
+      db.userTable.createAlias(
+        $_aliasNameGenerator(db.sessionTable.userId, db.userTable.id),
+      );
+
+  $$UserTableTableProcessedTableManager get userId {
+    final $_column = $_itemColumn<int>('user_id')!;
+
+    final manager = $$UserTableTableTableManager(
+      $_db,
+      $_db.userTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_userIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$SessionTableTableFilterComposer
+    extends Composer<_$AppLocalDatabase, $SessionTableTable> {
+  $$SessionTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dni => $composableBuilder(
+    column: $table.dni,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastLoginAt => $composableBuilder(
+    column: $table.lastLoginAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accessToken => $composableBuilder(
+    column: $table.accessToken,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get refreshToken => $composableBuilder(
+    column: $table.refreshToken,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get tokenExpiresAt => $composableBuilder(
+    column: $table.tokenExpiresAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$UserTableTableFilterComposer get userId {
+    final $$UserTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.userTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UserTableTableFilterComposer(
+            $db: $db,
+            $table: $db.userTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SessionTableTableOrderingComposer
+    extends Composer<_$AppLocalDatabase, $SessionTableTable> {
+  $$SessionTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dni => $composableBuilder(
+    column: $table.dni,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastLoginAt => $composableBuilder(
+    column: $table.lastLoginAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accessToken => $composableBuilder(
+    column: $table.accessToken,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get refreshToken => $composableBuilder(
+    column: $table.refreshToken,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get tokenExpiresAt => $composableBuilder(
+    column: $table.tokenExpiresAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$UserTableTableOrderingComposer get userId {
+    final $$UserTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.userTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UserTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.userTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SessionTableTableAnnotationComposer
+    extends Composer<_$AppLocalDatabase, $SessionTableTable> {
+  $$SessionTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get dni =>
+      $composableBuilder(column: $table.dni, builder: (column) => column);
+
+  GeneratedColumn<String> get email =>
+      $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastLoginAt => $composableBuilder(
+    column: $table.lastLoginAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<String> get accessToken => $composableBuilder(
+    column: $table.accessToken,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get refreshToken => $composableBuilder(
+    column: $table.refreshToken,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get tokenExpiresAt => $composableBuilder(
+    column: $table.tokenExpiresAt,
+    builder: (column) => column,
+  );
+
+  $$UserTableTableAnnotationComposer get userId {
+    final $$UserTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.userTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UserTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.userTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SessionTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppLocalDatabase,
+          $SessionTableTable,
+          SessionDriftModel,
+          $$SessionTableTableFilterComposer,
+          $$SessionTableTableOrderingComposer,
+          $$SessionTableTableAnnotationComposer,
+          $$SessionTableTableCreateCompanionBuilder,
+          $$SessionTableTableUpdateCompanionBuilder,
+          (SessionDriftModel, $$SessionTableTableReferences),
+          SessionDriftModel,
+          PrefetchHooks Function({bool userId})
+        > {
+  $$SessionTableTableTableManager(
+    _$AppLocalDatabase db,
+    $SessionTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SessionTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SessionTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SessionTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> userId = const Value.absent(),
+                Value<String> dni = const Value.absent(),
+                Value<String> email = const Value.absent(),
+                Value<DateTime> lastLoginAt = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<String?> accessToken = const Value.absent(),
+                Value<String?> refreshToken = const Value.absent(),
+                Value<DateTime?> tokenExpiresAt = const Value.absent(),
+              }) => SessionTableCompanion(
+                id: id,
+                userId: userId,
+                dni: dni,
+                email: email,
+                lastLoginAt: lastLoginAt,
+                isActive: isActive,
+                accessToken: accessToken,
+                refreshToken: refreshToken,
+                tokenExpiresAt: tokenExpiresAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int userId,
+                required String dni,
+                required String email,
+                Value<DateTime> lastLoginAt = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<String?> accessToken = const Value.absent(),
+                Value<String?> refreshToken = const Value.absent(),
+                Value<DateTime?> tokenExpiresAt = const Value.absent(),
+              }) => SessionTableCompanion.insert(
+                id: id,
+                userId: userId,
+                dni: dni,
+                email: email,
+                lastLoginAt: lastLoginAt,
+                isActive: isActive,
+                accessToken: accessToken,
+                refreshToken: refreshToken,
+                tokenExpiresAt: tokenExpiresAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SessionTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({userId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (userId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.userId,
+                                referencedTable: $$SessionTableTableReferences
+                                    ._userIdTable(db),
+                                referencedColumn: $$SessionTableTableReferences
+                                    ._userIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$SessionTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppLocalDatabase,
+      $SessionTableTable,
+      SessionDriftModel,
+      $$SessionTableTableFilterComposer,
+      $$SessionTableTableOrderingComposer,
+      $$SessionTableTableAnnotationComposer,
+      $$SessionTableTableCreateCompanionBuilder,
+      $$SessionTableTableUpdateCompanionBuilder,
+      (SessionDriftModel, $$SessionTableTableReferences),
+      SessionDriftModel,
+      PrefetchHooks Function({bool userId})
     >;
 typedef $$CompetenceTableTableCreateCompanionBuilder =
     CompetenceTableCompanion Function({
@@ -2488,6 +3930,8 @@ class $AppLocalDatabaseManager {
   $AppLocalDatabaseManager(this._db);
   $$UserTableTableTableManager get userTable =>
       $$UserTableTableTableManager(_db, _db.userTable);
+  $$SessionTableTableTableManager get sessionTable =>
+      $$SessionTableTableTableManager(_db, _db.sessionTable);
   $$CompetenceTableTableTableManager get competenceTable =>
       $$CompetenceTableTableTableManager(_db, _db.competenceTable);
   $$CompetitionRegistrationTableTableTableManager

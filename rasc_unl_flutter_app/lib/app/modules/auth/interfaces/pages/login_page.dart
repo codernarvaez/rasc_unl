@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rasc_unl_flutter_app/app/modules/auth/infrastructure/providers/auth_provider.dart';
+import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerStatefulWidget {
+  const LoginPage({super.key});
+
   @override
-  _LoginPageState createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage>
+class _LoginPageState extends ConsumerState<LoginPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   bool _obscurePassword = true;
   final _emailController = TextEditingController();
+  final _dniController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -32,12 +39,71 @@ class _LoginPageState extends State<LoginPage>
   void dispose() {
     _controller.dispose();
     _emailController.dispose();
+    _dniController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
+  Future<void> _handleLogin() async {
+    final isOffline = ref.read(isOfflineModeProvider);
+    final email = _emailController.text.trim();
+    final dni = _dniController.text.trim();
+    final password = _passwordController.text;
+
+    // Validaciones
+    if (email.isEmpty || dni.isEmpty) {
+      _showError('Por favor, ingrese su email y DNI');
+      return;
+    }
+
+    if (!isOffline && password.isEmpty) {
+      _showError('La contraseña es requerida cuando hay conexión a Internet');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    await ref.read(authNotifierProvider.notifier).login(
+          email: email,
+          dni: dni,
+          password: password.isNotEmpty ? password : null,
+        );
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    // Verificar resultado
+    final authState = ref.read(authNotifierProvider);
+    if (authState.isAuthenticated) {
+      if (mounted) {
+        context.go('/home');
+      }
+    } else if (authState.error != null) {
+      _showError(authState.error!);
+    }
+  }
+
+  void _showError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isOffline = ref.watch(isOfflineModeProvider);
+    final authState = ref.watch(authNotifierProvider);
+
+    // Si cambia a online/offline, mostrar información
     return Scaffold(
       body: Container(
         height: double.infinity,
@@ -129,6 +195,34 @@ class _LoginPageState extends State<LoginPage>
 
                   SizedBox(height: 48),
 
+                  // Indicador de modo offline
+                  if (isOffline)
+                    Container(
+                      padding: EdgeInsets.all(12),
+                      margin: EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.wifi_off, color: Colors.orange, size: 20),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Modo Offline: Solo DNI y Email requeridos',
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
                   // Campo de email
                   _buildTextField(
                     controller: _emailController,
@@ -140,30 +234,42 @@ class _LoginPageState extends State<LoginPage>
 
                   SizedBox(height: 20),
 
-                  // Campo de contraseña
+                  // Campo de DNI
                   _buildTextField(
-                    controller: _passwordController,
-                    label: 'Contraseña',
-                    hint: '••••••••',
-                    icon: Icons.lock_outline,
-                    isPassword: true,
-                    obscureText: _obscurePassword,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                        color: Colors.white.withOpacity(0.5),
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                    ),
+                    controller: _dniController,
+                    label: 'DNI / Cédula',
+                    hint: '1234567890',
+                    icon: Icons.badge_outlined,
+                    keyboardType: TextInputType.number,
                   ),
 
-                  SizedBox(height: 16),
+                  SizedBox(height: 20),
+
+                  // Campo de contraseña (solo si hay conexión)
+                  if (!isOffline)
+                    _buildTextField(
+                      controller: _passwordController,
+                      label: 'Contraseña',
+                      hint: '••••••••',
+                      icon: Icons.lock_outline,
+                      isPassword: true,
+                      obscureText: _obscurePassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: Colors.white.withOpacity(0.5),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
+                    ),
+
+                  if (!isOffline) SizedBox(height: 16),
 
                   // Olvidaste contraseña
                   Align(
@@ -200,25 +306,33 @@ class _LoginPageState extends State<LoginPage>
                       ],
                     ),
                     child: ElevatedButton(
-                      onPressed: () {
-                        context.go('/home');
-                      },
+                      onPressed: (_isLoading || authState.isLoading) ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
+                        disabledBackgroundColor: Colors.grey.withOpacity(0.3),
                       ),
-                      child: Text(
-                        'Iniciar Sesión',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
+                      child: (_isLoading || authState.isLoading)
+                          ? SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              'Iniciar Sesión',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
                     ),
                   ),
 
@@ -355,44 +469,6 @@ class _LoginPageState extends State<LoginPage>
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildSocialButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onPressed,
-  }) {
-    return Container(
-      height: 52,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
-      ),
-      child: TextButton(
-        onPressed: onPressed,
-        style: TextButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: Colors.white, size: 24),
-            SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

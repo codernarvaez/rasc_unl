@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:rasc_unl_flutter_app/app/modules/auth/domain/drift_models/user_drift_model.dart';
+import 'package:rasc_unl_flutter_app/app/modules/auth/domain/drift_models/session_drift_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/domain/drift_models/competence_drift_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/domain/drift_models/competition_registration_drift_model.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
@@ -10,7 +11,7 @@ import 'connection/connection.dart';
 part 'app_local_database.g.dart';
 
 @DriftDatabase(
-  tables: [UserTable, CompetenceTable, CompetitionRegistrationTable],
+  tables: [UserTable, SessionTable, CompetenceTable, CompetitionRegistrationTable],
   include: {
     'queries/functions.drift',
     'queries/indexs.drift',
@@ -51,10 +52,10 @@ class AppLocalDatabase extends _$AppLocalDatabase {
         await m.createAll();
       },
       onUpgrade: (Migrator m, int from, int to) async {
-        // Migración de versión 1 a 2
+        // Migración de versión 1 a 2: agregar tabla de sesiones y campos de sincronización
         if (from < 2) {
-          // Las migraciones automáticas de Drift se encargarán de actualizar el schema
-          // Si hay cambios específicos, puedes agregarlos aquí
+          // Drift manejará automáticamente la creación de nuevas columnas y tablas
+          // Al regenerar el código con build_runner
         }
       },
       beforeOpen: (details) async {
