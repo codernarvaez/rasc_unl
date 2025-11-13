@@ -8,6 +8,7 @@ from app.modules.auth.services import AuthService, UserService
 from app.modules.auth.schemas.auth_schemas import (
     UserCreate,
     UserUpdate,
+    UserUpdateAdmin,
     UserUpdatePassword,
     UserResponse,
     LoginRequest,
@@ -77,14 +78,7 @@ async def update_current_user(
     current_user: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
-    """Update current user information."""
-    # Prevent role change by non-admin
-    if user_data.role and current_user.role != "administrator":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Cannot change own role"
-        )
-    
+    """Update current user information (users can only update their own basic data)."""
     service = UserService(session)
     updated_user = await service.update_user(current_user.id, user_data)
     return updated_user
@@ -144,11 +138,11 @@ async def get_user(
 @router.put("/users/{user_id}", response_model=UserResponse)
 async def update_user(
     user_id: int,
-    user_data: UserUpdate,
+    user_data: UserUpdateAdmin,
     current_user: AdminUser,
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
-    """Update user by ID (admin only)."""
+    """Update user by ID (admin only - can update all fields including role and is_active)."""
     service = UserService(session)
     updated_user = await service.update_user(user_id, user_data)
     return updated_user

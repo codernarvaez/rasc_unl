@@ -23,7 +23,11 @@ class UserUpdate(BaseModel):
     last_name: Optional[str] = Field(None, min_length=1, max_length=100)
     dni: Optional[str] = Field(None, min_length=10, max_length=13)
     date_of_birth: Optional[date] = Field(None, description="Fecha de nacimiento (YYYY-MM-DD)")
-    role: Optional[str] = None
+
+
+class UserUpdateAdmin(UserUpdate):
+    """Schema para actualización de usuarios por parte de administradores"""
+    role: Optional[RoleEnum] = None
     is_active: Optional[bool] = None
 
 
