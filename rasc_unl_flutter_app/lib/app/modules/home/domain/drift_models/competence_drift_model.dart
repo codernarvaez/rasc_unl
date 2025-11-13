@@ -9,7 +9,9 @@ class CompetenceTable extends Table {
   DateTimeColumn get competitionDate => dateTime().nullable()();
   DateTimeColumn get competitionLimitForRegistrationDate => dateTime().nullable()();
   IntColumn get nTurns => integer().withDefault(const Constant(0))();
+  IntColumn get maxRegistrations => integer().nullable()(); // Límite de registros de tiempo
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  BoolColumn get isFinished => boolean().withDefault(const Constant(false))(); // Indica si finalizó
   TextColumn get createdBy => text()();
 
   // Guardamos los mapas como JSON strings

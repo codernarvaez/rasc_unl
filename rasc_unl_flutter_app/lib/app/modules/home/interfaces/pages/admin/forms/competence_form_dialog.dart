@@ -16,6 +16,7 @@ class CompetenceFormDialog extends StatefulWidget {
 class CompetenceFormData {
   final String name;
   final int nTurns;
+  final int? maxRegistrations;
   final DateTime competitionDate;
   final DateTime? competitionLimitForRegistrationDate;
   final bool isActive;
@@ -25,6 +26,7 @@ class CompetenceFormData {
   CompetenceFormData({
     required this.name,
     required this.nTurns,
+    this.maxRegistrations,
     required this.competitionDate,
     this.competitionLimitForRegistrationDate,
     required this.isActive,
@@ -37,6 +39,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _turnsController;
+  late TextEditingController _maxRegistrationsController;
   late DateTime _selectedDate;
   late DateTime? _registrationLimitDate;
   late bool _isActive;
@@ -60,6 +63,9 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
     );
     _turnsController = TextEditingController(
       text: widget.competence?.nTurns.toString() ?? '1',
+    );
+    _maxRegistrationsController = TextEditingController(
+      text: widget.competence?.maxRegistrations?.toString() ?? '',
     );
     _selectedDate = widget.competence?.competitionDate ?? DateTime.now();
     _registrationLimitDate =
@@ -284,6 +290,9 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
     final formData = CompetenceFormData(
       name: _nameController.text.trim(),
       nTurns: int.parse(_turnsController.text),
+      maxRegistrations: _maxRegistrationsController.text.trim().isEmpty 
+          ? null 
+          : int.parse(_maxRegistrationsController.text.trim()),
       competitionDate: _selectedDate,
       competitionLimitForRegistrationDate: _registrationLimitDate,
       isActive: _isActive,
@@ -432,6 +441,21 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
                     },
                   ),
                   SizedBox(height: 16),
+                  _buildTextField(
+                    controller: _maxRegistrationsController,
+                    label: 'Máximo de registros de tiempo (opcional)',
+                    icon: Icons.timer,
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value != null && value.isNotEmpty) {
+                        if (int.tryParse(value) == null || int.parse(value) < 1) {
+                          return 'Debe ser mayor a 0';
+                        }
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 16),
                 ],
               )
             : Row(
@@ -449,6 +473,24 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
                         if (int.tryParse(value) == null ||
                             int.parse(value) < 1) {
                           return 'Debe ser mayor a 0';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: _buildTextField(
+                      controller: _maxRegistrationsController,
+                      label: 'Máx. registros (opcional)',
+                      icon: Icons.timer,
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value != null && value.isNotEmpty) {
+                          if (int.tryParse(value) == null ||
+                              int.parse(value) < 1) {
+                            return 'Debe ser mayor a 0';
+                          }
                         }
                         return null;
                       },

@@ -11,7 +11,9 @@ class CompetenceModel {
   final DateTime? competitionDate;
   final DateTime? competitionLimitForRegistrationDate;
   final int nTurns;
+  final int? maxRegistrations; // Límite de registros de tiempo permitidos
   final bool isActive;
+  final bool isFinished; // Indica si la competencia finalizó
   final String createdBy; // User DNI of the creator
   final Map<String, List<double>> startCoordinates;
   final Map<String, List<double>> finishCoordinates;
@@ -24,7 +26,9 @@ class CompetenceModel {
     required this.competitionDate,
     required this.competitionLimitForRegistrationDate,
     required this.nTurns,
+    this.maxRegistrations,
     required this.isActive,
+    required this.isFinished,
     required this.createdBy,
     this.startCoordinates = const {
         "point_x": [0.0, 0.0],

@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 
-class SignupPage extends StatefulWidget {
+class SignupPage extends ConsumerStatefulWidget {
+  const SignupPage({Key? key}) : super(key: key);
+
   @override
-  _SignupPageState createState() => _SignupPageState();
+  ConsumerState<SignupPage> createState() => _SignupPageState();
 }
 
-class _SignupPageState extends State<SignupPage>
+class _SignupPageState extends ConsumerState<SignupPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   bool _obscurePassword = true;
   bool _acceptTerms = false;
+  bool _isLoading = false;
 
   final _dniController = TextEditingController();
   final _nombresController = TextEditingController();
@@ -42,6 +47,97 @@ class _SignupPageState extends State<SignupPage>
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleRegister() async {
+    // Validaciones
+    if (_dniController.text.trim().isEmpty) {
+      _showError('Por favor, ingrese su DNI');
+      return;
+    }
+    
+    if (_nombresController.text.trim().isEmpty) {
+      _showError('Por favor, ingrese sus nombres');
+      return;
+    }
+    
+    if (_apellidosController.text.trim().isEmpty) {
+      _showError('Por favor, ingrese sus apellidos');
+      return;
+    }
+    
+    if (_emailController.text.trim().isEmpty) {
+      _showError('Por favor, ingrese su email');
+      return;
+    }
+    
+    if (_passwordController.text.isEmpty) {
+      _showError('Por favor, ingrese su contraseña');
+      return;
+    }
+    
+    if (_passwordController.text.length < 8) {
+      _showError('La contraseña debe tener al menos 8 caracteres');
+      return;
+    }
+    
+    if (!_acceptTerms) {
+      _showError('Debe aceptar los términos y condiciones');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final repository = ref.read(rascUNLMainProvider);
+      final result = await repository.authRepository.register(
+        email: _emailController.text.trim(),
+        firstName: _nombresController.text.trim(),
+        lastName: _apellidosController.text.trim(),
+        dni: _dniController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (result.success) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.message),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+          // Redirigir al login después del registro exitoso
+          context.go('/login');
+        }
+      } else {
+        _showError(result.message);
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      _showError('Error inesperado: $e');
+    }
+  }
+
+  void _showError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.fixed,
+          duration: Duration(seconds: 4),
+        ),
+      );
+    }
   }
 
   @override
@@ -286,16 +382,16 @@ class _SignupPageState extends State<SignupPage>
                   Container(
                     height: 56,
                     decoration: BoxDecoration(
-                      gradient: _acceptTerms
+                      gradient: (_acceptTerms && !_isLoading)
                           ? LinearGradient(
                               colors: [Color(0xFFD50000), Color(0xFF8B0000)],
                             )
                           : null,
-                      color: _acceptTerms
+                      color: (_acceptTerms && !_isLoading)
                           ? null
                           : Colors.white.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: _acceptTerms
+                      boxShadow: (_acceptTerms && !_isLoading)
                           ? [
                               BoxShadow(
                                 color: Color(0xFFD50000).withOpacity(0.4),
@@ -306,10 +402,8 @@ class _SignupPageState extends State<SignupPage>
                           : null,
                     ),
                     child: ElevatedButton(
-                      onPressed: _acceptTerms
-                          ? () {
-                              context.go('/home');
-                            }
+                      onPressed: (_acceptTerms && !_isLoading)
+                          ? _handleRegister
                           : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
@@ -319,17 +413,26 @@ class _SignupPageState extends State<SignupPage>
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      child: Text(
-                        'Registrarse',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: _acceptTerms
-                              ? Colors.white
-                              : Colors.white.withOpacity(0.3),
-                          letterSpacing: 0.5,
-                        ),
-                      ),
+                      child: _isLoading
+                          ? SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : Text(
+                              'Registrarse',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: _acceptTerms
+                                    ? Colors.white
+                                    : Colors.white.withOpacity(0.3),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
                     ),
                   ),
 

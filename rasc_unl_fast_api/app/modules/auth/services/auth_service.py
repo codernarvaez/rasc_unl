@@ -4,10 +4,13 @@ Handles business logic for authentication operations
 """
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+import logging
 
 from app.core.jwt.jwt import JWTManager
 from app.modules.auth.repositories.user_repository import UserRepository
 from app.modules.auth.schemas.auth_schemas import UserCreate, LoginRequest
+
+logger = logging.getLogger(__name__)
 
 
 class AuthService:
@@ -20,36 +23,49 @@ class AuthService:
     
     async def register_user(self, user_data: UserCreate):
         """Registrar un nuevo usuario con validación."""
+        logger.info(f"Attempting to register user: {user_data.email}")
+        
         # Check if email already exists
         if await self.repository.exists(user_data.email):
+            logger.warning(f"Email already exists: {user_data.email}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered"
             )
         
         # Check if DNI already exists
-        if await self.repository.get_by_dni(user_data.dni):
+        existing_dni = await self.repository.get_by_dni(user_data.dni)
+        if existing_dni:
+            logger.warning(f"DNI already exists: {user_data.dni}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="DNI already registered"
             )
         
         user = await self.repository.create(user_data)
+        logger.info(f"User registered successfully: {user.email} (ID: {user.id})")
         return user
     
     async def login(self, credentials: LoginRequest) -> dict:
         """Autenticar al usuario y devolver tokens."""
+        logger.info(f"Login attempt for email: {credentials.email}")
+        
         # Get user by email
         user = await self.repository.get_by_email(credentials.email)
         
         if not user:
+            logger.warning(f"User not found: {credentials.email}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password"
             )
         
         # Verify password
-        if not await self.repository.verify_password(user, credentials.password):
+        password_valid = await self.repository.verify_password(user, credentials.password)
+        logger.info(f"Password verification for {credentials.email}: {password_valid}")
+        
+        if not password_valid:
+            logger.warning(f"Invalid password for: {credentials.email}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password"

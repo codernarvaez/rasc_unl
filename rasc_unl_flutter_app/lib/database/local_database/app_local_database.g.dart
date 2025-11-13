@@ -1389,6 +1389,17 @@ class $CompetenceTableTable extends CompetenceTable
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _maxRegistrationsMeta = const VerificationMeta(
+    'maxRegistrations',
+  );
+  @override
+  late final GeneratedColumn<int> maxRegistrations = GeneratedColumn<int>(
+    'max_registrations',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isActiveMeta = const VerificationMeta(
     'isActive',
   );
@@ -1403,6 +1414,21 @@ class $CompetenceTableTable extends CompetenceTable
       'CHECK ("is_active" IN (0, 1))',
     ),
     defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _isFinishedMeta = const VerificationMeta(
+    'isFinished',
+  );
+  @override
+  late final GeneratedColumn<bool> isFinished = GeneratedColumn<bool>(
+    'is_finished',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_finished" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
   );
   static const VerificationMeta _createdByMeta = const VerificationMeta(
     'createdBy',
@@ -1447,7 +1473,9 @@ class $CompetenceTableTable extends CompetenceTable
     competitionDate,
     competitionLimitForRegistrationDate,
     nTurns,
+    maxRegistrations,
     isActive,
+    isFinished,
     createdBy,
     startCoordinates,
     finishCoordinates,
@@ -1507,10 +1535,25 @@ class $CompetenceTableTable extends CompetenceTable
         nTurns.isAcceptableOrUnknown(data['n_turns']!, _nTurnsMeta),
       );
     }
+    if (data.containsKey('max_registrations')) {
+      context.handle(
+        _maxRegistrationsMeta,
+        maxRegistrations.isAcceptableOrUnknown(
+          data['max_registrations']!,
+          _maxRegistrationsMeta,
+        ),
+      );
+    }
     if (data.containsKey('is_active')) {
       context.handle(
         _isActiveMeta,
         isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('is_finished')) {
+      context.handle(
+        _isFinishedMeta,
+        isFinished.isAcceptableOrUnknown(data['is_finished']!, _isFinishedMeta),
       );
     }
     if (data.containsKey('created_by')) {
@@ -1554,9 +1597,17 @@ class $CompetenceTableTable extends CompetenceTable
         DriftSqlType.int,
         data['${effectivePrefix}n_turns'],
       )!,
+      maxRegistrations: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}max_registrations'],
+      ),
       isActive: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
+      )!,
+      isFinished: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_finished'],
       )!,
       createdBy: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -1598,7 +1649,9 @@ class competence_drift_model extends DataClass
   final DateTime? competitionDate;
   final DateTime? competitionLimitForRegistrationDate;
   final int nTurns;
+  final int? maxRegistrations;
   final bool isActive;
+  final bool isFinished;
   final String createdBy;
   final Map<String, List<double>> startCoordinates;
   final Map<String, List<double>> finishCoordinates;
@@ -1609,7 +1662,9 @@ class competence_drift_model extends DataClass
     this.competitionDate,
     this.competitionLimitForRegistrationDate,
     required this.nTurns,
+    this.maxRegistrations,
     required this.isActive,
+    required this.isFinished,
     required this.createdBy,
     required this.startCoordinates,
     required this.finishCoordinates,
@@ -1629,7 +1684,11 @@ class competence_drift_model extends DataClass
       );
     }
     map['n_turns'] = Variable<int>(nTurns);
+    if (!nullToAbsent || maxRegistrations != null) {
+      map['max_registrations'] = Variable<int>(maxRegistrations);
+    }
     map['is_active'] = Variable<bool>(isActive);
+    map['is_finished'] = Variable<bool>(isFinished);
     map['created_by'] = Variable<String>(createdBy);
     {
       map['start_coordinates'] = Variable<String>(
@@ -1661,7 +1720,11 @@ class competence_drift_model extends DataClass
           ? const Value.absent()
           : Value(competitionLimitForRegistrationDate),
       nTurns: Value(nTurns),
+      maxRegistrations: maxRegistrations == null && nullToAbsent
+          ? const Value.absent()
+          : Value(maxRegistrations),
       isActive: Value(isActive),
+      isFinished: Value(isFinished),
       createdBy: Value(createdBy),
       startCoordinates: Value(startCoordinates),
       finishCoordinates: Value(finishCoordinates),
@@ -1682,7 +1745,9 @@ class competence_drift_model extends DataClass
         json['competitionLimitForRegistrationDate'],
       ),
       nTurns: serializer.fromJson<int>(json['nTurns']),
+      maxRegistrations: serializer.fromJson<int?>(json['maxRegistrations']),
       isActive: serializer.fromJson<bool>(json['isActive']),
+      isFinished: serializer.fromJson<bool>(json['isFinished']),
       createdBy: serializer.fromJson<String>(json['createdBy']),
       startCoordinates: serializer.fromJson<Map<String, List<double>>>(
         json['startCoordinates'],
@@ -1704,7 +1769,9 @@ class competence_drift_model extends DataClass
         competitionLimitForRegistrationDate,
       ),
       'nTurns': serializer.toJson<int>(nTurns),
+      'maxRegistrations': serializer.toJson<int?>(maxRegistrations),
       'isActive': serializer.toJson<bool>(isActive),
+      'isFinished': serializer.toJson<bool>(isFinished),
       'createdBy': serializer.toJson<String>(createdBy),
       'startCoordinates': serializer.toJson<Map<String, List<double>>>(
         startCoordinates,
@@ -1722,7 +1789,9 @@ class competence_drift_model extends DataClass
     Value<DateTime?> competitionDate = const Value.absent(),
     Value<DateTime?> competitionLimitForRegistrationDate = const Value.absent(),
     int? nTurns,
+    Value<int?> maxRegistrations = const Value.absent(),
     bool? isActive,
+    bool? isFinished,
     String? createdBy,
     Map<String, List<double>>? startCoordinates,
     Map<String, List<double>>? finishCoordinates,
@@ -1738,7 +1807,11 @@ class competence_drift_model extends DataClass
         ? competitionLimitForRegistrationDate.value
         : this.competitionLimitForRegistrationDate,
     nTurns: nTurns ?? this.nTurns,
+    maxRegistrations: maxRegistrations.present
+        ? maxRegistrations.value
+        : this.maxRegistrations,
     isActive: isActive ?? this.isActive,
+    isFinished: isFinished ?? this.isFinished,
     createdBy: createdBy ?? this.createdBy,
     startCoordinates: startCoordinates ?? this.startCoordinates,
     finishCoordinates: finishCoordinates ?? this.finishCoordinates,
@@ -1758,7 +1831,13 @@ class competence_drift_model extends DataClass
           ? data.competitionLimitForRegistrationDate.value
           : this.competitionLimitForRegistrationDate,
       nTurns: data.nTurns.present ? data.nTurns.value : this.nTurns,
+      maxRegistrations: data.maxRegistrations.present
+          ? data.maxRegistrations.value
+          : this.maxRegistrations,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      isFinished: data.isFinished.present
+          ? data.isFinished.value
+          : this.isFinished,
       createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
       startCoordinates: data.startCoordinates.present
           ? data.startCoordinates.value
@@ -1780,7 +1859,9 @@ class competence_drift_model extends DataClass
             'competitionLimitForRegistrationDate: $competitionLimitForRegistrationDate, ',
           )
           ..write('nTurns: $nTurns, ')
+          ..write('maxRegistrations: $maxRegistrations, ')
           ..write('isActive: $isActive, ')
+          ..write('isFinished: $isFinished, ')
           ..write('createdBy: $createdBy, ')
           ..write('startCoordinates: $startCoordinates, ')
           ..write('finishCoordinates: $finishCoordinates')
@@ -1796,7 +1877,9 @@ class competence_drift_model extends DataClass
     competitionDate,
     competitionLimitForRegistrationDate,
     nTurns,
+    maxRegistrations,
     isActive,
+    isFinished,
     createdBy,
     startCoordinates,
     finishCoordinates,
@@ -1812,7 +1895,9 @@ class competence_drift_model extends DataClass
           other.competitionLimitForRegistrationDate ==
               this.competitionLimitForRegistrationDate &&
           other.nTurns == this.nTurns &&
+          other.maxRegistrations == this.maxRegistrations &&
           other.isActive == this.isActive &&
+          other.isFinished == this.isFinished &&
           other.createdBy == this.createdBy &&
           other.startCoordinates == this.startCoordinates &&
           other.finishCoordinates == this.finishCoordinates);
@@ -1825,7 +1910,9 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
   final Value<DateTime?> competitionDate;
   final Value<DateTime?> competitionLimitForRegistrationDate;
   final Value<int> nTurns;
+  final Value<int?> maxRegistrations;
   final Value<bool> isActive;
+  final Value<bool> isFinished;
   final Value<String> createdBy;
   final Value<Map<String, List<double>>> startCoordinates;
   final Value<Map<String, List<double>>> finishCoordinates;
@@ -1836,7 +1923,9 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     this.competitionDate = const Value.absent(),
     this.competitionLimitForRegistrationDate = const Value.absent(),
     this.nTurns = const Value.absent(),
+    this.maxRegistrations = const Value.absent(),
     this.isActive = const Value.absent(),
+    this.isFinished = const Value.absent(),
     this.createdBy = const Value.absent(),
     this.startCoordinates = const Value.absent(),
     this.finishCoordinates = const Value.absent(),
@@ -1848,7 +1937,9 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     this.competitionDate = const Value.absent(),
     this.competitionLimitForRegistrationDate = const Value.absent(),
     this.nTurns = const Value.absent(),
+    this.maxRegistrations = const Value.absent(),
     this.isActive = const Value.absent(),
+    this.isFinished = const Value.absent(),
     required String createdBy,
     required Map<String, List<double>> startCoordinates,
     required Map<String, List<double>> finishCoordinates,
@@ -1864,7 +1955,9 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     Expression<DateTime>? competitionDate,
     Expression<DateTime>? competitionLimitForRegistrationDate,
     Expression<int>? nTurns,
+    Expression<int>? maxRegistrations,
     Expression<bool>? isActive,
+    Expression<bool>? isFinished,
     Expression<String>? createdBy,
     Expression<String>? startCoordinates,
     Expression<String>? finishCoordinates,
@@ -1878,7 +1971,9 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
         'competition_limit_for_registration_date':
             competitionLimitForRegistrationDate,
       if (nTurns != null) 'n_turns': nTurns,
+      if (maxRegistrations != null) 'max_registrations': maxRegistrations,
       if (isActive != null) 'is_active': isActive,
+      if (isFinished != null) 'is_finished': isFinished,
       if (createdBy != null) 'created_by': createdBy,
       if (startCoordinates != null) 'start_coordinates': startCoordinates,
       if (finishCoordinates != null) 'finish_coordinates': finishCoordinates,
@@ -1892,7 +1987,9 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     Value<DateTime?>? competitionDate,
     Value<DateTime?>? competitionLimitForRegistrationDate,
     Value<int>? nTurns,
+    Value<int?>? maxRegistrations,
     Value<bool>? isActive,
+    Value<bool>? isFinished,
     Value<String>? createdBy,
     Value<Map<String, List<double>>>? startCoordinates,
     Value<Map<String, List<double>>>? finishCoordinates,
@@ -1906,7 +2003,9 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
           competitionLimitForRegistrationDate ??
           this.competitionLimitForRegistrationDate,
       nTurns: nTurns ?? this.nTurns,
+      maxRegistrations: maxRegistrations ?? this.maxRegistrations,
       isActive: isActive ?? this.isActive,
+      isFinished: isFinished ?? this.isFinished,
       createdBy: createdBy ?? this.createdBy,
       startCoordinates: startCoordinates ?? this.startCoordinates,
       finishCoordinates: finishCoordinates ?? this.finishCoordinates,
@@ -1936,8 +2035,14 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     if (nTurns.present) {
       map['n_turns'] = Variable<int>(nTurns.value);
     }
+    if (maxRegistrations.present) {
+      map['max_registrations'] = Variable<int>(maxRegistrations.value);
+    }
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (isFinished.present) {
+      map['is_finished'] = Variable<bool>(isFinished.value);
     }
     if (createdBy.present) {
       map['created_by'] = Variable<String>(createdBy.value);
@@ -1970,7 +2075,9 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
             'competitionLimitForRegistrationDate: $competitionLimitForRegistrationDate, ',
           )
           ..write('nTurns: $nTurns, ')
+          ..write('maxRegistrations: $maxRegistrations, ')
           ..write('isActive: $isActive, ')
+          ..write('isFinished: $isFinished, ')
           ..write('createdBy: $createdBy, ')
           ..write('startCoordinates: $startCoordinates, ')
           ..write('finishCoordinates: $finishCoordinates')
@@ -2458,6 +2565,436 @@ class CompetitionRegistrationTableCompanion
   }
 }
 
+class $CompetitionTimeRecordTableTable extends CompetitionTimeRecordTable
+    with
+        TableInfo<
+          $CompetitionTimeRecordTableTable,
+          competition_time_record_drift_model
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CompetitionTimeRecordTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _registrationNumberMeta =
+      const VerificationMeta('registrationNumber');
+  @override
+  late final GeneratedColumn<String> registrationNumber =
+      GeneratedColumn<String>(
+        'registration_number',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _timeMeta = const VerificationMeta('time');
+  @override
+  late final GeneratedColumn<int> time = GeneratedColumn<int>(
+    'time',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _competenceIdMeta = const VerificationMeta(
+    'competenceId',
+  );
+  @override
+  late final GeneratedColumn<int> competenceId = GeneratedColumn<int>(
+    'competence_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    registrationNumber,
+    time,
+    competenceId,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'competition_time_record_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<competition_time_record_drift_model> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('registration_number')) {
+      context.handle(
+        _registrationNumberMeta,
+        registrationNumber.isAcceptableOrUnknown(
+          data['registration_number']!,
+          _registrationNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('time')) {
+      context.handle(
+        _timeMeta,
+        time.isAcceptableOrUnknown(data['time']!, _timeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_timeMeta);
+    }
+    if (data.containsKey('competence_id')) {
+      context.handle(
+        _competenceIdMeta,
+        competenceId.isAcceptableOrUnknown(
+          data['competence_id']!,
+          _competenceIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_competenceIdMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  competition_time_record_drift_model map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return competition_time_record_drift_model(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      registrationNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}registration_number'],
+      ),
+      time: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}time'],
+      )!,
+      competenceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}competence_id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CompetitionTimeRecordTableTable createAlias(String alias) {
+    return $CompetitionTimeRecordTableTable(attachedDatabase, alias);
+  }
+}
+
+class competition_time_record_drift_model extends DataClass
+    implements Insertable<competition_time_record_drift_model> {
+  final int id;
+  final String? registrationNumber;
+  final int time;
+  final int competenceId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const competition_time_record_drift_model({
+    required this.id,
+    this.registrationNumber,
+    required this.time,
+    required this.competenceId,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    if (!nullToAbsent || registrationNumber != null) {
+      map['registration_number'] = Variable<String>(registrationNumber);
+    }
+    map['time'] = Variable<int>(time);
+    map['competence_id'] = Variable<int>(competenceId);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  CompetitionTimeRecordTableCompanion toCompanion(bool nullToAbsent) {
+    return CompetitionTimeRecordTableCompanion(
+      id: Value(id),
+      registrationNumber: registrationNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(registrationNumber),
+      time: Value(time),
+      competenceId: Value(competenceId),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory competition_time_record_drift_model.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return competition_time_record_drift_model(
+      id: serializer.fromJson<int>(json['id']),
+      registrationNumber: serializer.fromJson<String?>(
+        json['registrationNumber'],
+      ),
+      time: serializer.fromJson<int>(json['time']),
+      competenceId: serializer.fromJson<int>(json['competenceId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'registrationNumber': serializer.toJson<String?>(registrationNumber),
+      'time': serializer.toJson<int>(time),
+      'competenceId': serializer.toJson<int>(competenceId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  competition_time_record_drift_model copyWith({
+    int? id,
+    Value<String?> registrationNumber = const Value.absent(),
+    int? time,
+    int? competenceId,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => competition_time_record_drift_model(
+    id: id ?? this.id,
+    registrationNumber: registrationNumber.present
+        ? registrationNumber.value
+        : this.registrationNumber,
+    time: time ?? this.time,
+    competenceId: competenceId ?? this.competenceId,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  competition_time_record_drift_model copyWithCompanion(
+    CompetitionTimeRecordTableCompanion data,
+  ) {
+    return competition_time_record_drift_model(
+      id: data.id.present ? data.id.value : this.id,
+      registrationNumber: data.registrationNumber.present
+          ? data.registrationNumber.value
+          : this.registrationNumber,
+      time: data.time.present ? data.time.value : this.time,
+      competenceId: data.competenceId.present
+          ? data.competenceId.value
+          : this.competenceId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('competition_time_record_drift_model(')
+          ..write('id: $id, ')
+          ..write('registrationNumber: $registrationNumber, ')
+          ..write('time: $time, ')
+          ..write('competenceId: $competenceId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    registrationNumber,
+    time,
+    competenceId,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is competition_time_record_drift_model &&
+          other.id == this.id &&
+          other.registrationNumber == this.registrationNumber &&
+          other.time == this.time &&
+          other.competenceId == this.competenceId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class CompetitionTimeRecordTableCompanion
+    extends UpdateCompanion<competition_time_record_drift_model> {
+  final Value<int> id;
+  final Value<String?> registrationNumber;
+  final Value<int> time;
+  final Value<int> competenceId;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  const CompetitionTimeRecordTableCompanion({
+    this.id = const Value.absent(),
+    this.registrationNumber = const Value.absent(),
+    this.time = const Value.absent(),
+    this.competenceId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  CompetitionTimeRecordTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.registrationNumber = const Value.absent(),
+    required int time,
+    required int competenceId,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) : time = Value(time),
+       competenceId = Value(competenceId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<competition_time_record_drift_model> custom({
+    Expression<int>? id,
+    Expression<String>? registrationNumber,
+    Expression<int>? time,
+    Expression<int>? competenceId,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (registrationNumber != null) 'registration_number': registrationNumber,
+      if (time != null) 'time': time,
+      if (competenceId != null) 'competence_id': competenceId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  CompetitionTimeRecordTableCompanion copyWith({
+    Value<int>? id,
+    Value<String?>? registrationNumber,
+    Value<int>? time,
+    Value<int>? competenceId,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+  }) {
+    return CompetitionTimeRecordTableCompanion(
+      id: id ?? this.id,
+      registrationNumber: registrationNumber ?? this.registrationNumber,
+      time: time ?? this.time,
+      competenceId: competenceId ?? this.competenceId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (registrationNumber.present) {
+      map['registration_number'] = Variable<String>(registrationNumber.value);
+    }
+    if (time.present) {
+      map['time'] = Variable<int>(time.value);
+    }
+    if (competenceId.present) {
+      map['competence_id'] = Variable<int>(competenceId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CompetitionTimeRecordTableCompanion(')
+          ..write('id: $id, ')
+          ..write('registrationNumber: $registrationNumber, ')
+          ..write('time: $time, ')
+          ..write('competenceId: $competenceId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppLocalDatabase extends GeneratedDatabase {
   _$AppLocalDatabase(QueryExecutor e) : super(e);
   $AppLocalDatabaseManager get managers => $AppLocalDatabaseManager(this);
@@ -2468,6 +3005,8 @@ abstract class _$AppLocalDatabase extends GeneratedDatabase {
   );
   late final $CompetitionRegistrationTableTable competitionRegistrationTable =
       $CompetitionRegistrationTableTable(this);
+  late final $CompetitionTimeRecordTableTable competitionTimeRecordTable =
+      $CompetitionTimeRecordTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2477,6 +3016,7 @@ abstract class _$AppLocalDatabase extends GeneratedDatabase {
     sessionTable,
     competenceTable,
     competitionRegistrationTable,
+    competitionTimeRecordTable,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -3356,7 +3896,9 @@ typedef $$CompetenceTableTableCreateCompanionBuilder =
       Value<DateTime?> competitionDate,
       Value<DateTime?> competitionLimitForRegistrationDate,
       Value<int> nTurns,
+      Value<int?> maxRegistrations,
       Value<bool> isActive,
+      Value<bool> isFinished,
       required String createdBy,
       required Map<String, List<double>> startCoordinates,
       required Map<String, List<double>> finishCoordinates,
@@ -3369,7 +3911,9 @@ typedef $$CompetenceTableTableUpdateCompanionBuilder =
       Value<DateTime?> competitionDate,
       Value<DateTime?> competitionLimitForRegistrationDate,
       Value<int> nTurns,
+      Value<int?> maxRegistrations,
       Value<bool> isActive,
+      Value<bool> isFinished,
       Value<String> createdBy,
       Value<Map<String, List<double>>> startCoordinates,
       Value<Map<String, List<double>>> finishCoordinates,
@@ -3415,8 +3959,18 @@ class $$CompetenceTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get maxRegistrations => $composableBuilder(
+    column: $table.maxRegistrations,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<bool> get isActive => $composableBuilder(
     column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isFinished => $composableBuilder(
+    column: $table.isFinished,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3486,8 +4040,18 @@ class $$CompetenceTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get maxRegistrations => $composableBuilder(
+    column: $table.maxRegistrations,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isActive => $composableBuilder(
     column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isFinished => $composableBuilder(
+    column: $table.isFinished,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -3541,8 +4105,18 @@ class $$CompetenceTableTableAnnotationComposer
   GeneratedColumn<int> get nTurns =>
       $composableBuilder(column: $table.nTurns, builder: (column) => column);
 
+  GeneratedColumn<int> get maxRegistrations => $composableBuilder(
+    column: $table.maxRegistrations,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<bool> get isFinished => $composableBuilder(
+    column: $table.isFinished,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get createdBy =>
       $composableBuilder(column: $table.createdBy, builder: (column) => column);
@@ -3604,7 +4178,9 @@ class $$CompetenceTableTableTableManager
                 Value<DateTime?> competitionLimitForRegistrationDate =
                     const Value.absent(),
                 Value<int> nTurns = const Value.absent(),
+                Value<int?> maxRegistrations = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
+                Value<bool> isFinished = const Value.absent(),
                 Value<String> createdBy = const Value.absent(),
                 Value<Map<String, List<double>>> startCoordinates =
                     const Value.absent(),
@@ -3618,7 +4194,9 @@ class $$CompetenceTableTableTableManager
                 competitionLimitForRegistrationDate:
                     competitionLimitForRegistrationDate,
                 nTurns: nTurns,
+                maxRegistrations: maxRegistrations,
                 isActive: isActive,
+                isFinished: isFinished,
                 createdBy: createdBy,
                 startCoordinates: startCoordinates,
                 finishCoordinates: finishCoordinates,
@@ -3632,7 +4210,9 @@ class $$CompetenceTableTableTableManager
                 Value<DateTime?> competitionLimitForRegistrationDate =
                     const Value.absent(),
                 Value<int> nTurns = const Value.absent(),
+                Value<int?> maxRegistrations = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
+                Value<bool> isFinished = const Value.absent(),
                 required String createdBy,
                 required Map<String, List<double>> startCoordinates,
                 required Map<String, List<double>> finishCoordinates,
@@ -3644,7 +4224,9 @@ class $$CompetenceTableTableTableManager
                 competitionLimitForRegistrationDate:
                     competitionLimitForRegistrationDate,
                 nTurns: nTurns,
+                maxRegistrations: maxRegistrations,
                 isActive: isActive,
+                isFinished: isFinished,
                 createdBy: createdBy,
                 startCoordinates: startCoordinates,
                 finishCoordinates: finishCoordinates,
@@ -3935,6 +4517,242 @@ typedef $$CompetitionRegistrationTableTableProcessedTableManager =
       competition_registration_drift_model,
       PrefetchHooks Function()
     >;
+typedef $$CompetitionTimeRecordTableTableCreateCompanionBuilder =
+    CompetitionTimeRecordTableCompanion Function({
+      Value<int> id,
+      Value<String?> registrationNumber,
+      required int time,
+      required int competenceId,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+    });
+typedef $$CompetitionTimeRecordTableTableUpdateCompanionBuilder =
+    CompetitionTimeRecordTableCompanion Function({
+      Value<int> id,
+      Value<String?> registrationNumber,
+      Value<int> time,
+      Value<int> competenceId,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+    });
+
+class $$CompetitionTimeRecordTableTableFilterComposer
+    extends Composer<_$AppLocalDatabase, $CompetitionTimeRecordTableTable> {
+  $$CompetitionTimeRecordTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get registrationNumber => $composableBuilder(
+    column: $table.registrationNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get time => $composableBuilder(
+    column: $table.time,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get competenceId => $composableBuilder(
+    column: $table.competenceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CompetitionTimeRecordTableTableOrderingComposer
+    extends Composer<_$AppLocalDatabase, $CompetitionTimeRecordTableTable> {
+  $$CompetitionTimeRecordTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get registrationNumber => $composableBuilder(
+    column: $table.registrationNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get time => $composableBuilder(
+    column: $table.time,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get competenceId => $composableBuilder(
+    column: $table.competenceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CompetitionTimeRecordTableTableAnnotationComposer
+    extends Composer<_$AppLocalDatabase, $CompetitionTimeRecordTableTable> {
+  $$CompetitionTimeRecordTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get registrationNumber => $composableBuilder(
+    column: $table.registrationNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get time =>
+      $composableBuilder(column: $table.time, builder: (column) => column);
+
+  GeneratedColumn<int> get competenceId => $composableBuilder(
+    column: $table.competenceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$CompetitionTimeRecordTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppLocalDatabase,
+          $CompetitionTimeRecordTableTable,
+          competition_time_record_drift_model,
+          $$CompetitionTimeRecordTableTableFilterComposer,
+          $$CompetitionTimeRecordTableTableOrderingComposer,
+          $$CompetitionTimeRecordTableTableAnnotationComposer,
+          $$CompetitionTimeRecordTableTableCreateCompanionBuilder,
+          $$CompetitionTimeRecordTableTableUpdateCompanionBuilder,
+          (
+            competition_time_record_drift_model,
+            BaseReferences<
+              _$AppLocalDatabase,
+              $CompetitionTimeRecordTableTable,
+              competition_time_record_drift_model
+            >,
+          ),
+          competition_time_record_drift_model,
+          PrefetchHooks Function()
+        > {
+  $$CompetitionTimeRecordTableTableTableManager(
+    _$AppLocalDatabase db,
+    $CompetitionTimeRecordTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CompetitionTimeRecordTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$CompetitionTimeRecordTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$CompetitionTimeRecordTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String?> registrationNumber = const Value.absent(),
+                Value<int> time = const Value.absent(),
+                Value<int> competenceId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => CompetitionTimeRecordTableCompanion(
+                id: id,
+                registrationNumber: registrationNumber,
+                time: time,
+                competenceId: competenceId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String?> registrationNumber = const Value.absent(),
+                required int time,
+                required int competenceId,
+                required DateTime createdAt,
+                required DateTime updatedAt,
+              }) => CompetitionTimeRecordTableCompanion.insert(
+                id: id,
+                registrationNumber: registrationNumber,
+                time: time,
+                competenceId: competenceId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CompetitionTimeRecordTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppLocalDatabase,
+      $CompetitionTimeRecordTableTable,
+      competition_time_record_drift_model,
+      $$CompetitionTimeRecordTableTableFilterComposer,
+      $$CompetitionTimeRecordTableTableOrderingComposer,
+      $$CompetitionTimeRecordTableTableAnnotationComposer,
+      $$CompetitionTimeRecordTableTableCreateCompanionBuilder,
+      $$CompetitionTimeRecordTableTableUpdateCompanionBuilder,
+      (
+        competition_time_record_drift_model,
+        BaseReferences<
+          _$AppLocalDatabase,
+          $CompetitionTimeRecordTableTable,
+          competition_time_record_drift_model
+        >,
+      ),
+      competition_time_record_drift_model,
+      PrefetchHooks Function()
+    >;
 
 class $AppLocalDatabaseManager {
   final _$AppLocalDatabase _db;
@@ -3950,5 +4768,11 @@ class $AppLocalDatabaseManager {
       $$CompetitionRegistrationTableTableTableManager(
         _db,
         _db.competitionRegistrationTable,
+      );
+  $$CompetitionTimeRecordTableTableTableManager
+  get competitionTimeRecordTable =>
+      $$CompetitionTimeRecordTableTableTableManager(
+        _db,
+        _db.competitionTimeRecordTable,
       );
 }

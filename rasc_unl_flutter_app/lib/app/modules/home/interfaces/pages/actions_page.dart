@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 
-class ActionsPage extends StatefulWidget {
+class ActionsPage extends ConsumerStatefulWidget {
   const ActionsPage({super.key});
 
   @override
-  State<ActionsPage> createState() => _ActionsPageState();
+  ConsumerState<ActionsPage> createState() => _ActionsPageState();
 }
 
-class _ActionsPageState extends State<ActionsPage> with SingleTickerProviderStateMixin {
+class _ActionsPageState extends ConsumerState<ActionsPage> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
 
@@ -33,6 +35,11 @@ class _ActionsPageState extends State<ActionsPage> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = ref.watch(currentUserProvider);
+    final isAdmin = currentUser?.isAdministrator ?? false;
+    final isModerator = currentUser?.isModerator ?? false;
+    final isCompetitor = currentUser?.isCompetitor ?? false;
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -108,99 +115,158 @@ class _ActionsPageState extends State<ActionsPage> with SingleTickerProviderStat
                 
                 SizedBox(height: 32),
                 
-                // Sección Usuario
-                _buildSectionHeader('Mis Acciones', Icons.person_outline),
-                SizedBox(height: 12),
-                
-                _buildActionCard(
-                  icon: Icons.emoji_events_outlined,
-                  title: 'Mis Records RASC-UNL',
-                  subtitle: 'Ver mis logros y actividades registradas',
-                  gradient: [Color(0xFFD50000), Color(0xFF8B0000)],
-                  onTap: () {
-                    context.go('/my-records');
-                  },
-                ),
-                
-                SizedBox(height: 12),
-                
-                _buildActionCard(
-                  icon: Icons.sports_score_outlined,
-                  title: 'Ver Competencias Disponibles',
-                  subtitle: 'Registrarme en nuevas competencias',
-                  gradient: [Color(0xFFD50000).withOpacity(0.8), Color(0xFF8B0000).withOpacity(0.8)],
-                  onTap: () {
-                    context.go('/available-competences');
-                  },
-                ),
-                
-                SizedBox(height: 32),
-                
-                // Divisor
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 1,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.transparent,
-                                Color(0xFFD50000).withOpacity(0.5),
-                                Colors.transparent,
-                              ],
+                // Sección Usuario (todos los roles)
+                if (isCompetitor || isAdmin) ...[
+                  _buildSectionHeader('Mis Acciones', Icons.person_outline),
+                  SizedBox(height: 12),
+                  
+                  _buildActionCard(
+                    icon: Icons.emoji_events_outlined,
+                    title: 'Mis Records RASC-UNL',
+                    subtitle: 'Ver mis logros y actividades registradas',
+                    gradient: [Color(0xFFD50000), Color(0xFF8B0000)],
+                    onTap: () {
+                      context.go('/my-records');
+                    },
+                  ),
+                  
+                  SizedBox(height: 12),
+                  
+                  _buildActionCard(
+                    icon: Icons.sports_score_outlined,
+                    title: 'Ver Competencias Disponibles',
+                    subtitle: 'Registrarme en nuevas competencias',
+                    gradient: [Color(0xFFD50000).withOpacity(0.8), Color(0xFF8B0000).withOpacity(0.8)],
+                    onTap: () {
+                      context.go('/available-competences');
+                    },
+                  ),
+                  
+                  SizedBox(height: 32),
+                  
+                  // Divisor
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 1,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.transparent,
+                                  Color(0xFFD50000).withOpacity(0.5),
+                                  Colors.transparent,
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                  
+                  SizedBox(height: 32),
+                ],
                 
-                SizedBox(height: 32),
+                // Sección Moderador
+                if (isModerator) ...[
+                  _buildSectionHeader('Panel de Moderador', Icons.timer_outlined),
+                  SizedBox(height: 12),
+                  
+                  _buildActionCard(
+                    icon: Icons.timer,
+                    title: 'Cronómetro de Competencias',
+                    subtitle: 'Registrar tiempos de las competencias activas',
+                    gradient: [Color(0xFF2196F3), Color(0xFF1976D2)],
+                    onTap: () {
+                      context.go('/moderator/timer');
+                    },
+                  ),
+                  
+                  SizedBox(height: 12),
+                  
+                  _buildActionCard(
+                    icon: Icons.visibility_outlined,
+                    title: 'Ver Competencias Activas',
+                    subtitle: 'Consultar competencias disponibles para moderar',
+                    gradient: [Color(0xFF2196F3).withOpacity(0.8), Color(0xFF1976D2).withOpacity(0.8)],
+                    onTap: () {
+                      context.go('/available-competences');
+                    },
+                  ),
+                  
+                  SizedBox(height: 32),
+                  
+                  // Divisor
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 1,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.transparent,
+                                  Color(0xFF2196F3).withOpacity(0.5),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  SizedBox(height: 32),
+                ],
                 
                 // Sección Administrador
-                _buildSectionHeader('Gestión Administrativa', Icons.admin_panel_settings_outlined),
-                SizedBox(height: 12),
-                
-                _buildActionCard(
-                  icon: Icons.manage_accounts_outlined,
-                  title: 'Gestionar Usuarios',
-                  subtitle: 'Ver y administrar usuarios registrados',
-                  gradient: [Color(0xFF424242), Color(0xFF212121)],
-                  onTap: () {
-                    context.go('/manage-users');
-                  },
-                ),
-                
-                SizedBox(height: 12),
-                
-                _buildActionCard(
-                  icon: Icons.event_available_outlined,
-                  title: 'Gestionar Competencias',
-                  subtitle: 'Ver y administrar competencias disponibles',
-                  gradient: [Color(0xFF424242), Color(0xFF212121)],
-                  onTap: () {
-                    context.go('/manage-competences');
-                  },
-                ),
-                
-                
-                SizedBox(height: 12),
-                
-                _buildActionCard(
-                  icon: Icons.analytics_outlined,
-                  title: 'Generar Reportes',
-                  subtitle: 'Crear y descargar reportes de actividades',
-                  gradient: [Color(0xFF424242), Color(0xFF212121)],
-                  onTap: () {
-                    context.go('/generate-reports');
-                  },
-                ),
-                
-                SizedBox(height: 32),
+                if (isAdmin) ...[
+                  _buildSectionHeader('Gestión Administrativa', Icons.admin_panel_settings_outlined),
+                  SizedBox(height: 12),
+                  
+                  _buildActionCard(
+                    icon: Icons.manage_accounts_outlined,
+                    title: 'Gestionar Usuarios',
+                    subtitle: 'Ver y administrar usuarios registrados',
+                    gradient: [Color(0xFF424242), Color(0xFF212121)],
+                    onTap: () {
+                      context.go('/manage-users');
+                    },
+                  ),
+                  
+                  SizedBox(height: 12),
+                  
+                  _buildActionCard(
+                    icon: Icons.event_available_outlined,
+                    title: 'Gestionar Competencias',
+                    subtitle: 'Ver y administrar competencias disponibles',
+                    gradient: [Color(0xFF424242), Color(0xFF212121)],
+                    onTap: () {
+                      context.go('/manage-competences');
+                    },
+                  ),
+                  
+                  
+                  SizedBox(height: 12),
+                  
+                  _buildActionCard(
+                    icon: Icons.analytics_outlined,
+                    title: 'Generar Reportes',
+                    subtitle: 'Crear y descargar reportes de actividades',
+                    gradient: [Color(0xFF424242), Color(0xFF212121)],
+                    onTap: () {
+                      context.go('/generate-reports');
+                    },
+                  ),
+                  
+                  SizedBox(height: 32),
+                ],
               ],
             ),
           ),

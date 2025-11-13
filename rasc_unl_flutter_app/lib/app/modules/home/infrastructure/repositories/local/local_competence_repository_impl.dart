@@ -48,6 +48,8 @@ class LocalCompetenceRepositoryImpl implements CompetenceRepository {
             createdBy: row.createdBy,
             startCoordinates: row.startCoordinates,
             finishCoordinates: row.finishCoordinates,
+            maxRegistrations: row.maxRegistrations,
+            isFinished: row.isFinished,
           ),
         )
         .toList();
@@ -70,6 +72,8 @@ class LocalCompetenceRepositoryImpl implements CompetenceRepository {
         createdBy: queryResult.createdBy,
         startCoordinates: queryResult.startCoordinates,
         finishCoordinates: queryResult.finishCoordinates,
+        maxRegistrations: queryResult.maxRegistrations,
+        isFinished: queryResult.isFinished,
       );
     }
     return null;

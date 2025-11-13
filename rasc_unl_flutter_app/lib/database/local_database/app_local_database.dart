@@ -5,13 +5,14 @@ import 'package:rasc_unl_flutter_app/app/modules/auth/domain/drift_models/user_d
 import 'package:rasc_unl_flutter_app/app/modules/auth/domain/drift_models/session_drift_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/domain/drift_models/competence_drift_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/domain/drift_models/competition_registration_drift_model.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/domain/drift_models/competition_time_record_drift_model.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 import 'connection/connection.dart';
 
 part 'app_local_database.g.dart';
 
 @DriftDatabase(
-  tables: [UserTable, SessionTable, CompetenceTable, CompetitionRegistrationTable],
+  tables: [UserTable, SessionTable, CompetenceTable, CompetitionRegistrationTable, CompetitionTimeRecordTable],
   include: {
     'queries/functions.drift',
     'queries/indexs.drift',

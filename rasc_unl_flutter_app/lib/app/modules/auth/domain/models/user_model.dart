@@ -42,9 +42,11 @@ class UserModel {
   
   bool get isAdministrator => rol == 'ADMINISTRATOR';
   bool get isCompetitor => rol == 'COMPETITOR';
+  bool get isModerator => rol == 'MODERATOR';
 }
 
 enum UserRoleType {
   ADMINISTRATOR,
   COMPETITOR,
+  MODERATOR,
 }

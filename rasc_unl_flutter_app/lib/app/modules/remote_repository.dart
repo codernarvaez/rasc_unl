@@ -4,9 +4,11 @@ import 'package:rasc_unl_flutter_app/app/modules/auth/infrastructure/repositorie
 import 'package:rasc_unl_flutter_app/app/modules/auth/infrastructure/repositories/remote/remote_user_repository_impl.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/infrastructure/repositories/remote/remote_competence_repository_impl.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/infrastructure/repositories/remote/remote_competition_registration_repository_impl.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/infrastructure/repositories/remote/remote_competition_time_record_repository_impl.dart';
 import 'package:rasc_unl_flutter_app/app/modules/main_repository.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/domain/repositories/competence_repository.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/domain/repositories/competition_registration_repository.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/domain/repositories/competition_time_record_repository.dart';
 
 class RemoteRepository implements MainRepository {
   final String? accessToken;
@@ -20,6 +22,10 @@ class RemoteRepository implements MainRepository {
   @override
   CompetitionRegistrationRepository get competitionRegistrationRepository =>
       RemoteCompetitionRegistrationRepositoryImpl(accessToken: accessToken);
+
+  @override
+  CompetitionTimeRecordRepository get competitionTimeRecordRepository =>
+      RemoteCompetitionTimeRecordRepositoryImpl(accessToken: accessToken);
 
   @override
   UserRepository get userRepository =>

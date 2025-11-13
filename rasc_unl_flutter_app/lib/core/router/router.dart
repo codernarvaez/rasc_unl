@@ -8,6 +8,7 @@ import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/gen
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/manage_competences_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/manage_users_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/admin_competence_details_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/moderator/moderator_timer_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/rasc_unl_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/home_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/actions_page.dart';
@@ -32,7 +33,7 @@ enum AppRouterNames {
   manageUsers,
   manageCompetences,
   generateReports,
-  
+  moderatorTimer,
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -67,6 +68,7 @@ class RouterNotifier extends ChangeNotifier {
       '/manage-users',
       '/manage-competences',
       '/generate-reports',
+      '/moderator/timer',
     ];
 
     // Si el usuario no está autenticado y está intentando acceder a una ruta protegida
@@ -174,6 +176,11 @@ class RouterNotifier extends ChangeNotifier {
       path: '/generate-reports',
       name: AppRouterNames.generateReports.name,
       builder: (context, state) => GenerateReportsPage()
-      )
+    ),
+    GoRoute(
+      path: '/moderator/timer',
+      name: AppRouterNames.moderatorTimer.name,
+      builder: (context, state) => ModeratorTimerPage(),
+    ),
   ];
 }

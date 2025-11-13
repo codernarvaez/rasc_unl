@@ -18,7 +18,10 @@ class CompetenceModel(Base):
     competition_date = Column(DateTime(timezone=True), nullable=False)
     competition_limit_for_registration_date = Column(DateTime(timezone=True), nullable=True)
     n_turns = Column(Integer, nullable=True)
+    max_registrations = Column(Integer, nullable=True)  # Límite de registros de tiempo permitidos
     is_active = Column(Boolean, default=True, nullable=False)
+    is_finished = Column(Boolean, default=False, nullable=False, server_default='false')  # Indica si la competencia finalizó
+    
     created_by = Column(String(50), nullable=False)  # User.dni
     start_coordinates = Column(JSON, nullable=True)  # {"point_x": [0.0, 0.0], "point_y": [0.0, 0.0]}
     finish_coordinates = Column(JSON, nullable=True)  # {"point_x": [0.0, 0.0], "point_y": [0.0, 0.0]}
@@ -27,6 +30,9 @@ class CompetenceModel(Base):
 
     # Relación 1:N con CompetitionRegistration
     competition_registrations = relationship("CompetitionRegistrationModel", back_populates="competence", cascade="all, delete-orphan")
+    
+    # Relación 1:N con CompetitionTimeRecord
+    time_records = relationship("CompetitionTimeRecordModel", back_populates="competence", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Competence(id={self.id}, name='{self.name}')>"

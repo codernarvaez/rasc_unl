@@ -86,10 +86,12 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
                 competitionDate: formData.competitionDate,
                 competitionLimitForRegistrationDate: formData.competitionLimitForRegistrationDate,
                 nTurns: formData.nTurns,
+                maxRegistrations: formData.maxRegistrations,
                 isActive: formData.isActive,
                 createdBy: admin.dni,
                 startCoordinates: formData.startCoordinates,
                 finishCoordinates: formData.finishCoordinates,
+                isFinished: false,
               );
               await repository.createCompetence(newCompetence);
               
@@ -110,10 +112,12 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
                 competitionDate: formData.competitionDate,
                 competitionLimitForRegistrationDate: formData.competitionLimitForRegistrationDate,
                 nTurns: formData.nTurns,
+                maxRegistrations: formData.maxRegistrations,
                 isActive: formData.isActive,
                 createdBy: competence.createdBy,
                 startCoordinates: formData.startCoordinates,
                 finishCoordinates: formData.finishCoordinates,
+                isFinished: competence.isFinished,
               );
               await repository.updateCompetence(updatedCompetence);
               
@@ -620,6 +624,7 @@ Widget _buildTabBar() {
         createdBy: competence.createdBy,
         startCoordinates: competence.startCoordinates,
         finishCoordinates: competence.finishCoordinates,
+        isFinished: competence.isFinished,
       );
 
       await ref.read(rascUNLMainProvider).competenceRepository.updateCompetence(updatedCompetence);

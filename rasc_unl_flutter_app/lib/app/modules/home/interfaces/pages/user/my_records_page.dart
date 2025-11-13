@@ -69,6 +69,7 @@ class _MyRecordsPageState extends ConsumerState<MyRecordsPage> {
             nTurns: 0,
             isActive: false,
             createdBy: '',
+            isFinished: false
           ),
         );
         

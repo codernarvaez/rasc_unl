@@ -21,7 +21,9 @@ CompetenceModel _$CompetenceModelFromJson(Map<String, dynamic> json) =>
               json['competition_limit_for_registration_date'] as String,
             ),
       nTurns: (json['n_turns'] as num).toInt(),
+      maxRegistrations: (json['max_registrations'] as num?)?.toInt(),
       isActive: json['is_active'] as bool,
+      isFinished: json['is_finished'] as bool,
       createdBy: json['created_by'] as String,
       startCoordinates:
           (json['start_coordinates'] as Map<String, dynamic>?)?.map(
@@ -57,7 +59,9 @@ Map<String, dynamic> _$CompetenceModelToJson(CompetenceModel instance) =>
           .competitionLimitForRegistrationDate
           ?.toIso8601String(),
       'n_turns': instance.nTurns,
+      'max_registrations': instance.maxRegistrations,
       'is_active': instance.isActive,
+      'is_finished': instance.isFinished,
       'created_by': instance.createdBy,
       'start_coordinates': instance.startCoordinates,
       'finish_coordinates': instance.finishCoordinates,

@@ -8,6 +8,7 @@ from app.core.db.database import Base
 class RoleEnum(str, enum.Enum):
     ADMINISTRATOR = "ADMINISTRATOR"
     COMPETITOR = "COMPETITOR"
+    MODERATOR = "MODERATOR"
 
 
 class User(Base):
