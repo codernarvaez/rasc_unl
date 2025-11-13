@@ -23,17 +23,14 @@ async def lifespan(app: FastAPI):
     async with db_engine.begin() as conn:
         logger.info("✅ Database connection established")
     
-    # Inicializa Redis (opcional)
+    # Inicializa Redis
     logger.info("📊 Initializing Redis connection...")
-    redis_available = False
+    redis_client = _redis.get_client()
     try:
-        redis_client = _redis.get_client()
         await redis_client.ping()
         logger.info("✅ Redis connection established")
-        redis_available = True
     except Exception as e:
-        logger.warning(f"⚠️ Redis connection failed (continuing without Redis): {e}")
-        redis_available = False
+        logger.error(f"❌ Redis connection failed: {e}")
     
     # Tarea de limpieza de sesiones expiradas
     async def cleanup_sessions_periodically():
@@ -69,14 +66,10 @@ async def lifespan(app: FastAPI):
     except asyncio.CancelledError:
         logger.info("✅ Session cleanup task cancelled")
     
-    # Cierra Redis (si estaba disponible)
-    if redis_available:
-        logger.info("🔴 Closing Redis connection...")
-        try:
-            await _redis.close()
-            logger.info("✅ Redis connection closed")
-        except:
-            pass
+    # Cierra Redis
+    logger.info("🔴 Closing Redis connection...")
+    await _redis.close()
+    logger.info("✅ Redis connection closed")
     
     # Cierra base de datos
     logger.info("📊 Closing database connection...")
