@@ -54,7 +54,7 @@ class SyncService {
       final session = await _sessionRepo.getActiveSession();
       if (session != null) {
         final localUser = await _localUserRepo.getUserById(session.userId);
-        if (localUser != null && localUser.rol == UserRoleType.ADMINISTRATOR) {
+        if (localUser != null && localUser.rol == 'ADMINISTRATOR') {
           final allUsersResult = await _syncAllUsers(accessToken);
           usersDownloaded = allUsersResult.usersDownloaded;
           usersUploaded = allUsersResult.usersUploaded;
@@ -96,9 +96,7 @@ class SyncService {
       final user = UserModel(
         id: userApiResponse.id,
         dni: userApiResponse.dni,
-        rol: userApiResponse.role == 'ADMINISTRATOR'
-            ? UserRoleType.ADMINISTRATOR
-            : UserRoleType.COMPETITOR,
+        rol: userApiResponse.role,
         name: userApiResponse.firstName,
         lastName: userApiResponse.lastName,
         email: userApiResponse.email,
@@ -151,9 +149,7 @@ class SyncService {
           final user = UserModel(
             id: userApiResponse.id,
             dni: userApiResponse.dni,
-            rol: userApiResponse.role == 'ADMINISTRATOR'
-                ? UserRoleType.ADMINISTRATOR
-                : UserRoleType.COMPETITOR,
+            rol: userApiResponse.role,
             name: userApiResponse.firstName,
             lastName: userApiResponse.lastName,
             email: userApiResponse.email,
@@ -239,16 +235,18 @@ class SyncService {
 }
 
 /// Extension para copiar UserModel con cambios
-extension UserModelCopyWith on UserModel {
+extension UserModelCopyWithSync on UserModel {
   UserModel copyWith({
     int? id,
     String? dni,
-    UserRoleType? rol,
+    String? rol,
     String? name,
     String? lastName,
     String? email,
     bool? isActive,
     DateTime? birthDate,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -259,6 +257,8 @@ extension UserModelCopyWith on UserModel {
       email: email ?? this.email,
       isActive: isActive ?? this.isActive,
       birthDate: birthDate ?? this.birthDate,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }

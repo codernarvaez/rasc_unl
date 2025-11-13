@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rasc_unl_flutter_app/app/modules/auth/infrastructure/providers/auth_provider.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -50,39 +49,57 @@ class _LoginPageState extends ConsumerState<LoginPage>
     final dni = _dniController.text.trim();
     final password = _passwordController.text;
 
-    // Validaciones
-    if (email.isEmpty || dni.isEmpty) {
-      _showError('Por favor, ingrese su email y DNI');
+    // Validaciones según modo online/offline
+    if (email.isEmpty) {
+      _showError('Por favor, ingrese su email');
       return;
     }
 
-    if (!isOffline && password.isEmpty) {
-      _showError('La contraseña es requerida cuando hay conexión a Internet');
-      return;
+    if (isOffline) {
+      // Modo offline: requiere DNI y email
+      if (dni.isEmpty) {
+        _showError('El DNI es requerido para iniciar sesión sin conexión');
+        return;
+      }
+    } else {
+      // Modo online: requiere email y contraseña (sin DNI)
+      if (password.isEmpty) {
+        _showError('La contraseña es requerida cuando hay conexión a Internet');
+        return;
+      }
     }
 
     setState(() {
       _isLoading = true;
     });
 
-    await ref.read(authNotifierProvider.notifier).login(
-          email: email,
-          dni: dni,
-          password: password.isNotEmpty ? password : null,
-        );
+    try {
+      final repository = ref.read(rascUNLMainProvider);
+      final result = await repository.authRepository.login(
+        email: email,
+        dni: isOffline ? dni : null,
+        password: isOffline ? null : password,
+      );
 
-    setState(() {
-      _isLoading = false;
-    });
+      setState(() {
+        _isLoading = false;
+      });
 
-    // Verificar resultado
-    final authState = ref.read(authNotifierProvider);
-    if (authState.isAuthenticated) {
-      if (mounted) {
-        context.go('/home');
+      if (result.success && result.user != null) {
+        // Actualizar el usuario actual
+        ref.read(currentUserProvider.notifier).setUser(result.user!);
+        
+        if (mounted) {
+          context.go('/home');
+        }
+      } else {
+        _showError(result.message);
       }
-    } else if (authState.error != null) {
-      _showError(authState.error!);
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      _showError('Error inesperado: $e');
     }
   }
 
@@ -92,7 +109,8 @@ class _LoginPageState extends ConsumerState<LoginPage>
         SnackBar(
           content: Text(message),
           backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
+          behavior: SnackBarBehavior.fixed,
+          duration: Duration(seconds: 4),
         ),
       );
     }
@@ -101,7 +119,6 @@ class _LoginPageState extends ConsumerState<LoginPage>
   @override
   Widget build(BuildContext context) {
     final isOffline = ref.watch(isOfflineModeProvider);
-    final authState = ref.watch(authNotifierProvider);
 
     // Si cambia a online/offline, mostrar información
     return Scaffold(
@@ -234,16 +251,20 @@ class _LoginPageState extends ConsumerState<LoginPage>
 
                   SizedBox(height: 20),
 
-                  // Campo de DNI
-                  _buildTextField(
-                    controller: _dniController,
-                    label: 'DNI / Cédula',
-                    hint: '1234567890',
-                    icon: Icons.badge_outlined,
-                    keyboardType: TextInputType.number,
-                  ),
-
-                  SizedBox(height: 20),
+                  // Campo de DNI (solo en modo offline)
+                  if (isOffline)
+                    Column(
+                      children: [
+                        _buildTextField(
+                          controller: _dniController,
+                          label: 'DNI / Cédula',
+                          hint: '1234567890',
+                          icon: Icons.badge_outlined,
+                          keyboardType: TextInputType.number,
+                        ),
+                        SizedBox(height: 20),
+                      ],
+                    ),
 
                   // Campo de contraseña (solo si hay conexión)
                   if (!isOffline)
@@ -306,7 +327,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                       ],
                     ),
                     child: ElevatedButton(
-                      onPressed: (_isLoading || authState.isLoading) ? null : _handleLogin,
+                      onPressed: _isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
@@ -315,7 +336,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                         ),
                         disabledBackgroundColor: Colors.grey.withOpacity(0.3),
                       ),
-                      child: (_isLoading || authState.isLoading)
+                      child: _isLoading
                           ? SizedBox(
                               height: 24,
                               width: 24,

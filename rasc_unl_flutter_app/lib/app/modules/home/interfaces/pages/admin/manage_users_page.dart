@@ -59,8 +59,8 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
   Future<List<UserData>> _fetchUsers(MainRepository repository) async {
     final userModels = await repository.userRepository.getAllUsers();
     return userModels.map((userModel) {
-      // Mapear UserRoleType a UserRole
-      final role = userModel.rol == UserRoleType.ADMINISTRATOR
+      // Mapear String role a UserRole
+      final role = userModel.rol == 'ADMINISTRATOR'
           ? UserRole.admin
           : UserRole.user;
       
@@ -191,9 +191,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
         onSave: (formData) async {
           try {
             // Convertir el rol de string a UserRoleType enum
-            final roleType = formData.role == 'ADMINISTRATOR'
-                ? UserRoleType.ADMINISTRATOR
-                : UserRoleType.COMPETITOR;
+            
 
             final newUser = UserModel(
               id: DateTime.now().millisecondsSinceEpoch,
@@ -201,7 +199,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
               name: formData.name,
               lastName: formData.lastName,
               email: formData.email,
-              rol: roleType,
+              rol: formData.role,
               isActive: true,
               birthDate: formData.birthDate,
             );
@@ -769,10 +767,10 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
               user.rol,
               (role) async {
                 try {
-                  // Convertir UserRole a UserRoleType
+                  // Convertir UserRole a String
                   final roleType = role == UserRole.admin
-                      ? UserRoleType.ADMINISTRATOR
-                      : UserRoleType.COMPETITOR;
+                      ? 'ADMINISTRATOR'
+                      : 'COMPETITOR';
 
                   final updatedUser = UserModel(
                     id: user.id,
@@ -821,8 +819,8 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
               (role) async {
                 try {
                   final roleType = role == UserRole.admin
-                      ? UserRoleType.ADMINISTRATOR
-                      : UserRoleType.COMPETITOR;
+                      ? 'ADMINISTRATOR'
+                      : 'COMPETITOR';
 
                   final updatedUser = UserModel(
                     id: user.id,
@@ -943,10 +941,10 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
     try {
       final repository = ref.read(rascUNLMainProvider);
 
-      // Convertir UserRole a UserRoleType
+      // Convertir UserRole a String
       final roleType = user.rol == UserRole.admin
-          ? UserRoleType.ADMINISTRATOR
-          : UserRoleType.COMPETITOR;
+          ? 'ADMINISTRATOR'
+          : 'COMPETITOR';
 
       final updatedUser = UserModel(
         id: user.id,

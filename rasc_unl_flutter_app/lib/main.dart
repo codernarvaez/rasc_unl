@@ -6,8 +6,13 @@ import 'package:rasc_unl_flutter_app/core/router/router.dart';
 import 'package:flutter/foundation.dart'; // ya lo tienes
 
 void main() async {
-  // await dotenv.load(fileName: ".env");
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    debugPrint('Error loading .env file: $e');
+    // Continuar sin .env, usar valores por defecto
+  }
   runApp(const ProviderScope(child: App()));
 }
 

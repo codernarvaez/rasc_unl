@@ -347,9 +347,7 @@ class AuthService {
     return UserModel(
       id: apiResponse.id,
       dni: apiResponse.dni,
-      rol: apiResponse.role == 'ADMINISTRATOR'
-          ? UserRoleType.ADMINISTRATOR
-          : UserRoleType.COMPETITOR,
+      rol: apiResponse.role,
       name: apiResponse.firstName,
       lastName: apiResponse.lastName,
       email: apiResponse.email,
@@ -366,12 +364,14 @@ extension UserModelCopyWith on UserModel {
   UserModel copyWith({
     int? id,
     String? dni,
-    UserRoleType? rol,
+    String? rol,
     String? name,
     String? lastName,
     String? email,
     bool? isActive,
     DateTime? birthDate,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -382,6 +382,8 @@ extension UserModelCopyWith on UserModel {
       email: email ?? this.email,
       isActive: isActive ?? this.isActive,
       birthDate: birthDate ?? this.birthDate,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }
