@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:rasc_unl_flutter_app/app/modules/auth/domain/models/user_model.dart';
+import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -10,14 +11,41 @@ class SettingsPage extends ConsumerStatefulWidget {
 }
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
-  // Datos de ejemplo del usuario
-  String userName = 'Usuario sin Nombre';
-  String userLastName = 'Apellido';
-  String userBirthDate = '01/01/1990';
-  final String userEmail = 'email@example.com';
+  bool _isSaving = false;
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return 'No especificado';
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = ref.watch(currentUserProvider);
+    final mainRepository = ref.watch(rascUNLMainProvider);
+
+    // Si no hay usuario logueado, mostrar pantalla de carga
+    if (currentUser == null) {
+      return Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF2A2A2A),
+                Color(0xFF1A1A1A),
+              ],
+            ),
+          ),
+          child: Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD50000)),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -88,7 +116,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       children: [
                         Flexible(
                           child: Text(
-                            '$userName $userLastName',
+                            '${currentUser.name} ${currentUser.lastName}',
                             style: TextStyle(
                               fontSize: 22, // Ajusta el tamaño para evitar desbordamientos
                               fontWeight: FontWeight.bold,
@@ -113,7 +141,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                             ],
                           ),
                           child: IconButton(
-                            onPressed: _showEditProfileDialog,
+                            onPressed: () => _showEditProfileDialog(currentUser, mainRepository),
                             icon: Icon(
                               Icons.edit,
                               size: 20,
@@ -140,7 +168,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         ),
                         SizedBox(width: 6),
                         Text(
-                          userEmail,
+                          currentUser.email,
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.white.withOpacity(0.7),
@@ -162,7 +190,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         ),
                         SizedBox(width: 6),
                         Text(
-                          userBirthDate,
+                          _formatDate(currentUser.birthDate),
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.white.withOpacity(0.7),
@@ -362,130 +390,239 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
-  void _showEditProfileDialog() {
-    final TextEditingController nameController = TextEditingController(text: userName);
-    final TextEditingController lastNameController = TextEditingController(text: userLastName);
-    final TextEditingController birthDateController = TextEditingController(text: userBirthDate);
+  void _showEditProfileDialog(dynamic currentUser, dynamic mainRepository) async {
+    final TextEditingController nameController = TextEditingController(text: currentUser.name);
+    final TextEditingController lastNameController = TextEditingController(text: currentUser.lastName);
+    DateTime? selectedDate = currentUser.birthDate;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Color(0xFF2A2A2A),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: Color(0xFFD50000).withOpacity(0.3),
-            width: 1,
-          ),
-        ),
-        title: Row(
-          children: [
-            Icon(Icons.edit, color: Color(0xFFD50000)),
-            SizedBox(width: 12),
-            Text(
-              'Editar Perfil',
-              style: TextStyle(color: Colors.white),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: Color(0xFF2A2A2A),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(
+              color: Color(0xFFD50000).withOpacity(0.3),
+              width: 1,
             ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          ),
+          title: Row(
             children: [
-              _buildDialogTextField(
-                controller: nameController,
-                label: 'Nombres',
-                icon: Icons.person_outline,
-              ),
-              SizedBox(height: 16),
-              _buildDialogTextField(
-                controller: lastNameController,
-                label: 'Apellidos',
-                icon: Icons.person_outline,
-              ),
-              SizedBox(height: 16),
-              _buildDialogTextField(
-                controller: birthDateController,
-                label: 'Fecha de Nacimiento',
-                icon: Icons.cake_outlined,
-                readOnly: true,
-                onTap: () async {
-                  final DateTime? picked = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime(1990, 1, 1),
-                    firstDate: DateTime(1900),
-                    lastDate: DateTime.now(),
-                    builder: (context, child) {
-                      return Theme(
-                        data: Theme.of(context).copyWith(
-                          colorScheme: ColorScheme.dark(
-                            primary: Color(0xFFD50000),
-                            onPrimary: Colors.white,
-                            surface: Color(0xFF2A2A2A),
-                            onSurface: Colors.white,
-                          ),
-                        ),
-                        child: child!,
-                      );
-                    },
-                  );
-                  if (picked != null) {
-                    birthDateController.text = 
-                        '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
-                  }
-                },
+              Icon(Icons.edit, color: Color(0xFFD50000)),
+              SizedBox(width: 12),
+              Text(
+                'Editar Perfil',
+                style: TextStyle(color: Colors.white),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancelar',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
-              ),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFD50000), Color(0xFF8B0000)],
-              ),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: TextButton(
-              onPressed: () {
-                setState(() {
-                  userName = nameController.text;
-                  userLastName = lastNameController.text;
-                  userBirthDate = birthDateController.text;
-                });
-                Navigator.pop(context);
-                
-                // Mostrar confirmación
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Perfil actualizado correctamente'),
-                    backgroundColor: Color(0xFFD50000),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildDialogTextField(
+                  controller: nameController,
+                  label: 'Nombres',
+                  icon: Icons.person_outline,
+                ),
+                SizedBox(height: 16),
+                _buildDialogTextField(
+                  controller: lastNameController,
+                  label: 'Apellidos',
+                  icon: Icons.person_outline,
+                ),
+                SizedBox(height: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.1),
+                      width: 1,
                     ),
                   ),
-                );
-              },
+                  child: ListTile(
+                    leading: Icon(Icons.cake_outlined, color: Colors.white.withOpacity(0.5)),
+                    title: Text(
+                      'Fecha de Nacimiento',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                    subtitle: Text(
+                      selectedDate != null 
+                          ? _formatDate(selectedDate)
+                          : 'Seleccionar fecha',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                    ),
+                    onTap: () async {
+                      final DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate ?? DateTime(2000, 1, 1),
+                        firstDate: DateTime(1900),
+                        lastDate: DateTime.now(),
+                        builder: (context, child) {
+                          return Theme(
+                            data: Theme.of(context).copyWith(
+                              colorScheme: ColorScheme.dark(
+                                primary: Color(0xFFD50000),
+                                onPrimary: Colors.white,
+                                surface: Color(0xFF2A2A2A),
+                                onSurface: Colors.white,
+                              ),
+                            ),
+                            child: child!,
+                          );
+                        },
+                      );
+                      if (picked != null) {
+                        setDialogState(() {
+                          selectedDate = picked;
+                        });
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
               child: Text(
-                'Guardar',
+                'Cancelar',
                 style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  color: Colors.white.withOpacity(0.7),
                 ),
               ),
             ),
-          ),
-        ],
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: _isSaving 
+                      ? [Colors.grey, Colors.grey.shade700]
+                      : [Color(0xFFD50000), Color(0xFF8B0000)],
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: TextButton(
+                onPressed: _isSaving ? null : () async {
+                  // Validaciones
+                  if (nameController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('El nombre es requerido'),
+                        backgroundColor: Colors.red,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+
+                  if (lastNameController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('El apellido es requerido'),
+                        backgroundColor: Colors.red,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+
+                  setState(() {
+                    _isSaving = true;
+                  });
+
+                  try {
+                    // Crear usuario actualizado
+                    final updatedUser = UserModel(
+                      id: currentUser.id,
+                      dni: currentUser.dni,
+                      rol: currentUser.rol,
+                      name: nameController.text.trim(),
+                      lastName: lastNameController.text.trim(),
+                      email: currentUser.email,
+                      isActive: currentUser.isActive,
+                      birthDate: selectedDate,
+                      createdAt: currentUser.createdAt,
+                      updatedAt: DateTime.now(),
+                    );
+
+                    // Actualizar en el repositorio
+                    await mainRepository.userRepository.updateUser(updatedUser);
+
+                    // Actualizar el estado global del usuario
+                    ref.read(currentUserProvider.notifier).setUser(updatedUser);
+
+                    Navigator.pop(context);
+
+                    // Mostrar confirmación
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            Icon(Icons.check_circle, color: Colors.white),
+                            SizedBox(width: 12),
+                            Text('Perfil actualizado correctamente'),
+                          ],
+                        ),
+                        backgroundColor: Color(0xFFD50000),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    );
+                  } catch (e) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error al actualizar perfil: $e'),
+                        backgroundColor: Colors.red,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    );
+                  } finally {
+                    setState(() {
+                      _isSaving = false;
+                    });
+                  }
+                },
+                child: _isSaving
+                    ? SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Text(
+                        'Guardar',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
