@@ -169,7 +169,7 @@ class _LoginPageState extends State<LoginPage>
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: () => context.go('/forgot-password'),
                       child: Text(
                         '¿Olvidaste tu contraseña?',
                         style: TextStyle(

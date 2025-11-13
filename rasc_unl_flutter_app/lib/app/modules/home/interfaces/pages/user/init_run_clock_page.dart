@@ -68,13 +68,22 @@ class _InitRunClockState extends ConsumerState<InitRunClockPage> with TickerProv
   }
 
   Future<void> _loadNextCompetence() async {
+    if (!mounted) return;
+    
     setState(() => _isLoading = true);
     try {
       final repository = ref.read(rascUNLMainProvider);
       final currentUser = ref.read(currentUserProvider);
       
       if (currentUser == null) {
-        setState(() => _isLoading = false);
+        if (mounted) {
+          setState(() {
+            _nextCompetence = null;
+            _upcomingCompetence = null;
+            _isRegistered = false;
+            _isLoading = false;
+          });
+        }
         return;
       }
       
@@ -420,6 +429,8 @@ class _InitRunClockState extends ConsumerState<InitRunClockPage> with TickerProv
   }
 
   Widget _buildRegistrationStatus(bool isSmall) {
+    if (_nextCompetence == null) return const SizedBox.shrink();
+    
     final now = DateTime.now();
     final canRegister = _nextCompetence!.competitionLimitForRegistrationDate != null &&
         now.isBefore(_nextCompetence!.competitionLimitForRegistrationDate!);
@@ -706,6 +717,8 @@ class _InitRunClockState extends ConsumerState<InitRunClockPage> with TickerProv
   }
 
   Widget _buildUpcomingCompetence(bool isSmall) {
+    if (_upcomingCompetence == null) return const SizedBox.shrink();
+    
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Container(

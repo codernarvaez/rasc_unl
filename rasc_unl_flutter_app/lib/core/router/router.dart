@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rasc_unl_flutter_app/app/modules/auth/interfaces/pages/forgot_password_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/auth/interfaces/pages/login_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/auth/interfaces/pages/singup_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/generate_reports_page.dart';
@@ -12,6 +13,7 @@ import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/actions_p
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/user/available_competences_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/user/components/competence_details_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/user/my_records_page.dart';
+import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 
 enum AppRouterNames {
   login,
@@ -42,35 +44,39 @@ final routerProvider = Provider<GoRouter>((ref) {
 });
 
 class RouterNotifier extends ChangeNotifier {
-  // Simulated authentication state
   final Ref _ref;
 
   RouterNotifier(this._ref) {
-    // _ref.listen<bool>(authProvider, (_, __) => notifyListeners());
-    // inicia
+    // Escuchar cambios en el estado de autenticación
+    _ref.listen<dynamic>(currentUserProvider, (_, __) => notifyListeners());
   }
 
   String? _redirect(BuildContext context, GoRouterState state) {
-    // final authState = _ref.read(authProvider);
-    // final isAuth = switch (authState) {
-    //   AuthStateAuthenticated() => true,
-    //   _ => false,
-    // };
+    final currentUser = _ref.read(currentUserProvider);
+    final isAuthenticated = currentUser != null;
+    final currentPath = state.matchedLocation;
 
-  //   final currentPath = state.matchedLocation;
+    // Rutas que requieren autenticación
+    final protectedRoutes = [
+      '/home',
+      '/actions',
+      '/my-records',
+      '/user/competence-details',
+      '/available-competences',
+      '/manage-users',
+      '/manage-competences',
+      '/generate-reports',
+    ];
 
-    // Si el usuario está autenticado y está en páginas de auth, redirigir a home
-    // if (isAuth &&
-    //     (currentPath == '/' ||
-    //         currentPath == '/login' ||
-    //         currentPath == '/signup')) {
-    //   return '/home';
-    // }
+    // Si el usuario no está autenticado y está intentando acceder a una ruta protegida
+    if (!isAuthenticated && protectedRoutes.any((route) => currentPath.startsWith(route))) {
+      return '/login';
+    }
 
-    // // Si el usuario no está autenticado y está en home, redirigir a welcome
-    // if (!isAuth && currentPath == '/home') {
-    //   return '/';
-    // }
+    // Si el usuario está autenticado y está en login o signup, redirigir a home
+    if (isAuthenticated && (currentPath == '/login' || currentPath == '/signup')) {
+      return '/home';
+    }
 
     // En todos los demás casos, permitir la navegación
     return null;
@@ -92,11 +98,11 @@ class RouterNotifier extends ChangeNotifier {
       name: AppRouterNames.signup.name,
       builder: (context, state) => SignupPage(),
     ),
-    // GoRoute(
-    //   path: '/forgot-password',
-    //   name: AppRouterNames.forgotPassword.name,
-    //   builder: (context, state) => const ForgotPasswordPage(),
-    // ),
+    GoRoute(
+      path: '/forgot-password',
+      name: AppRouterNames.forgotPassword.name,
+      builder: (context, state) => const ForgotPasswordPage(),
+    ),
     GoRoute(
       path: '/home',
       name: AppRouterNames.home.name,
