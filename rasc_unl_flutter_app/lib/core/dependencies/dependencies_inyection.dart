@@ -48,8 +48,42 @@ final currentUserProvider = NotifierProvider<CurrentUserNotifier, UserModel?>(
   () => CurrentUserNotifier(),
 );
 
+// Notifier for access token management
+class AccessTokenNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void setToken(String? token) {
+    state = token;
+  }
+
+  void clearToken() {
+    state = null;
+  }
+
+  Future<void> loadTokenForUser(String dni, AppLocalDatabase localDb) async {
+    try {
+      final session = await (localDb.select(localDb.sessionTable)
+            ..where((tbl) => tbl.dni.equals(dni))
+            ..where((tbl) => tbl.isActive.equals(true))
+            ..orderBy([(tbl) => OrderingTerm.desc(tbl.lastLoginAt)])
+            ..limit(1))
+          .getSingleOrNull();
+      
+      state = session?.accessToken;
+    } catch (e) {
+      state = null;
+    }
+  }
+}
+
 // Provider para el access token de la sesión actual
-final accessTokenProvider = FutureProvider<String?>((ref) async {
+final accessTokenProvider = NotifierProvider<AccessTokenNotifier, String?>(
+  () => AccessTokenNotifier(),
+);
+
+// Provider para el refresh token
+final refreshTokenProvider = FutureProvider<String?>((ref) async {
   final localDbAsync = ref.watch(localDatabaseProvider);
   final currentUser = ref.watch(currentUserProvider);
   
@@ -58,7 +92,6 @@ final accessTokenProvider = FutureProvider<String?>((ref) async {
   return localDbAsync.when(
     data: (localDb) async {
       try {
-        // Obtener la última sesión activa del usuario actual
         final session = await (localDb.select(localDb.sessionTable)
               ..where((tbl) => tbl.dni.equals(currentUser.dni))
               ..where((tbl) => tbl.isActive.equals(true))
@@ -66,7 +99,7 @@ final accessTokenProvider = FutureProvider<String?>((ref) async {
               ..limit(1))
             .getSingleOrNull();
         
-        return session?.accessToken;
+        return session?.refreshToken;
       } catch (e) {
         return null;
       }
@@ -79,22 +112,22 @@ final accessTokenProvider = FutureProvider<String?>((ref) async {
 final rascUNLMainProvider = Provider<MainRepository>((ref) {
   final isOffline = ref.watch(isOfflineModeProvider);
   final localDbAsync = ref.watch(localDatabaseProvider);
-  final accessTokenAsync = ref.watch(accessTokenProvider);
+  final accessToken = ref.watch(accessTokenProvider);
 
-  // Si la base de datos aún no está lista, lanzamos un error que será manejado por AsyncValue
-  return localDbAsync.when(
-    data: (localDb) {
-      if (isOffline) {
-        return LocalRepository(localDb);
-      } else {
-        // Obtenemos el accessToken si está disponible
-        final accessToken = accessTokenAsync.value;
-        return RemoteRepository(accessToken: accessToken);
-      }
-    },
-    loading: () => throw Exception('Database is loading...'),
-    error: (error, stack) => throw error,
-  );
+  logging.i('🏗️ Creating MainRepository - Offline: $isOffline, Token: ${accessToken != null ? "Present (${accessToken.length} chars)" : "NULL"}');
+
+  // Para modo offline, necesitamos esperar a que la base de datos esté lista
+  // Para modo online, podemos usar RemoteRepository inmediatamente
+  if (isOffline) {
+    return localDbAsync.when(
+      data: (localDb) => LocalRepository(localDb),
+      loading: () => throw Exception('Database is loading...'),
+      error: (error, stack) => throw error,
+    );
+  } else {
+    // En modo online, no necesitamos esperar la base de datos
+    return RemoteRepository(accessToken: accessToken);
+  }
 });
 
 

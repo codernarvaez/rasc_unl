@@ -10,11 +10,11 @@ CompetitionRegistrationModel _$CompetitionRegistrationModelFromJson(
   Map<String, dynamic> json,
 ) => CompetitionRegistrationModel(
   id: (json['id'] as num).toInt(),
-  externalId: json['external_id'] as String,
-  registrationNumber: (json['registration_number'] as num).toInt(),
-  time: const DurationConverter().fromJson((json['time'] as num).toInt()),
+  externalId: json['external_id'] as String?,
+  registrationNumber: json['registration_number'] as String?,
+  time: const DurationConverter().fromJson((json['time'] as num?)?.toInt()),
   userDni: json['user_dni'] as String,
-  nTurns: (json['n_turns'] as num).toInt(),
+  nTurns: (json['n_turns'] as num?)?.toInt(),
   competenceId: (json['competence_id'] as num).toInt(),
 );
 

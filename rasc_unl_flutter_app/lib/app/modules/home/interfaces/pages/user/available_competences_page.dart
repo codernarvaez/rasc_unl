@@ -613,23 +613,12 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
         return;
       }
       
-      // Generar número de registro único
-      final allRegistrations = await repository.competitionRegistrationRepository.getAllRegistrations();
-      final existingNumbers = allRegistrations
-          .where((r) => r.competenceId == competence.id)
-          .map((r) => r.registrationNumber)
-          .toList();
-      
-      int newRegistrationNumber = 1;
-      while (existingNumbers.contains(newRegistrationNumber)) {
-        newRegistrationNumber++;
-      }
       
       // Crear nuevo registro
       final registration = CompetitionRegistrationModel(
         id: 0, // Se generará automáticamente
         externalId: '${DateTime.now().millisecondsSinceEpoch}',
-        registrationNumber: newRegistrationNumber,
+        registrationNumber: null, // Se asigna null para asignar despues
         time: Duration.zero, // Sin tiempo aún
         userDni: currentUser.dni,
         nTurns: 0, // Sin vueltas completadas aún
@@ -641,7 +630,7 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('¡Registro exitoso! Número de dorsal: $newRegistrationNumber'),
+            content: Text('¡Registro exitoso! Te has registrado en "${competence.name}".'),
             backgroundColor: Colors.green,
           ),
         );

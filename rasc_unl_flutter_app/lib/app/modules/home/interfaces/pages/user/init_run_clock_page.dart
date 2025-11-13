@@ -905,24 +905,11 @@ class _InitRunClockState extends ConsumerState<InitRunClockPage> with TickerProv
         return;
       }
       
-      // Generar número de registro
-      // Generar número de registro
-      final allRegistrations = await repository.competitionRegistrationRepository.getAllRegistrations();
-      final existingNumbers = allRegistrations
-          .where((r) => r.competenceId == _nextCompetence!.id)
-          .map((r) => r.registrationNumber)
-          .toList();
-      
-      int newRegistrationNumber = 1;
-      while (existingNumbers.contains(newRegistrationNumber)) {
-        newRegistrationNumber++;
-      }
-      
       // Crear registro
       final registration = CompetitionRegistrationModel(
         id: 0,
         externalId: '${DateTime.now().millisecondsSinceEpoch}',
-        registrationNumber: newRegistrationNumber,
+        registrationNumber: null,
         time: Duration.zero,
         userDni: currentUser.dni,
         nTurns: 0,
@@ -934,7 +921,7 @@ class _InitRunClockState extends ConsumerState<InitRunClockPage> with TickerProv
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('¡Registro exitoso! Número de dorsal: $newRegistrationNumber'),
+            content: Text('¡Registro exitoso! Te has registrado en ${_nextCompetence!.name}'),
             backgroundColor: Colors.green,
           ),
         );

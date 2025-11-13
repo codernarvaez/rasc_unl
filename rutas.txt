@@ -955,3 +955,13 @@ Example V1
 Example Endpoint
 Responses
 200 Successful Response
+
+get
+/api/v1/example/
+Response samples
+200
+Content type
+application/json
+
+Copy
+null

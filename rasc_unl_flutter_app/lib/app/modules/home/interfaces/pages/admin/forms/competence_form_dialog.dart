@@ -454,11 +454,9 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
                       },
                     ),
                   ),
-                  SizedBox(width: 16),
-                  Expanded(child: _buildDatePicker()),
                 ],
               ),
-        SizedBox(height: 8),
+        SizedBox(height: 16),
 
         // Fecha límite de registro
         Text(

@@ -103,7 +103,7 @@ class RemoteCompetitionRegistrationRepositoryImpl
           'user_dni': registration.userDni,
           'external_id': registration.externalId,
           'registration_number': registration.registrationNumber.toString(),
-          'time': registration.time.inMilliseconds,
+          'time': registration.time?.inMilliseconds,
           'n_turns': registration.nTurns,
           'competence_id': registration.competenceId,
         }),

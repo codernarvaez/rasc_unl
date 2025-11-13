@@ -63,7 +63,7 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => CompetenceFormDialog(
+      builder: (dialogContext) => CompetenceFormDialog(
         competence: competence,
         onSave: (formData) async {
           try {
@@ -93,7 +93,7 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
               );
               await repository.createCompetence(newCompetence);
               
-              if (mounted) {
+              if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Competencia creada exitosamente'),
@@ -117,7 +117,7 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
               );
               await repository.updateCompetence(updatedCompetence);
               
-              if (mounted) {
+              if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Competencia actualizada exitosamente'),
@@ -127,9 +127,9 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
               }
             }
             
-            setState(() {}); // Refrescar la lista
+            if (mounted) setState(() {}); // Refrescar la lista
           } catch (e) {
-            if (mounted) {
+            if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Error: $e'),

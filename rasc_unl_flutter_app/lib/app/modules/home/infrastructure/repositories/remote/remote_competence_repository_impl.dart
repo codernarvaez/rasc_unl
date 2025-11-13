@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:rasc_unl_flutter_app/app/modules/home/domain/models/competence_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/domain/repositories/competence_repository.dart';
+import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 
 class RemoteCompetenceRepositoryImpl implements CompetenceRepository {
   final String _baseUrl = dotenv.env['API_URL'] ?? '';
@@ -11,10 +12,22 @@ class RemoteCompetenceRepositoryImpl implements CompetenceRepository {
   RemoteCompetenceRepositoryImpl({String? accessToken})
       : _accessToken = accessToken;
 
-  Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
-      };
+  Map<String, String> get _headers {
+    final headers = {
+      'Content-Type': 'application/json',
+    };
+    
+    logging.i('🔑 RemoteCompetenceRepository - Token status: ${_accessToken != null ? "Present (${_accessToken.length} chars)" : "NULL"}');
+    
+    if (_accessToken != null && _accessToken.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $_accessToken';
+      logging.i('✅ Authorization header added');
+    } else {
+      logging.i('❌ No token available - requests will be unauthenticated');
+    }
+    
+    return headers;
+  }
 
   @override
   Future<List<CompetenceModel>> getAllCompetences() async {
@@ -65,6 +78,8 @@ class RemoteCompetenceRepositoryImpl implements CompetenceRepository {
   @override
   Future<void> createCompetence(CompetenceModel competence) async {
     try {
+      print('Creating competence with access token: ${_accessToken != null ? "Token present (${_accessToken.length} chars)" : "No token"}');
+      
       final response = await http.post(
         Uri.parse('$_baseUrl/api/v1/competencias/'),
         headers: _headers,
@@ -82,12 +97,20 @@ class RemoteCompetenceRepositoryImpl implements CompetenceRepository {
         }),
       );
 
+      print('Create competence response status: ${response.statusCode}');
+      print('Create competence response body: ${response.body}');
+
+      if (response.statusCode == 401) {
+        throw Exception('No autorizado: El token de acceso es inválido o ha expirado');
+      }
+
       if (response.statusCode != 201) {
         final errorData = jsonDecode(response.body);
         throw Exception(
             'Error al crear competencia: ${errorData['detail'] ?? response.statusCode}');
       }
     } catch (e) {
+      print('Exception creating competence: $e');
       throw Exception('Error de conexión al crear competencia: $e');
     }
   }

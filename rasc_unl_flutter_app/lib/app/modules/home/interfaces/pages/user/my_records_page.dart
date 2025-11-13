@@ -56,7 +56,7 @@ class _MyRecordsPageState extends ConsumerState<MyRecordsPage> {
       
       for (var registration in userRegistrations) {
         // Solo incluir si tiene tiempo registrado (ha participado)
-        if (registration.time == Duration.zero) continue;
+        if (registration.time == null || registration.time == Duration.zero) continue;
         
         final competence = allCompetences.firstWhere(
           (c) => c.id == registration.competenceId,
@@ -84,9 +84,9 @@ class _MyRecordsPageState extends ConsumerState<MyRecordsPage> {
         
         // Filtrar solo los que tienen tiempo y ordenar
         final finishedParticipants = competenceRegistrations
-            .where((r) => r.time != Duration.zero)
+            .where((r) => r.time != null && r.time != Duration.zero)
             .toList()
-          ..sort((a, b) => a.time.compareTo(b.time));
+          ..sort((a, b) => a.time!.compareTo(b.time!));
         
         // Calcular posición
         final position = finishedParticipants.indexWhere(
@@ -221,7 +221,8 @@ class _MyRecordsPageState extends ConsumerState<MyRecordsPage> {
     
     Duration? bestTime = records.isEmpty
         ? null
-        : records.map((r) => r.time).reduce((a, b) => a < b ? a : b);
+        : records.map((r) => r.time).where((t) => t != null).fold<Duration?>(
+            null, (prev, curr) => prev == null || curr! < prev ? curr : prev);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -433,7 +434,7 @@ class _MyRecordsPageState extends ConsumerState<MyRecordsPage> {
                   children: [
                     _buildInfoChip(
                       Icons.timer_outlined,
-                      _formatDuration(record.time),
+                      record.time != null ? _formatDuration(record.time!) : '--:--',
                     ),
                     _buildInfoChip(
                       Icons.loop,
@@ -501,7 +502,7 @@ class _MyRecordsPageState extends ConsumerState<MyRecordsPage> {
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () => context.push('/user/available-competences'),
+              onPressed: () => context.push('/available-competences'),
               icon: const Icon(Icons.search),
               label: const Text('Ver Competencias'),
               style: ElevatedButton.styleFrom(
@@ -569,20 +570,20 @@ class RecordData {
   final int competenceId;
   final String competenceName;
   final int position;
-  final Duration time;
-  final int nTurns;
+  final Duration? time;
+  final int? nTurns;
   final DateTime date;
   final int totalParticipants;
-  final int registrationNumber;
+  final String? registrationNumber;
 
   RecordData({
     required this.competenceId,
     required this.competenceName,
     required this.position,
-    required this.time,
-    required this.nTurns,
+    this.time,
+    this.nTurns,
     required this.date,
     required this.totalParticipants,
-    required this.registrationNumber,
+    this.registrationNumber,
   });
 }

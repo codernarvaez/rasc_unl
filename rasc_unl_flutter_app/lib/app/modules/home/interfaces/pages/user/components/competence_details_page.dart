@@ -72,14 +72,14 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
       
       // Ordenar por tiempo (menor tiempo primero), los que no tienen tiempo al final
       participants.sort((a, b) {
-        if (a.time == Duration.zero && b.time == Duration.zero) {
+        if ((a.time == null || a.time == Duration.zero) && (b.time == null || b.time == Duration.zero)) {
           return 0;
-        } else if (a.time == Duration.zero) {
+        } else if (a.time == null || a.time == Duration.zero) {
           return 1;
-        } else if (b.time == Duration.zero) {
+        } else if (b.time == null || b.time == Duration.zero) {
           return -1;
         }
-        return a.time.compareTo(b.time);
+        return a.time!.compareTo(b.time!);
       });
       
       // Asignar posiciones
@@ -440,7 +440,7 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
 
   List<Widget> _buildGroupedParticipants() {
     // Agrupar participantes por número de registro (equipo)
-    final groups = <int, List<ParticipantData>>{};
+    final groups = <String?, List<ParticipantData>>{};
     for (var participant in _participants) {
       if (!groups.containsKey(participant.registrationNumber)) {
         groups[participant.registrationNumber] = [];
@@ -452,12 +452,12 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
     final sortedGroups = groups.entries.toList()
       ..sort((a, b) {
         final aBestTime = a.value
-            .where((p) => p.time != Duration.zero)
-            .map((p) => p.time)
+            .where((p) => p.time != null && p.time != Duration.zero)
+            .map((p) => p.time!)
             .fold<Duration?>(null, (prev, curr) => prev == null || curr < prev ? curr : prev);
         final bBestTime = b.value
-            .where((p) => p.time != Duration.zero)
-            .map((p) => p.time)
+            .where((p) => p.time != null && p.time != Duration.zero)
+            .map((p) => p.time!)
             .fold<Duration?>(null, (prev, curr) => prev == null || curr < prev ? curr : prev);
         
         if (aBestTime == null && bBestTime == null) return 0;
@@ -474,7 +474,7 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
       final members = group.value;
       
       // Verificar si algún miembro tiene tiempo registrado
-      final hasTime = members.any((m) => m.time != Duration.zero);
+      final hasTime = members.any((m) => m.time != null && m.time != Duration.zero);
       
       if (members.length == 1) {
         // Participante individual
@@ -547,7 +547,7 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          '#${participant.registrationNumber}',
+                          '#${participant.registrationNumber ?? "--"}',
                           style: const TextStyle(
                             color: Color(0xFFD50000),
                             fontSize: 12,
@@ -587,7 +587,7 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
                     const Icon(Icons.timer, color: Color(0xFFD50000), size: 16),
                     const SizedBox(width: 4),
                     Text(
-                      hasTime ? _formatDuration(participant.time) : '--:--',
+                      hasTime && participant.time != null ? _formatDuration(participant.time!) : '--:--',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -604,12 +604,12 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
     );
   }
 
-  Widget _buildTeamCard(int teamNumber, List<ParticipantData> members, int position, bool hasTime) {
+  Widget _buildTeamCard(String? teamNumber, List<ParticipantData> members, int position, bool hasTime) {
     Color positionColor = _getPositionColor(position);
     bool isPodium = position <= 3 && hasTime;
     final bestTime = members
-        .where((m) => m.time != Duration.zero)
-        .map((m) => m.time)
+        .where((m) => m.time != null && m.time != Duration.zero)
+        .map((m) => m.time!)
         .fold<Duration?>(null, (prev, curr) => prev == null || curr < prev ? curr : prev);
 
     return Container(
@@ -774,9 +774,9 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
               ],
             ),
           ),
-          if (member.time != Duration.zero)
+          if (member.time != null && member.time != Duration.zero)
             Text(
-              _formatDuration(member.time),
+              _formatDuration(member.time!),
               style: const TextStyle(
                 color: Colors.white70,
                 fontSize: 13,
@@ -997,7 +997,7 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
       final registration = CompetitionRegistrationModel(
         id: 0,
         externalId: '${DateTime.now().millisecondsSinceEpoch}',
-        registrationNumber: newRegistrationNumber,
+        registrationNumber: newRegistrationNumber.toString(),
         time: Duration.zero,
         userDni: currentUser.dni,
         nTurns: 0,
@@ -1029,24 +1029,24 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
 }
 
 class ParticipantData {
-  final int registrationNumber;
+  final String? registrationNumber;
   final String name;
   final String dni;
-  final Duration time;
-  final int nTurns;
+  final Duration? time;
+  final int? nTurns;
   final int? position;
 
   ParticipantData({
-    required this.registrationNumber,
+    this.registrationNumber,
     required this.name,
     required this.dni,
-    required this.time,
-    required this.nTurns,
+    this.time,
+    this.nTurns,
     this.position,
   });
 
   ParticipantData copyWith({
-    int? registrationNumber,
+    String? registrationNumber,
     String? name,
     String? dni,
     Duration? time,

@@ -2009,29 +2009,29 @@ class $CompetitionRegistrationTableTable extends CompetitionRegistrationTable
   late final GeneratedColumn<String> externalId = GeneratedColumn<String>(
     'external_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _registrationNumberMeta =
       const VerificationMeta('registrationNumber');
   @override
-  late final GeneratedColumn<int> registrationNumber = GeneratedColumn<int>(
-    'registration_number',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
+  late final GeneratedColumn<String> registrationNumber =
+      GeneratedColumn<String>(
+        'registration_number',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _timeMeta = const VerificationMeta('time');
   @override
   late final GeneratedColumn<int> time = GeneratedColumn<int>(
     'time',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
-    defaultValue: const Constant(0),
   );
   static const VerificationMeta _userDniMeta = const VerificationMeta(
     'userDni',
@@ -2049,10 +2049,9 @@ class $CompetitionRegistrationTableTable extends CompetitionRegistrationTable
   late final GeneratedColumn<int> nTurns = GeneratedColumn<int>(
     'n_turns',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
-    defaultValue: const Constant(0),
   );
   static const VerificationMeta _competenceIdMeta = const VerificationMeta(
     'competenceId',
@@ -2095,8 +2094,6 @@ class $CompetitionRegistrationTableTable extends CompetitionRegistrationTable
         _externalIdMeta,
         externalId.isAcceptableOrUnknown(data['external_id']!, _externalIdMeta),
       );
-    } else if (isInserting) {
-      context.missing(_externalIdMeta);
     }
     if (data.containsKey('registration_number')) {
       context.handle(
@@ -2106,8 +2103,6 @@ class $CompetitionRegistrationTableTable extends CompetitionRegistrationTable
           _registrationNumberMeta,
         ),
       );
-    } else if (isInserting) {
-      context.missing(_registrationNumberMeta);
     }
     if (data.containsKey('time')) {
       context.handle(
@@ -2159,15 +2154,15 @@ class $CompetitionRegistrationTableTable extends CompetitionRegistrationTable
       externalId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}external_id'],
-      )!,
+      ),
       registrationNumber: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}registration_number'],
-      )!,
+      ),
       time: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}time'],
-      )!,
+      ),
       userDni: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}user_dni'],
@@ -2175,7 +2170,7 @@ class $CompetitionRegistrationTableTable extends CompetitionRegistrationTable
       nTurns: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}n_turns'],
-      )!,
+      ),
       competenceId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}competence_id'],
@@ -2192,30 +2187,38 @@ class $CompetitionRegistrationTableTable extends CompetitionRegistrationTable
 class competition_registration_drift_model extends DataClass
     implements Insertable<competition_registration_drift_model> {
   final int id;
-  final String externalId;
-  final int registrationNumber;
-  final int time;
+  final String? externalId;
+  final String? registrationNumber;
+  final int? time;
   final String userDni;
-  final int nTurns;
+  final int? nTurns;
   final int competenceId;
   const competition_registration_drift_model({
     required this.id,
-    required this.externalId,
-    required this.registrationNumber,
-    required this.time,
+    this.externalId,
+    this.registrationNumber,
+    this.time,
     required this.userDni,
-    required this.nTurns,
+    this.nTurns,
     required this.competenceId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
-    map['external_id'] = Variable<String>(externalId);
-    map['registration_number'] = Variable<int>(registrationNumber);
-    map['time'] = Variable<int>(time);
+    if (!nullToAbsent || externalId != null) {
+      map['external_id'] = Variable<String>(externalId);
+    }
+    if (!nullToAbsent || registrationNumber != null) {
+      map['registration_number'] = Variable<String>(registrationNumber);
+    }
+    if (!nullToAbsent || time != null) {
+      map['time'] = Variable<int>(time);
+    }
     map['user_dni'] = Variable<String>(userDni);
-    map['n_turns'] = Variable<int>(nTurns);
+    if (!nullToAbsent || nTurns != null) {
+      map['n_turns'] = Variable<int>(nTurns);
+    }
     map['competence_id'] = Variable<int>(competenceId);
     return map;
   }
@@ -2223,11 +2226,17 @@ class competition_registration_drift_model extends DataClass
   CompetitionRegistrationTableCompanion toCompanion(bool nullToAbsent) {
     return CompetitionRegistrationTableCompanion(
       id: Value(id),
-      externalId: Value(externalId),
-      registrationNumber: Value(registrationNumber),
-      time: Value(time),
+      externalId: externalId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(externalId),
+      registrationNumber: registrationNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(registrationNumber),
+      time: time == null && nullToAbsent ? const Value.absent() : Value(time),
       userDni: Value(userDni),
-      nTurns: Value(nTurns),
+      nTurns: nTurns == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nTurns),
       competenceId: Value(competenceId),
     );
   }
@@ -2239,11 +2248,13 @@ class competition_registration_drift_model extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return competition_registration_drift_model(
       id: serializer.fromJson<int>(json['id']),
-      externalId: serializer.fromJson<String>(json['externalId']),
-      registrationNumber: serializer.fromJson<int>(json['registrationNumber']),
-      time: serializer.fromJson<int>(json['time']),
+      externalId: serializer.fromJson<String?>(json['externalId']),
+      registrationNumber: serializer.fromJson<String?>(
+        json['registrationNumber'],
+      ),
+      time: serializer.fromJson<int?>(json['time']),
       userDni: serializer.fromJson<String>(json['userDni']),
-      nTurns: serializer.fromJson<int>(json['nTurns']),
+      nTurns: serializer.fromJson<int?>(json['nTurns']),
       competenceId: serializer.fromJson<int>(json['competenceId']),
     );
   }
@@ -2252,30 +2263,32 @@ class competition_registration_drift_model extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'externalId': serializer.toJson<String>(externalId),
-      'registrationNumber': serializer.toJson<int>(registrationNumber),
-      'time': serializer.toJson<int>(time),
+      'externalId': serializer.toJson<String?>(externalId),
+      'registrationNumber': serializer.toJson<String?>(registrationNumber),
+      'time': serializer.toJson<int?>(time),
       'userDni': serializer.toJson<String>(userDni),
-      'nTurns': serializer.toJson<int>(nTurns),
+      'nTurns': serializer.toJson<int?>(nTurns),
       'competenceId': serializer.toJson<int>(competenceId),
     };
   }
 
   competition_registration_drift_model copyWith({
     int? id,
-    String? externalId,
-    int? registrationNumber,
-    int? time,
+    Value<String?> externalId = const Value.absent(),
+    Value<String?> registrationNumber = const Value.absent(),
+    Value<int?> time = const Value.absent(),
     String? userDni,
-    int? nTurns,
+    Value<int?> nTurns = const Value.absent(),
     int? competenceId,
   }) => competition_registration_drift_model(
     id: id ?? this.id,
-    externalId: externalId ?? this.externalId,
-    registrationNumber: registrationNumber ?? this.registrationNumber,
-    time: time ?? this.time,
+    externalId: externalId.present ? externalId.value : this.externalId,
+    registrationNumber: registrationNumber.present
+        ? registrationNumber.value
+        : this.registrationNumber,
+    time: time.present ? time.value : this.time,
     userDni: userDni ?? this.userDni,
-    nTurns: nTurns ?? this.nTurns,
+    nTurns: nTurns.present ? nTurns.value : this.nTurns,
     competenceId: competenceId ?? this.competenceId,
   );
   competition_registration_drift_model copyWithCompanion(
@@ -2338,11 +2351,11 @@ class competition_registration_drift_model extends DataClass
 class CompetitionRegistrationTableCompanion
     extends UpdateCompanion<competition_registration_drift_model> {
   final Value<int> id;
-  final Value<String> externalId;
-  final Value<int> registrationNumber;
-  final Value<int> time;
+  final Value<String?> externalId;
+  final Value<String?> registrationNumber;
+  final Value<int?> time;
   final Value<String> userDni;
-  final Value<int> nTurns;
+  final Value<int?> nTurns;
   final Value<int> competenceId;
   const CompetitionRegistrationTableCompanion({
     this.id = const Value.absent(),
@@ -2355,20 +2368,18 @@ class CompetitionRegistrationTableCompanion
   });
   CompetitionRegistrationTableCompanion.insert({
     this.id = const Value.absent(),
-    required String externalId,
-    required int registrationNumber,
+    this.externalId = const Value.absent(),
+    this.registrationNumber = const Value.absent(),
     this.time = const Value.absent(),
     required String userDni,
     this.nTurns = const Value.absent(),
     required int competenceId,
-  }) : externalId = Value(externalId),
-       registrationNumber = Value(registrationNumber),
-       userDni = Value(userDni),
+  }) : userDni = Value(userDni),
        competenceId = Value(competenceId);
   static Insertable<competition_registration_drift_model> custom({
     Expression<int>? id,
     Expression<String>? externalId,
-    Expression<int>? registrationNumber,
+    Expression<String>? registrationNumber,
     Expression<int>? time,
     Expression<String>? userDni,
     Expression<int>? nTurns,
@@ -2387,11 +2398,11 @@ class CompetitionRegistrationTableCompanion
 
   CompetitionRegistrationTableCompanion copyWith({
     Value<int>? id,
-    Value<String>? externalId,
-    Value<int>? registrationNumber,
-    Value<int>? time,
+    Value<String?>? externalId,
+    Value<String?>? registrationNumber,
+    Value<int?>? time,
     Value<String>? userDni,
-    Value<int>? nTurns,
+    Value<int?>? nTurns,
     Value<int>? competenceId,
   }) {
     return CompetitionRegistrationTableCompanion(
@@ -2415,7 +2426,7 @@ class CompetitionRegistrationTableCompanion
       map['external_id'] = Variable<String>(externalId.value);
     }
     if (registrationNumber.present) {
-      map['registration_number'] = Variable<int>(registrationNumber.value);
+      map['registration_number'] = Variable<String>(registrationNumber.value);
     }
     if (time.present) {
       map['time'] = Variable<int>(time.value);
@@ -3670,21 +3681,21 @@ typedef $$CompetenceTableTableProcessedTableManager =
 typedef $$CompetitionRegistrationTableTableCreateCompanionBuilder =
     CompetitionRegistrationTableCompanion Function({
       Value<int> id,
-      required String externalId,
-      required int registrationNumber,
-      Value<int> time,
+      Value<String?> externalId,
+      Value<String?> registrationNumber,
+      Value<int?> time,
       required String userDni,
-      Value<int> nTurns,
+      Value<int?> nTurns,
       required int competenceId,
     });
 typedef $$CompetitionRegistrationTableTableUpdateCompanionBuilder =
     CompetitionRegistrationTableCompanion Function({
       Value<int> id,
-      Value<String> externalId,
-      Value<int> registrationNumber,
-      Value<int> time,
+      Value<String?> externalId,
+      Value<String?> registrationNumber,
+      Value<int?> time,
       Value<String> userDni,
-      Value<int> nTurns,
+      Value<int?> nTurns,
       Value<int> competenceId,
     });
 
@@ -3707,7 +3718,7 @@ class $$CompetitionRegistrationTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get registrationNumber => $composableBuilder(
+  ColumnFilters<String> get registrationNumber => $composableBuilder(
     column: $table.registrationNumber,
     builder: (column) => ColumnFilters(column),
   );
@@ -3752,7 +3763,7 @@ class $$CompetitionRegistrationTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get registrationNumber => $composableBuilder(
+  ColumnOrderings<String> get registrationNumber => $composableBuilder(
     column: $table.registrationNumber,
     builder: (column) => ColumnOrderings(column),
   );
@@ -3795,7 +3806,7 @@ class $$CompetitionRegistrationTableTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<int> get registrationNumber => $composableBuilder(
+  GeneratedColumn<String> get registrationNumber => $composableBuilder(
     column: $table.registrationNumber,
     builder: (column) => column,
   );
@@ -3862,11 +3873,11 @@ class $$CompetitionRegistrationTableTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
-                Value<String> externalId = const Value.absent(),
-                Value<int> registrationNumber = const Value.absent(),
-                Value<int> time = const Value.absent(),
+                Value<String?> externalId = const Value.absent(),
+                Value<String?> registrationNumber = const Value.absent(),
+                Value<int?> time = const Value.absent(),
                 Value<String> userDni = const Value.absent(),
-                Value<int> nTurns = const Value.absent(),
+                Value<int?> nTurns = const Value.absent(),
                 Value<int> competenceId = const Value.absent(),
               }) => CompetitionRegistrationTableCompanion(
                 id: id,
@@ -3880,11 +3891,11 @@ class $$CompetitionRegistrationTableTableTableManager
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
-                required String externalId,
-                required int registrationNumber,
-                Value<int> time = const Value.absent(),
+                Value<String?> externalId = const Value.absent(),
+                Value<String?> registrationNumber = const Value.absent(),
+                Value<int?> time = const Value.absent(),
                 required String userDni,
-                Value<int> nTurns = const Value.absent(),
+                Value<int?> nTurns = const Value.absent(),
                 required int competenceId,
               }) => CompetitionRegistrationTableCompanion.insert(
                 id: id,

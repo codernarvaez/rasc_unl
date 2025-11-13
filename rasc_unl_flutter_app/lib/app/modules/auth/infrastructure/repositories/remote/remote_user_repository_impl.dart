@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:rasc_unl_flutter_app/app/modules/auth/domain/models/user_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/auth/domain/repositories/user_repository.dart';
+import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 
 class RemoteUserRepositoryImpl implements UserRepository {
   final String _baseUrl = dotenv.env['API_URL'] ?? '';
@@ -10,10 +11,13 @@ class RemoteUserRepositoryImpl implements UserRepository {
 
   RemoteUserRepositoryImpl({String? accessToken}) : _accessToken = accessToken;
 
-  Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
-      };
+  Map<String, String> get _headers {
+    logging.i('🔑 RemoteUserRepository - Token status: ${_accessToken != null ? "Present (${_accessToken.length} chars)" : "NULL"}');
+    return {
+      'Content-Type': 'application/json',
+      if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+    };
+  }
 
   @override
   Future<List<UserModel>> getAllUsers() async {
@@ -84,17 +88,21 @@ class RemoteUserRepositoryImpl implements UserRepository {
   @override
   Future<void> updateUser(UserModel user) async {
     try {
+      // Usar el endpoint /me para actualizar el perfil del usuario actual
+      // Este endpoint permite que cualquier usuario autenticado actualice su propio perfil
       final response = await http.put(
-        Uri.parse('$_baseUrl/api/v1/auth/users/${user.id}'),
+        Uri.parse('$_baseUrl/api/v1/auth/me'),
         headers: _headers,
         body: jsonEncode({
           'first_name': user.name,
           'last_name': user.lastName,
-          'date_of_birth': user.birthDate?.toIso8601String(),
-          'role': user.rol,
-          'is_active': user.isActive,
+          'date_of_birth': user.birthDate?.toIso8601String().split('T')[0],
         }),
       );
+
+      if (response.statusCode == 401) {
+        throw Exception('No autorizado: El token de acceso es inválido o ha expirado');
+      }
 
       if (response.statusCode != 200) {
         final errorData = jsonDecode(response.body);

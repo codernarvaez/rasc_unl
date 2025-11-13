@@ -21,7 +21,7 @@ class LocalCompetitionRegistrationRepositoryImpl implements CompetitionRegistrat
         registrationNumber: queryResult.registrationNumber,
         externalId: queryResult.externalId,
         nTurns: queryResult.nTurns,
-        time: Duration(milliseconds: queryResult.time),
+        time: queryResult.time != null ? Duration(milliseconds: queryResult.time!) : null,
       );
     }
     return null;
@@ -49,7 +49,7 @@ class LocalCompetitionRegistrationRepositoryImpl implements CompetitionRegistrat
         registrationNumber: queryResult.registrationNumber,
         externalId: queryResult.externalId,
         nTurns: queryResult.nTurns,
-        time: Duration(milliseconds: queryResult.time),
+        time: queryResult.time != null ? Duration(milliseconds: queryResult.time!) : null,
       );
     }
     return null;
@@ -61,10 +61,10 @@ class LocalCompetitionRegistrationRepositoryImpl implements CompetitionRegistrat
           CompetitionRegistrationTableCompanion.insert(
             userDni: registration.userDni,
             competenceId: registration.competenceId,
-            registrationNumber: registration.registrationNumber,
-            externalId: registration.externalId,
+            registrationNumber: Value(registration.registrationNumber),
+            externalId: Value(registration.externalId),
             nTurns: Value(registration.nTurns),
-            time: Value(registration.time.inMilliseconds),
+            time: Value(registration.time?.inMilliseconds),
           ),
         );
   }
@@ -89,7 +89,7 @@ class LocalCompetitionRegistrationRepositoryImpl implements CompetitionRegistrat
       registrationNumber: result.registrationNumber,
       externalId: result.externalId,
       nTurns: result.nTurns,
-      time: Duration(milliseconds: result.time),
+      time: result.time != null ? Duration(milliseconds: result.time!) : null,
     )).toList();
   }
 
@@ -104,7 +104,7 @@ class LocalCompetitionRegistrationRepositoryImpl implements CompetitionRegistrat
       registrationNumber: result.registrationNumber,
       externalId: result.externalId,
       nTurns: result.nTurns,
-      time: Duration(milliseconds: result.time),
+      time: result.time != null ? Duration(milliseconds: result.time!) : null,
     )).toList();
   }
 
@@ -121,7 +121,7 @@ class LocalCompetitionRegistrationRepositoryImpl implements CompetitionRegistrat
         registrationNumber: queryResult.registrationNumber,
         externalId: queryResult.externalId,
         nTurns: queryResult.nTurns,
-        time: Duration(milliseconds: queryResult.time),
+        time: queryResult.time != null ? Duration(milliseconds: queryResult.time!) : null,
       );
     }
     return null;
@@ -140,7 +140,7 @@ class LocalCompetitionRegistrationRepositoryImpl implements CompetitionRegistrat
       registrationNumber: result.registrationNumber,
       externalId: result.externalId,
       nTurns: result.nTurns,
-      time: Duration(milliseconds: result.time),
+      time: result.time != null ? Duration(milliseconds: result.time!) : null,
     )).toList();
   }
 }

@@ -89,6 +89,19 @@ class _LoginPageState extends ConsumerState<LoginPage>
         // Actualizar el usuario actual
         ref.read(currentUserProvider.notifier).setUser(result.user!);
         
+        // Establecer el token directamente desde el resultado del login
+        if (!isOffline && result.accessToken != null) {
+          logging.i('📝 Login successful - Access token received: ${result.accessToken}');
+          logging.i('📝 Token length: ${result.accessToken!.length} chars');
+          
+          // Establecer el token directamente en el provider (sin leer de DB)
+          ref.read(accessTokenProvider.notifier).setToken(result.accessToken);
+          
+          // Verify token was set
+          final loadedToken = ref.read(accessTokenProvider);
+          logging.i('✅ Token set in provider: ${loadedToken != null ? "YES (${loadedToken.length} chars)" : "NO"}');
+        }
+        
         if (mounted) {
           context.go('/home');
         }

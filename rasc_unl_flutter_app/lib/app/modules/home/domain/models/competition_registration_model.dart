@@ -6,21 +6,21 @@ part 'competition_registration_model.g.dart';
 @JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
 class CompetitionRegistrationModel {
   final int id;
-  final String externalId;
-  final int registrationNumber;
+  final String? externalId;
+  final String? registrationNumber;
   @DurationConverter()
-  final Duration time;
+  final Duration? time;
   final String userDni;
-  final int nTurns;
+  final int? nTurns;
   final int competenceId;
 
   CompetitionRegistrationModel({
     required this.id,
-    required this.externalId,
-    required this.registrationNumber,
-    required this.time,
+    this.externalId,
+    this.registrationNumber,
+    this.time,
     required this.userDni,
-    required this.nTurns,
+    this.nTurns,
     required this.competenceId,
   });
 
@@ -33,12 +33,12 @@ class CompetitionRegistrationModel {
 
 
 
-class DurationConverter implements JsonConverter<Duration, int> {
+class DurationConverter implements JsonConverter<Duration?, int?> {
   const DurationConverter();
 
   @override
-  Duration fromJson(int json) => Duration(milliseconds: json);
+  Duration? fromJson(int? json) => json != null ? Duration(milliseconds: json) : null;
 
   @override
-  int toJson(Duration object) => object.inMilliseconds;
+  int? toJson(Duration? object) => object?.inMilliseconds;
 }

@@ -131,4 +131,38 @@ class RemoteAuthRepositoryImpl implements AuthRepository {
       // Ignorar errores de logout
     }
   }
+
+  /// Refresh access token using refresh token
+  Future<AuthResult> refreshAccessToken(String refreshToken) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/api/v1/auth/refresh'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'refresh_token': refreshToken}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final newAccessToken = data['access_token'] as String?;
+        final newRefreshToken = data['refresh_token'] as String?;
+
+        return AuthResult(
+          success: true,
+          message: 'Token refreshed successfully',
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+        );
+      }
+
+      return AuthResult(
+        success: false,
+        message: 'Failed to refresh token',
+      );
+    } catch (e) {
+      return AuthResult(
+        success: false,
+        message: 'Error refreshing token: $e',
+      );
+    }
+  }
 }

@@ -10,10 +10,10 @@ from typing import Optional, List, Dict
 class CompetenceBase(BaseModel):
     """Schema base para Competence"""
     name: str = Field(..., min_length=1, max_length=255, description="Nombre de la competencia")
-    competition_date: date = Field(..., description="Fecha de la competencia")
+    competition_date: datetime = Field(..., description="Fecha de la competencia")
     created_by: str = Field(..., min_length=1, max_length=50, description="DNI del creador")
     external_id: Optional[str] = Field(None, min_length=1, max_length=255, description="ID externo único")
-    competition_limit_for_registration_date: Optional[date] = Field(None, description="Fecha límite de registro")
+    competition_limit_for_registration_date: Optional[datetime] = Field(None, description="Fecha límite de registro")
     n_turns: Optional[int] = Field(None, gt=0, description="Número de vueltas")
     is_active: bool = Field(default=True, description="Estado activo/inactivo")
     start_coordinates: Optional[Dict] = Field(None, description="Coordenadas de inicio")
@@ -29,8 +29,8 @@ class CompetenceUpdate(BaseModel):
     """Schema para actualizar una competencia"""
     external_id: Optional[str] = Field(None, min_length=1, max_length=255)
     name: Optional[str] = Field(None, min_length=1, max_length=255)
-    competition_date: Optional[date] = None
-    competition_limit_for_registration_date: Optional[date] = None
+    competition_date: Optional[datetime] = None
+    competition_limit_for_registration_date: Optional[datetime] = None
     n_turns: Optional[int] = Field(None, gt=0)
     is_active: Optional[bool] = None
     created_by: Optional[str] = Field(None, min_length=1, max_length=50)

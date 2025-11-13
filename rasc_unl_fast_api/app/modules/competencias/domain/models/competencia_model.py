@@ -15,8 +15,8 @@ class CompetenceModel(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     external_id = Column(String(255), unique=True, nullable=True, index=True)
     name = Column(String(255), nullable=False, index=True)
-    competition_date = Column(Date, nullable=False)
-    competition_limit_for_registration_date = Column(Date, nullable=True)
+    competition_date = Column(DateTime(timezone=True), nullable=False)
+    competition_limit_for_registration_date = Column(DateTime(timezone=True), nullable=True)
     n_turns = Column(Integer, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
     created_by = Column(String(50), nullable=False)  # User.dni
