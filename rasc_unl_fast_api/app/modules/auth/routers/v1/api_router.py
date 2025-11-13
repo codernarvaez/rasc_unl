@@ -1,6 +1,8 @@
 from typing import Annotated, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.modules.auth.models.user import RoleEnum
 
 from app.core.db.database import get_session
 from app.modules.auth.dependencies import CurrentUser, AdminUser
@@ -18,7 +20,7 @@ from app.modules.auth.schemas.auth_schemas import (
     MessageResponse
 )
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+router = APIRouter(prefix="/auth")
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -34,11 +36,16 @@ async def register(
 
 @router.post("/login", response_model=TokenResponse)
 async def login(
-    credentials: LoginRequest,
+    form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_session)
 ):
-    """Login user and return access and refresh tokens."""
+    """Login user and return access and refresh tokens.
+    
+    OAuth2 compatible endpoint - uses 'username' field for email.
+    """
     service = AuthService(session)
+    # OAuth2PasswordRequestForm usa 'username', pero nosotros usamos email
+    credentials = LoginRequest(email=form_data.username, password=form_data.password)
     tokens = await service.login(credentials)
     return TokenResponse(**tokens)
 
@@ -105,7 +112,7 @@ async def update_current_user_password(
 async def get_users(
     skip: int = 0,
     limit: int = 100,
-    role: Optional[str] = None,
+    role: RoleEnum = None,
     is_active: Optional[bool] = None,
     search: Optional[str] = None,
     current_user: AdminUser = None,

@@ -9,7 +9,6 @@ class UserBase(BaseModel):
     first_name: str = Field(..., min_length=1, max_length=100)
     last_name: str = Field(..., min_length=1, max_length=100)
     dni: str = Field(..., min_length=10, max_length=13)
-    date_of_birth: date = Field(..., description="Fecha de nacimiento (YYYY-MM-DD)")
 
 
 # Request schemas
@@ -18,10 +17,8 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseModel):
-    email: Optional[EmailStr] = None
     first_name: Optional[str] = Field(None, min_length=1, max_length=100)
     last_name: Optional[str] = Field(None, min_length=1, max_length=100)
-    dni: Optional[str] = Field(None, min_length=10, max_length=13)
     date_of_birth: Optional[date] = Field(None, description="Fecha de nacimiento (YYYY-MM-DD)")
 
 
@@ -48,7 +45,7 @@ class UserResponse(BaseModel):
     first_name: str
     last_name: str
     dni: str
-    date_of_birth: date
+    date_of_birth: Optional[date]
     role: str
     is_active: bool
     created_at: datetime

@@ -20,7 +20,7 @@ class UserRepository:
             first_name=user_data.first_name,
             last_name=user_data.last_name,
             dni=user_data.dni,
-            date_of_birth=user_data.date_of_birth,
+            date_of_birth=None,
             password=hashed_password,
             role=RoleEnum.COMPETITOR,
             is_active=True
