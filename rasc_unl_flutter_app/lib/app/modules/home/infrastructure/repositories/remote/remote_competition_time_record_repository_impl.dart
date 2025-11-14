@@ -19,6 +19,10 @@ class RemoteCompetitionTimeRecordRepositoryImpl implements CompetitionTimeRecord
     required String? registrationNumber,
     required int timeInMilliseconds,
     required int competenceId,
+    required String recordedByDni,
+    int? position,
+    bool isEarly = false,
+    bool isReference = false,
   }) async {
     final url = Uri.parse('$baseUrl/api/v1/competencias/time-records');
     
@@ -26,6 +30,10 @@ class RemoteCompetitionTimeRecordRepositoryImpl implements CompetitionTimeRecord
       'registration_number': registrationNumber,
       'time': timeInMilliseconds,
       'competence_id': competenceId,
+      'recorded_by_dni': recordedByDni,
+      if (position != null) 'position': position,
+      'is_early': isEarly,
+      'is_reference': isReference,
     });
 
     final response = await http.post(
@@ -111,12 +119,18 @@ class RemoteCompetitionTimeRecordRepositoryImpl implements CompetitionTimeRecord
     required int id,
     String? registrationNumber,
     int? timeInMilliseconds,
+    int? position,
+    bool? isEarly,
+    bool? isReference,
   }) async {
     final url = Uri.parse('$baseUrl/api/v1/competencias/time-records/$id');
     
     final Map<String, dynamic> body = {};
     if (registrationNumber != null) body['registration_number'] = registrationNumber;
     if (timeInMilliseconds != null) body['time'] = timeInMilliseconds;
+    if (position != null) body['position'] = position;
+    if (isEarly != null) body['is_early'] = isEarly;
+    if (isReference != null) body['is_reference'] = isReference;
 
     final response = await http.patch(
       url,

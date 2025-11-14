@@ -2,7 +2,7 @@ from typing import Optional, List
 from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.modules.auth.models.user import User, RoleEnum
-from app.modules.auth.schemas.auth_schemas import UserCreate, UserUpdate
+from app.modules.auth.schemas.auth_schemas import UserCreate, UserUpdate, UserCreateByAdmin
 from app.core.jwt.jwt import PasswordHasher
 
 
@@ -23,6 +23,28 @@ class UserRepository:
             date_of_birth=None,
             password=hashed_password,
             role=RoleEnum.COMPETITOR,
+            is_active=True
+        )
+        
+        self.session.add(user)
+        await self.session.commit()
+        await self.session.refresh(user)
+        return user
+
+    async def create_by_admin(self, user_data: UserCreateByAdmin) -> User:
+        """Create a new user by admin. Password defaults to DNI if not provided."""
+        # Use DNI as password if not provided
+        password = user_data.password if user_data.password else user_data.dni
+        hashed_password = self.password_hasher.hash(password)
+        
+        user = User(
+            email=user_data.email,
+            first_name=user_data.first_name,
+            last_name=user_data.last_name,
+            dni=user_data.dni,
+            date_of_birth=user_data.date_of_birth,
+            password=hashed_password,
+            role=user_data.role if user_data.role else RoleEnum.COMPETITOR,
             is_active=True
         )
         

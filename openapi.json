@@ -961,6 +961,228 @@
                 }
             }
         },
+        "/api/v1/competencias/time-records": {
+            "post": {
+                "tags": [
+                    "Competencias V1"
+                ],
+                "summary": "Create a time record",
+                "description": "Create a new time record for a competition",
+                "operationId": "create_time_record_api_v1_competencias_time_records_post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CompetitionTimeRecordCreate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CompetitionTimeRecordResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Competencias V1"
+                ],
+                "summary": "Get all time records",
+                "description": "Get all time records with pagination",
+                "operationId": "get_all_time_records_api_v1_competencias_time_records_get",
+                "parameters": [
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CompetitionTimeRecordListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/competencias/time-records/{time_record_id}": {
+            "get": {
+                "tags": [
+                    "Competencias V1"
+                ],
+                "summary": "Get a time record by ID",
+                "description": "Get a specific time record by its ID",
+                "operationId": "get_time_record_api_v1_competencias_time_records__time_record_id__get",
+                "parameters": [
+                    {
+                        "name": "time_record_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Time Record Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CompetitionTimeRecordResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "tags": [
+                    "Competencias V1"
+                ],
+                "summary": "Update a time record",
+                "description": "Partially updates the data of a time record",
+                "operationId": "update_time_record_api_v1_competencias_time_records__time_record_id__patch",
+                "parameters": [
+                    {
+                        "name": "time_record_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Time Record Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CompetitionTimeRecordUpdate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CompetitionTimeRecordResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Competencias V1"
+                ],
+                "summary": "Delete a time record",
+                "description": "Delete a time record by its ID",
+                "operationId": "delete_time_record_api_v1_competencias_time_records__time_record_id__delete",
+                "parameters": [
+                    {
+                        "name": "time_record_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Time Record Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful Response"
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/competencias/{competence_id}": {
             "get": {
                 "tags": [
@@ -1125,6 +1347,65 @@
                 }
             }
         },
+        "/api/v1/competencias/{competence_id}/time-records": {
+            "get": {
+                "tags": [
+                    "Competencias V1"
+                ],
+                "summary": "Get time records for a competition",
+                "description": "Get all time records for a specific competition, optionally filtered by registration number",
+                "operationId": "get_time_records_by_competence_api_v1_competencias__competence_id__time_records_get",
+                "parameters": [
+                    {
+                        "name": "competence_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Competence Id"
+                        }
+                    },
+                    {
+                        "name": "registration_number",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Registration Number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CompetitionTimeRecordListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/example/": {
             "get": {
                 "tags": [
@@ -1217,7 +1498,7 @@
                     },
                     "competition_date": {
                         "type": "string",
-                        "format": "date",
+                        "format": "date-time",
                         "title": "Competition Date",
                         "description": "Fecha de la competencia"
                     },
@@ -1246,7 +1527,7 @@
                         "anyOf": [
                             {
                                 "type": "string",
-                                "format": "date"
+                                "format": "date-time"
                             },
                             {
                                 "type": "null"
@@ -1268,11 +1549,30 @@
                         "title": "N Turns",
                         "description": "Número de vueltas"
                     },
+                    "max_registrations": {
+                        "anyOf": [
+                            {
+                                "type": "integer",
+                                "exclusiveMinimum": 0.0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Max Registrations",
+                        "description": "Límite de registros de tiempo permitidos"
+                    },
                     "is_active": {
                         "type": "boolean",
                         "title": "Is Active",
                         "description": "Estado activo/inactivo",
                         "default": true
+                    },
+                    "is_finished": {
+                        "type": "boolean",
+                        "title": "Is Finished",
+                        "description": "Indica si la competencia finalizó",
+                        "default": false
                     },
                     "start_coordinates": {
                         "anyOf": [
@@ -1343,7 +1643,7 @@
                     },
                     "competition_date": {
                         "type": "string",
-                        "format": "date",
+                        "format": "date-time",
                         "title": "Competition Date",
                         "description": "Fecha de la competencia"
                     },
@@ -1372,7 +1672,7 @@
                         "anyOf": [
                             {
                                 "type": "string",
-                                "format": "date"
+                                "format": "date-time"
                             },
                             {
                                 "type": "null"
@@ -1394,11 +1694,30 @@
                         "title": "N Turns",
                         "description": "Número de vueltas"
                     },
+                    "max_registrations": {
+                        "anyOf": [
+                            {
+                                "type": "integer",
+                                "exclusiveMinimum": 0.0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Max Registrations",
+                        "description": "Límite de registros de tiempo permitidos"
+                    },
                     "is_active": {
                         "type": "boolean",
                         "title": "Is Active",
                         "description": "Estado activo/inactivo",
                         "default": true
+                    },
+                    "is_finished": {
+                        "type": "boolean",
+                        "title": "Is Finished",
+                        "description": "Indica si la competencia finalizó",
+                        "default": false
                     },
                     "start_coordinates": {
                         "anyOf": [
@@ -1485,7 +1804,7 @@
                         "anyOf": [
                             {
                                 "type": "string",
-                                "format": "date"
+                                "format": "date-time"
                             },
                             {
                                 "type": "null"
@@ -1497,7 +1816,7 @@
                         "anyOf": [
                             {
                                 "type": "string",
-                                "format": "date"
+                                "format": "date-time"
                             },
                             {
                                 "type": "null"
@@ -1517,6 +1836,18 @@
                         ],
                         "title": "N Turns"
                     },
+                    "max_registrations": {
+                        "anyOf": [
+                            {
+                                "type": "integer",
+                                "exclusiveMinimum": 0.0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Max Registrations"
+                    },
                     "is_active": {
                         "anyOf": [
                             {
@@ -1527,6 +1858,17 @@
                             }
                         ],
                         "title": "Is Active"
+                    },
+                    "is_finished": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Finished"
                     },
                     "created_by": {
                         "anyOf": [
@@ -1835,6 +2177,149 @@
                 "title": "CompetitionRegistrationUpdate",
                 "description": "Schema para actualizar un registro"
             },
+            "CompetitionTimeRecordCreate": {
+                "properties": {
+                    "registration_number": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 100,
+                                "minLength": 1
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Registration Number",
+                        "description": "Número de registro/dorsal"
+                    },
+                    "time": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "title": "Time",
+                        "description": "Tiempo en milisegundos"
+                    },
+                    "competence_id": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0.0,
+                        "title": "Competence Id",
+                        "description": "ID de la competencia"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "time",
+                    "competence_id"
+                ],
+                "title": "CompetitionTimeRecordCreate",
+                "description": "Schema para crear un registro de tiempo"
+            },
+            "CompetitionTimeRecordListResponse": {
+                "properties": {
+                    "time_records": {
+                        "items": {
+                            "$ref": "#/components/schemas/CompetitionTimeRecordResponse"
+                        },
+                        "type": "array",
+                        "title": "Time Records"
+                    },
+                    "total": {
+                        "type": "integer",
+                        "title": "Total"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "time_records",
+                    "total"
+                ],
+                "title": "CompetitionTimeRecordListResponse",
+                "description": "Schema para lista de registros de tiempo"
+            },
+            "CompetitionTimeRecordResponse": {
+                "properties": {
+                    "registration_number": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 100,
+                                "minLength": 1
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Registration Number",
+                        "description": "Número de registro/dorsal"
+                    },
+                    "time": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "title": "Time",
+                        "description": "Tiempo en milisegundos"
+                    },
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "competence_id": {
+                        "type": "integer",
+                        "title": "Competence Id"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated At"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "time",
+                    "id",
+                    "competence_id",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "CompetitionTimeRecordResponse",
+                "description": "Schema de respuesta para un registro de tiempo"
+            },
+            "CompetitionTimeRecordUpdate": {
+                "properties": {
+                    "registration_number": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 100,
+                                "minLength": 1
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Registration Number"
+                    },
+                    "time": {
+                        "anyOf": [
+                            {
+                                "type": "integer",
+                                "minimum": 0.0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Time"
+                    }
+                },
+                "type": "object",
+                "title": "CompetitionTimeRecordUpdate",
+                "description": "Schema para actualizar un registro de tiempo"
+            },
             "HTTPValidationError": {
                 "properties": {
                     "detail": {
@@ -1891,7 +2376,8 @@
                 "type": "string",
                 "enum": [
                     "ADMINISTRATOR",
-                    "COMPETITOR"
+                    "COMPETITOR",
+                    "MODERATOR"
                 ],
                 "title": "RoleEnum"
             },

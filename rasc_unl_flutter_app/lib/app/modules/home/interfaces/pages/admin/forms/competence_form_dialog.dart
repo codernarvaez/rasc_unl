@@ -20,8 +20,8 @@ class CompetenceFormData {
   final DateTime competitionDate;
   final DateTime? competitionLimitForRegistrationDate;
   final bool isActive;
-  final Map<String, List<double>> startCoordinates;
-  final Map<String, List<double>> finishCoordinates;
+  final Map<String, double> startCoordinates;
+  final Map<String, double> finishCoordinates;
 
   CompetenceFormData({
     required this.name,
@@ -81,72 +81,69 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
   void _loadExistingCoordinates() {
     final comp = widget.competence!;
 
-    // Start coordinates: point_x = [lat1, lat2], point_y = [lon1, lon2]
-    if (comp.startCoordinates.containsKey('point_x') &&
-        comp.startCoordinates.containsKey('point_y')) {
-      final lats = comp.startCoordinates['point_x']!;
-      final lons = comp.startCoordinates['point_y']!;
+    // Start coordinates: latitude and longitude
+    if (comp.startCoordinates.containsKey('latitude') &&
+        comp.startCoordinates.containsKey('longitude')) {
+      final lat = comp.startCoordinates['latitude']!;
+      final lon = comp.startCoordinates['longitude']!;
 
-      if (lats.length >= 2 && lons.length >= 2) {
-        _startPoint1 = Position(
-          latitude: lats[0],
-          longitude: lons[0],
-          timestamp: DateTime.now(),
-          accuracy: 0,
-          altitude: 0,
-          altitudeAccuracy: 0,
-          heading: 0,
-          headingAccuracy: 0,
-          speed: 0,
-          speedAccuracy: 0,
-        );
-        _startPoint2 = Position(
-          latitude: lats[1],
-          longitude: lons[1],
-          timestamp: DateTime.now(),
-          accuracy: 0,
-          altitude: 0,
-          altitudeAccuracy: 0,
-          heading: 0,
-          headingAccuracy: 0,
-          speed: 0,
-          speedAccuracy: 0,
-        );
-      }
+      _startPoint1 = Position(
+        latitude: lat,
+        longitude: lon,
+        timestamp: DateTime.now(),
+        accuracy: 0,
+        altitude: 0,
+        altitudeAccuracy: 0,
+        heading: 0,
+        headingAccuracy: 0,
+        speed: 0,
+        speedAccuracy: 0,
+      );
+      // Using same point for both since we now store single coordinate
+      _startPoint2 = Position(
+        latitude: lat,
+        longitude: lon,
+        timestamp: DateTime.now(),
+        accuracy: 0,
+        altitude: 0,
+        altitudeAccuracy: 0,
+        heading: 0,
+        headingAccuracy: 0,
+        speed: 0,
+        speedAccuracy: 0,
+      );
     }
 
     // Finish coordinates
-    if (comp.finishCoordinates.containsKey('point_x') &&
-        comp.finishCoordinates.containsKey('point_y')) {
-      final lats = comp.finishCoordinates['point_x']!;
-      final lons = comp.finishCoordinates['point_y']!;
+    if (comp.finishCoordinates.containsKey('latitude') &&
+        comp.finishCoordinates.containsKey('longitude')) {
+      final lat = comp.finishCoordinates['latitude']!;
+      final lon = comp.finishCoordinates['longitude']!;
 
-      if (lats.length >= 2 && lons.length >= 2) {
-        _finishPoint1 = Position(
-          latitude: lats[0],
-          longitude: lons[0],
-          timestamp: DateTime.now(),
-          accuracy: 0,
-          altitude: 0,
-          altitudeAccuracy: 0,
-          heading: 0,
-          headingAccuracy: 0,
-          speed: 0,
-          speedAccuracy: 0,
-        );
-        _finishPoint2 = Position(
-          latitude: lats[1],
-          longitude: lons[1],
-          timestamp: DateTime.now(),
-          accuracy: 0,
-          altitude: 0,
-          altitudeAccuracy: 0,
-          heading: 0,
-          headingAccuracy: 0,
-          speed: 0,
-          speedAccuracy: 0,
-        );
-      }
+      _finishPoint1 = Position(
+        latitude: lat,
+        longitude: lon,
+        timestamp: DateTime.now(),
+        accuracy: 0,
+        altitude: 0,
+        altitudeAccuracy: 0,
+        heading: 0,
+        headingAccuracy: 0,
+        speed: 0,
+        speedAccuracy: 0,
+      );
+      _finishPoint2 = Position(
+        latitude: lat,
+        longitude: lon,
+        timestamp: DateTime.now(),
+        accuracy: 0,
+        altitude: 0,
+        altitudeAccuracy: 0,
+        heading: 0,
+        headingAccuracy: 0,
+        speed: 0,
+        speedAccuracy: 0,
+      );
     }
 
     // Check if coordinates are the same
@@ -243,20 +240,21 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
     }
   }
 
-  Map<String, List<double>> _buildCoordinateMap(
+  Map<String, double> _buildCoordinateMap(
     Position? point1,
     Position? point2,
   ) {
     if (point1 == null || point2 == null) {
       return {
-        "point_x": [0.0, 0.0],
-        "point_y": [0.0, 0.0],
+        "latitude": 0.0,
+        "longitude": 0.0,
       };
     }
 
+    // Using average of both points
     return {
-      "point_x": [point1.latitude, point2.latitude],
-      "point_y": [point1.longitude, point2.longitude],
+      "latitude": (point1.latitude + point2.latitude) / 2,
+      "longitude": (point1.longitude + point2.longitude) / 2,
     };
   }
 

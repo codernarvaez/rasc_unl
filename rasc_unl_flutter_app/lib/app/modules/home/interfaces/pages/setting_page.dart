@@ -706,9 +706,51 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: TextButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(context);
-                // Lógica para cerrar sesión
+                
+                try {
+                  // Limpiar el usuario actual
+                  ref.read(currentUserProvider.notifier).clearUser();
+                  
+                  // Limpiar el token de acceso
+                  ref.read(accessTokenProvider.notifier).clearToken();
+                  
+                  // Navegar a la página de login y limpiar el stack
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/login',
+                    (route) => false,
+                  );
+                  
+                  // Mostrar mensaje de confirmación
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.white),
+                          SizedBox(width: 12),
+                          Text('Sesión cerrada correctamente'),
+                        ],
+                      ),
+                      backgroundColor: Color(0xFFD50000),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error al cerrar sesión: $e'),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  );
+                }
               },
               child: Text(
                 'Cerrar Sesión',

@@ -88,16 +88,29 @@ class RemoteUserRepositoryImpl implements UserRepository {
   @override
   Future<void> updateUser(UserModel user) async {
     try {
-      // Usar el endpoint /me para actualizar el perfil del usuario actual
-      // Este endpoint permite que cualquier usuario autenticado actualice su propio perfil
+      // Usar el endpoint de admin /users/{id} que permite actualizar rol e is_active
+      final body = <String, dynamic>{
+        'first_name': user.name,
+        'last_name': user.lastName,
+      };
+
+      // Agregar campos opcionales si están presentes
+      if (user.birthDate != null) {
+        body['date_of_birth'] = user.birthDate!.toIso8601String().split('T')[0];
+      }
+      
+      // Agregar rol si está presente (para admins)
+      if (user.rol.isNotEmpty) {
+        body['role'] = user.rol;
+      }
+      
+      // Agregar is_active
+      body['is_active'] = user.isActive;
+
       final response = await http.put(
-        Uri.parse('$_baseUrl/api/v1/auth/me'),
+        Uri.parse('$_baseUrl/api/v1/auth/users/${user.id}'),
         headers: _headers,
-        body: jsonEncode({
-          'first_name': user.name,
-          'last_name': user.lastName,
-          'date_of_birth': user.birthDate?.toIso8601String().split('T')[0],
-        }),
+        body: jsonEncode(body),
       );
 
       if (response.statusCode == 401) {

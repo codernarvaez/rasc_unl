@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/domain/models/competence_model.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/domain/models/competition_registration_model.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/domain/models/competition_time_record_model.dart';
 
 class ModeratorTimerPage extends ConsumerStatefulWidget {
   const ModeratorTimerPage({Key? key}) : super(key: key);
@@ -24,7 +24,7 @@ class _ModeratorTimerPageState extends ConsumerState<ModeratorTimerPage> {
   
   // Registration state
   String _registrationNumber = "";
-  List<CompetitionRegistrationModel> _currentRegistrations = [];
+  List<CompetitionTimeRecordModel> _currentTimeRecords = [];
   int _registrationCount = 0;
 
   @override
@@ -45,8 +45,10 @@ class _ModeratorTimerPageState extends ConsumerState<ModeratorTimerPage> {
       final repository = ref.read(rascUNLMainProvider).competenceRepository;
       final allCompetences = await repository.getAllCompetences();
       
-      // Filter only active competences
-      _activeCompetences = allCompetences.where((c) => c.isActive).toList();
+      // Filter only active and not finished competences
+      _activeCompetences = allCompetences
+          .where((c) => c.isActive && !c.isFinished)
+          .toList();
       
       // Sort by competition date (nearest first)
       _activeCompetences.sort((a, b) {
@@ -66,16 +68,19 @@ class _ModeratorTimerPageState extends ConsumerState<ModeratorTimerPage> {
     }
   }
 
-  Future<void> _loadRegistrations() async {
+  Future<void> _loadTimeRecords() async {
     if (_selectedCompetence == null) return;
     
     try {
-      final repository = ref.read(rascUNLMainProvider).competitionRegistrationRepository;
-      _currentRegistrations = await repository.getRegistrationsByCompetenceId(_selectedCompetence!.id);
+      final repository = ref.read(rascUNLMainProvider).competitionTimeRecordRepository;
+      _currentTimeRecords = await repository.getTimeRecordsByCompetenceId(
+        _selectedCompetence!.id,
+        registrationNumber: _registrationNumber.isNotEmpty ? _registrationNumber : null,
+      );
       
       // Count registrations with the same registration number
       if (_registrationNumber.isNotEmpty) {
-        _registrationCount = _currentRegistrations
+        _registrationCount = _currentTimeRecords
             .where((r) => r.registrationNumber == _registrationNumber)
             .length;
       }
@@ -119,13 +124,12 @@ class _ModeratorTimerPageState extends ConsumerState<ModeratorTimerPage> {
   }
 
   String _formatTime(int milliseconds) {
-    int hundreds = (milliseconds / 10).truncate();
-    int seconds = (hundreds / 100).truncate();
+    int seconds = (milliseconds / 1000).truncate();
     int minutes = (seconds / 60).truncate();
 
     String minutesStr = (minutes % 60).toString().padLeft(2, '0');
     String secondsStr = (seconds % 60).toString().padLeft(2, '0');
-    String millisecondsStr = (hundreds % 100).toString().padLeft(3, '0');
+    String millisecondsStr = (milliseconds % 1000).toString().padLeft(3, '0');
 
     return "$minutesStr:$secondsStr.$millisecondsStr";
   }
@@ -168,20 +172,14 @@ class _ModeratorTimerPageState extends ConsumerState<ModeratorTimerPage> {
     _stopTimer();
 
     try {
-      final currentUser = ref.read(currentUserProvider);
-      final repository = ref.read(rascUNLMainProvider).competitionRegistrationRepository;
-      
-      final newRegistration = CompetitionRegistrationModel(
-        id: DateTime.now().millisecondsSinceEpoch,
-        userDni: currentUser?.dni ?? 'MODERATOR',
+      final user = ref.read(currentUserProvider);
+      final repository = ref.read(rascUNLMainProvider).competitionTimeRecordRepository;
+      await repository.createTimeRecord(
+        registrationNumber: _registrationNumber.isNotEmpty ? _registrationNumber : null,
+        timeInMilliseconds: _stopwatch.elapsedMilliseconds,
         competenceId: _selectedCompetence!.id,
-        registrationNumber: _registrationNumber,
-        time: Duration(milliseconds: _stopwatch.elapsedMilliseconds),
-        nTurns: _selectedCompetence!.nTurns,
-        externalId: null,
+        recordedByDni: user!.dni,
       );
-
-      await repository.createRegistration(newRegistration);
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -190,7 +188,7 @@ class _ModeratorTimerPageState extends ConsumerState<ModeratorTimerPage> {
       }
 
       _resetTimer();
-      await _loadRegistrations();
+      await _loadTimeRecords();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -206,6 +204,20 @@ class _ModeratorTimerPageState extends ConsumerState<ModeratorTimerPage> {
     final isMobile = screenWidth < 600;
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Cronómetro de Moderador'),
+        backgroundColor: Color(0xFF1A1A2E),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: () {
+              _loadActiveCompetences();
+              if (_selectedCompetence != null) _loadTimeRecords();
+            },
+            tooltip: 'Actualizar',
+          ),
+        ],
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -226,28 +238,15 @@ class _ModeratorTimerPageState extends ConsumerState<ModeratorTimerPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Header
-                      Row(
-                        children: [
-                          Icon(Icons.timer, color: Colors.white, size: isMobile ? 28 : 32),
-                          SizedBox(width: 12),
-                          Text(
-                            'Cronómetro de Moderador',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: isMobile ? 20 : 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 24),
-
                       // Competition selector
                       _buildCompetenceSelector(isMobile),
                       SizedBox(height: 24),
 
                       if (_selectedCompetence != null) ...[
+                        // Competition info card
+                        _buildCompetenceInfoCard(isMobile),
+                        SizedBox(height: 16),
+
                         // Registration number input
                         _buildRegistrationNumberInput(isMobile),
                         SizedBox(height: 24),
@@ -283,7 +282,7 @@ class _ModeratorTimerPageState extends ConsumerState<ModeratorTimerPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Seleccionar Competencia',
+            'Seleccionar Competencia Activa',
             style: TextStyle(
               color: Colors.white,
               fontSize: isMobile ? 14 : 16,
@@ -329,9 +328,64 @@ class _ModeratorTimerPageState extends ConsumerState<ModeratorTimerPage> {
                   _registrationCount = 0;
                   _resetTimer();
                 });
-                _loadRegistrations();
+                _loadTimeRecords();
               },
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompetenceInfoCard(bool isMobile) {
+    if (_selectedCompetence == null) return SizedBox.shrink();
+
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.withOpacity(0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.blue, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Información de la Competencia',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          _buildInfoRow('Vueltas', '${_selectedCompetence!.nTurns}'),
+          if (_selectedCompetence!.maxRegistrations != null)
+            _buildInfoRow('Límite de registros', '${_selectedCompetence!.maxRegistrations}'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(color: Colors.white70, fontSize: 13),
+          ),
+          Text(
+            value,
+            style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );
@@ -365,7 +419,7 @@ class _ModeratorTimerPageState extends ConsumerState<ModeratorTimerPage> {
                   decoration: BoxDecoration(
                     color: _registrationCount >= _selectedCompetence!.maxRegistrations!
                         ? Colors.red.withOpacity(0.3)
-                        : Colors.blue.withOpacity(0.3),
+                        : Colors.green.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -399,7 +453,7 @@ class _ModeratorTimerPageState extends ConsumerState<ModeratorTimerPage> {
               setState(() {
                 _registrationNumber = value.trim();
               });
-              _loadRegistrations();
+              _loadTimeRecords();
             },
           ),
         ],
@@ -521,16 +575,10 @@ class _ModeratorTimerPageState extends ConsumerState<ModeratorTimerPage> {
   }
 
   Widget _buildRecentRegistrations(bool isMobile) {
-    final recentRegistrations = _currentRegistrations
-        .where((r) => r.registrationNumber == _registrationNumber)
-        .toList();
+    final recentRegistrations = _currentTimeRecords.toList();
     
-    recentRegistrations.sort((a, b) {
-      if (a.time == null && b.time == null) return 0;
-      if (a.time == null) return 1;
-      if (b.time == null) return -1;
-      return a.time!.compareTo(b.time!);
-    });
+    // Sort by time (fastest first)
+    recentRegistrations.sort((a, b) => a.time.compareTo(b.time));
 
     return Container(
       padding: EdgeInsets.all(16),
@@ -554,6 +602,11 @@ class _ModeratorTimerPageState extends ConsumerState<ModeratorTimerPage> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              Spacer(),
+              Text(
+                'Total: ${recentRegistrations.length}',
+                style: TextStyle(color: Colors.white70, fontSize: 12),
+              ),
             ],
           ),
           SizedBox(height: 12),
@@ -563,10 +616,7 @@ class _ModeratorTimerPageState extends ConsumerState<ModeratorTimerPage> {
               style: TextStyle(color: Colors.white70, fontSize: 14),
             )
           else
-            ...recentRegistrations.take(5).map((reg) {
-              final timeStr = reg.time != null 
-                  ? _formatTime(reg.time!.inMilliseconds)
-                  : 'Sin tiempo';
+            ...recentRegistrations.take(10).map((record) {
               return Container(
                 margin: EdgeInsets.only(bottom: 8),
                 padding: EdgeInsets.all(12),
@@ -577,17 +627,23 @@ class _ModeratorTimerPageState extends ConsumerState<ModeratorTimerPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      timeStr,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: isMobile ? 16 : 18,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'monospace',
-                      ),
+                    Row(
+                      children: [
+                        Icon(Icons.timer_outlined, color: Colors.white70, size: 16),
+                        SizedBox(width: 8),
+                        Text(
+                          record.formattedTime,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: isMobile ? 16 : 18,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ],
                     ),
                     Text(
-                      '${reg.nTurns ?? 0} vueltas',
+                      '${record.registrationNumber ?? "N/A"}',
                       style: TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                   ],

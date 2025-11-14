@@ -14,6 +14,11 @@ class CompetenceTable extends Table {
   BoolColumn get isFinished => boolean().withDefault(const Constant(false))(); // Indica si finalizó
   TextColumn get createdBy => text()();
 
+  // Timer fields - NEW
+  BoolColumn get timerStarted => boolean().withDefault(const Constant(false))(); // Indica si el cronómetro ha iniciado
+  DateTimeColumn get timerStartTime => dateTime().nullable()(); // Momento exacto de inicio del cronómetro
+  IntColumn get proximityRadiusMeters => integer().withDefault(const Constant(50))(); // Radio de proximidad en metros
+
   // Guardamos los mapas como JSON strings
   TextColumn get startCoordinates =>
       text().map(const CoordinatesMapConverter())();
@@ -23,26 +28,26 @@ class CompetenceTable extends Table {
 
 }
 
-/// Conversor para Map<String, List<double>>
+/// Conversor para Map<String, double> (latitude/longitude)
 class CoordinatesMapConverter
-    extends TypeConverter<Map<String, List<double>>, String> {
+    extends TypeConverter<Map<String, double>, String> {
   const CoordinatesMapConverter();
 
   @override
-  Map<String, List<double>> fromSql(String fromDb) {
+  Map<String, double> fromSql(String fromDb) {
     try {
       final decoded = jsonDecode(fromDb);
       return (decoded as Map).map((key, value) => MapEntry(
         key.toString(),
-        (value as List).map((e) => (e as num).toDouble()).toList(),
+        (value as num).toDouble(),
       ));
     } catch (_) {
-      return {};
+      return {"latitude": 0.0, "longitude": 0.0};
     }
   }
 
   @override
-  String toSql(Map<String, List<double>> value) {
+  String toSql(Map<String, double> value) {
     return jsonEncode(value);
   }
 }

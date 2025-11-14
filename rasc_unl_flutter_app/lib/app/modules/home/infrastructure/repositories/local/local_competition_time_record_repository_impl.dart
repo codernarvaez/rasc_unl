@@ -13,12 +13,20 @@ class LocalCompetitionTimeRecordRepositoryImpl implements CompetitionTimeRecordR
     required String? registrationNumber,
     required int timeInMilliseconds,
     required int competenceId,
+    required String recordedByDni,
+    int? position,
+    bool isEarly = false,
+    bool isReference = false,
   }) async {
     final now = DateTime.now();
     final id = await _localDatabase.into(_localDatabase.competitionTimeRecordTable).insert(
       CompetitionTimeRecordTableCompanion.insert(
         registrationNumber: Value(registrationNumber),
         time: timeInMilliseconds,
+        position: Value(position),
+        recordedByDni: recordedByDni,
+        isEarly: Value(isEarly),
+        isReference: Value(isReference),
         competenceId: competenceId,
         createdAt: now,
         updatedAt: now,
@@ -29,6 +37,10 @@ class LocalCompetitionTimeRecordRepositoryImpl implements CompetitionTimeRecordR
       id: id,
       registrationNumber: registrationNumber,
       time: timeInMilliseconds,
+      position: position,
+      recordedByDni: recordedByDni,
+      isEarly: isEarly,
+      isReference: isReference,
       competenceId: competenceId,
       createdAt: now,
       updatedAt: now,
@@ -49,6 +61,10 @@ class LocalCompetitionTimeRecordRepositoryImpl implements CompetitionTimeRecordR
               id: row.id,
               registrationNumber: row.registrationNumber,
               time: row.time,
+              position: row.position,
+              recordedByDni: row.recordedByDni,
+              isEarly: row.isEarly,
+              isReference: row.isReference,
               competenceId: row.competenceId,
               createdAt: row.createdAt,
               updatedAt: row.updatedAt,
@@ -70,6 +86,10 @@ class LocalCompetitionTimeRecordRepositoryImpl implements CompetitionTimeRecordR
       id: queryResult.id,
       registrationNumber: queryResult.registrationNumber,
       time: queryResult.time,
+      position: queryResult.position,
+      recordedByDni: queryResult.recordedByDni,
+      isEarly: queryResult.isEarly,
+      isReference: queryResult.isReference,
       competenceId: queryResult.competenceId,
       createdAt: queryResult.createdAt,
       updatedAt: queryResult.updatedAt,
@@ -98,6 +118,10 @@ class LocalCompetitionTimeRecordRepositoryImpl implements CompetitionTimeRecordR
               id: row.id,
               registrationNumber: row.registrationNumber,
               time: row.time,
+              position: row.position,
+              recordedByDni: row.recordedByDni,
+              isEarly: row.isEarly,
+              isReference: row.isReference,
               competenceId: row.competenceId,
               createdAt: row.createdAt,
               updatedAt: row.updatedAt,
@@ -110,6 +134,9 @@ class LocalCompetitionTimeRecordRepositoryImpl implements CompetitionTimeRecordR
     required int id,
     String? registrationNumber,
     int? timeInMilliseconds,
+    int? position,
+    bool? isEarly,
+    bool? isReference,
   }) async {
     final now = DateTime.now();
     
@@ -117,8 +144,11 @@ class LocalCompetitionTimeRecordRepositoryImpl implements CompetitionTimeRecordR
           ..where((tbl) => tbl.id.equals(id)))
         .write(
       CompetitionTimeRecordTableCompanion(
-        registrationNumber: registrationNumber != null ? Value(registrationNumber) : Value.absent(),
-        time: timeInMilliseconds != null ? Value(timeInMilliseconds) : Value.absent(),
+        registrationNumber: registrationNumber != null ? Value(registrationNumber) : const Value.absent(),
+        time: timeInMilliseconds != null ? Value(timeInMilliseconds) : const Value.absent(),
+        position: position != null ? Value(position) : const Value.absent(),
+        isEarly: isEarly != null ? Value(isEarly) : const Value.absent(),
+        isReference: isReference != null ? Value(isReference) : const Value.absent(),
         updatedAt: Value(now),
       ),
     );

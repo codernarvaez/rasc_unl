@@ -7,6 +7,10 @@ class CompetitionTimeRecordModel {
   final int id;
   final String? registrationNumber;
   final int time; // Time in milliseconds
+  final int? position; // Position/rank of the arrival (1st, 2nd, 3rd, etc.)
+  final String recordedByDni; // DNI of moderator/admin who recorded
+  final bool isEarly; // If time was recorded before first moderator record
+  final bool isReference; // If this is the first/reference time record
   final int competenceId;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -15,6 +19,10 @@ class CompetitionTimeRecordModel {
     required this.id,
     this.registrationNumber,
     required this.time,
+    this.position,
+    required this.recordedByDni,
+    this.isEarly = false,
+    this.isReference = false,
     required this.competenceId,
     required this.createdAt,
     required this.updatedAt,
@@ -47,6 +55,10 @@ class CompetitionTimeRecordModel {
     int? id,
     String? registrationNumber,
     int? time,
+    int? position,
+    String? recordedByDni,
+    bool? isEarly,
+    bool? isReference,
     int? competenceId,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -55,6 +67,10 @@ class CompetitionTimeRecordModel {
       id: id ?? this.id,
       registrationNumber: registrationNumber ?? this.registrationNumber,
       time: time ?? this.time,
+      position: position ?? this.position,
+      recordedByDni: recordedByDni ?? this.recordedByDni,
+      isEarly: isEarly ?? this.isEarly,
+      isReference: isReference ?? this.isReference,
       competenceId: competenceId ?? this.competenceId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

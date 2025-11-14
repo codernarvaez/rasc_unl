@@ -8,7 +8,7 @@ import logging
 
 from app.core.jwt.jwt import JWTManager
 from app.modules.auth.repositories.user_repository import UserRepository
-from app.modules.auth.schemas.auth_schemas import UserCreate, LoginRequest
+from app.modules.auth.schemas.auth_schemas import UserCreate, LoginRequest, UserCreateByAdmin
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,31 @@ class AuthService:
         
         user = await self.repository.create(user_data)
         logger.info(f"User registered successfully: {user.email} (ID: {user.id})")
+        return user
+    
+    async def create_user_by_admin(self, user_data: UserCreateByAdmin):
+        """Create a new user by admin. Password defaults to DNI if not provided."""
+        logger.info(f"Admin attempting to create user: {user_data.email}")
+        
+        # Check if email already exists
+        if await self.repository.exists(user_data.email):
+            logger.warning(f"Email already exists: {user_data.email}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+        
+        # Check if DNI already exists
+        existing_dni = await self.repository.get_by_dni(user_data.dni)
+        if existing_dni:
+            logger.warning(f"DNI already exists: {user_data.dni}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="DNI already registered"
+            )
+        
+        user = await self.repository.create_by_admin(user_data)
+        logger.info(f"User created by admin: {user.email} (ID: {user.id}, Role: {user.role})")
         return user
     
     async def login(self, credentials: LoginRequest) -> dict:

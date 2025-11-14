@@ -17,7 +17,8 @@ from app.modules.auth.schemas.auth_schemas import (
     TokenResponse,
     RefreshTokenRequest,
     LogoutRequest,
-    MessageResponse
+    MessageResponse,
+    UserCreateByAdmin
 )
 
 router = APIRouter(prefix="/auth")
@@ -108,6 +109,18 @@ async def update_current_user_password(
 
 
 # Admin routes
+@router.post("/admin/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def create_user_by_admin(
+    user_data: UserCreateByAdmin,
+    current_user: AdminUser,
+    session: Annotated[AsyncSession, Depends(get_session)]
+):
+    """Create a new user (admin only). Password defaults to DNI if not provided."""
+    service = AuthService(session)
+    user = await service.create_user_by_admin(user_data)
+    return user
+
+
 @router.get("/users", response_model=List[UserResponse])
 async def get_users(
     skip: int = 0,
@@ -149,8 +162,18 @@ async def update_user(
     current_user: AdminUser,
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
-    """Update user by ID (admin only - can update all fields including role and is_active)."""
+    """Update user by ID (admin only - can update all fields including role and is_active).
+    Admin CANNOT update dni or email."""
     service = UserService(session)
+    
+    # Validate that admin is not trying to update dni or email
+    update_dict = user_data.model_dump(exclude_unset=True)
+    if 'dni' in update_dict or 'email' in update_dict:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Admin cannot update DNI or email"
+        )
+    
     updated_user = await service.update_user(user_id, user_data)
     return updated_user
 

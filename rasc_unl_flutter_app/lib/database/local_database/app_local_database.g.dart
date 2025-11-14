@@ -1441,8 +1441,46 @@ class $CompetenceTableTable extends CompetenceTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _timerStartedMeta = const VerificationMeta(
+    'timerStarted',
+  );
   @override
-  late final GeneratedColumnWithTypeConverter<Map<String, List<double>>, String>
+  late final GeneratedColumn<bool> timerStarted = GeneratedColumn<bool>(
+    'timer_started',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("timer_started" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _timerStartTimeMeta = const VerificationMeta(
+    'timerStartTime',
+  );
+  @override
+  late final GeneratedColumn<DateTime> timerStartTime =
+      GeneratedColumn<DateTime>(
+        'timer_start_time',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _proximityRadiusMetersMeta =
+      const VerificationMeta('proximityRadiusMeters');
+  @override
+  late final GeneratedColumn<int> proximityRadiusMeters = GeneratedColumn<int>(
+    'proximity_radius_meters',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(50),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<Map<String, double>, String>
   startCoordinates =
       GeneratedColumn<String>(
         'start_coordinates',
@@ -1450,11 +1488,11 @@ class $CompetenceTableTable extends CompetenceTable
         false,
         type: DriftSqlType.string,
         requiredDuringInsert: true,
-      ).withConverter<Map<String, List<double>>>(
+      ).withConverter<Map<String, double>>(
         $CompetenceTableTable.$converterstartCoordinates,
       );
   @override
-  late final GeneratedColumnWithTypeConverter<Map<String, List<double>>, String>
+  late final GeneratedColumnWithTypeConverter<Map<String, double>, String>
   finishCoordinates =
       GeneratedColumn<String>(
         'finish_coordinates',
@@ -1462,7 +1500,7 @@ class $CompetenceTableTable extends CompetenceTable
         false,
         type: DriftSqlType.string,
         requiredDuringInsert: true,
-      ).withConverter<Map<String, List<double>>>(
+      ).withConverter<Map<String, double>>(
         $CompetenceTableTable.$converterfinishCoordinates,
       );
   @override
@@ -1477,6 +1515,9 @@ class $CompetenceTableTable extends CompetenceTable
     isActive,
     isFinished,
     createdBy,
+    timerStarted,
+    timerStartTime,
+    proximityRadiusMeters,
     startCoordinates,
     finishCoordinates,
   ];
@@ -1564,6 +1605,33 @@ class $CompetenceTableTable extends CompetenceTable
     } else if (isInserting) {
       context.missing(_createdByMeta);
     }
+    if (data.containsKey('timer_started')) {
+      context.handle(
+        _timerStartedMeta,
+        timerStarted.isAcceptableOrUnknown(
+          data['timer_started']!,
+          _timerStartedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('timer_start_time')) {
+      context.handle(
+        _timerStartTimeMeta,
+        timerStartTime.isAcceptableOrUnknown(
+          data['timer_start_time']!,
+          _timerStartTimeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('proximity_radius_meters')) {
+      context.handle(
+        _proximityRadiusMetersMeta,
+        proximityRadiusMeters.isAcceptableOrUnknown(
+          data['proximity_radius_meters']!,
+          _proximityRadiusMetersMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1613,6 +1681,18 @@ class $CompetenceTableTable extends CompetenceTable
         DriftSqlType.string,
         data['${effectivePrefix}created_by'],
       )!,
+      timerStarted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}timer_started'],
+      )!,
+      timerStartTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}timer_start_time'],
+      ),
+      proximityRadiusMeters: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}proximity_radius_meters'],
+      )!,
       startCoordinates: $CompetenceTableTable.$converterstartCoordinates
           .fromSql(
             attachedDatabase.typeMapping.read(
@@ -1635,9 +1715,9 @@ class $CompetenceTableTable extends CompetenceTable
     return $CompetenceTableTable(attachedDatabase, alias);
   }
 
-  static TypeConverter<Map<String, List<double>>, String>
-  $converterstartCoordinates = const CoordinatesMapConverter();
-  static TypeConverter<Map<String, List<double>>, String>
+  static TypeConverter<Map<String, double>, String> $converterstartCoordinates =
+      const CoordinatesMapConverter();
+  static TypeConverter<Map<String, double>, String>
   $converterfinishCoordinates = const CoordinatesMapConverter();
 }
 
@@ -1653,8 +1733,11 @@ class competence_drift_model extends DataClass
   final bool isActive;
   final bool isFinished;
   final String createdBy;
-  final Map<String, List<double>> startCoordinates;
-  final Map<String, List<double>> finishCoordinates;
+  final bool timerStarted;
+  final DateTime? timerStartTime;
+  final int proximityRadiusMeters;
+  final Map<String, double> startCoordinates;
+  final Map<String, double> finishCoordinates;
   const competence_drift_model({
     required this.id,
     required this.externalId,
@@ -1666,6 +1749,9 @@ class competence_drift_model extends DataClass
     required this.isActive,
     required this.isFinished,
     required this.createdBy,
+    required this.timerStarted,
+    this.timerStartTime,
+    required this.proximityRadiusMeters,
     required this.startCoordinates,
     required this.finishCoordinates,
   });
@@ -1690,6 +1776,11 @@ class competence_drift_model extends DataClass
     map['is_active'] = Variable<bool>(isActive);
     map['is_finished'] = Variable<bool>(isFinished);
     map['created_by'] = Variable<String>(createdBy);
+    map['timer_started'] = Variable<bool>(timerStarted);
+    if (!nullToAbsent || timerStartTime != null) {
+      map['timer_start_time'] = Variable<DateTime>(timerStartTime);
+    }
+    map['proximity_radius_meters'] = Variable<int>(proximityRadiusMeters);
     {
       map['start_coordinates'] = Variable<String>(
         $CompetenceTableTable.$converterstartCoordinates.toSql(
@@ -1726,6 +1817,11 @@ class competence_drift_model extends DataClass
       isActive: Value(isActive),
       isFinished: Value(isFinished),
       createdBy: Value(createdBy),
+      timerStarted: Value(timerStarted),
+      timerStartTime: timerStartTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(timerStartTime),
+      proximityRadiusMeters: Value(proximityRadiusMeters),
       startCoordinates: Value(startCoordinates),
       finishCoordinates: Value(finishCoordinates),
     );
@@ -1749,10 +1845,15 @@ class competence_drift_model extends DataClass
       isActive: serializer.fromJson<bool>(json['isActive']),
       isFinished: serializer.fromJson<bool>(json['isFinished']),
       createdBy: serializer.fromJson<String>(json['createdBy']),
-      startCoordinates: serializer.fromJson<Map<String, List<double>>>(
+      timerStarted: serializer.fromJson<bool>(json['timerStarted']),
+      timerStartTime: serializer.fromJson<DateTime?>(json['timerStartTime']),
+      proximityRadiusMeters: serializer.fromJson<int>(
+        json['proximityRadiusMeters'],
+      ),
+      startCoordinates: serializer.fromJson<Map<String, double>>(
         json['startCoordinates'],
       ),
-      finishCoordinates: serializer.fromJson<Map<String, List<double>>>(
+      finishCoordinates: serializer.fromJson<Map<String, double>>(
         json['finishCoordinates'],
       ),
     );
@@ -1773,10 +1874,13 @@ class competence_drift_model extends DataClass
       'isActive': serializer.toJson<bool>(isActive),
       'isFinished': serializer.toJson<bool>(isFinished),
       'createdBy': serializer.toJson<String>(createdBy),
-      'startCoordinates': serializer.toJson<Map<String, List<double>>>(
+      'timerStarted': serializer.toJson<bool>(timerStarted),
+      'timerStartTime': serializer.toJson<DateTime?>(timerStartTime),
+      'proximityRadiusMeters': serializer.toJson<int>(proximityRadiusMeters),
+      'startCoordinates': serializer.toJson<Map<String, double>>(
         startCoordinates,
       ),
-      'finishCoordinates': serializer.toJson<Map<String, List<double>>>(
+      'finishCoordinates': serializer.toJson<Map<String, double>>(
         finishCoordinates,
       ),
     };
@@ -1793,8 +1897,11 @@ class competence_drift_model extends DataClass
     bool? isActive,
     bool? isFinished,
     String? createdBy,
-    Map<String, List<double>>? startCoordinates,
-    Map<String, List<double>>? finishCoordinates,
+    bool? timerStarted,
+    Value<DateTime?> timerStartTime = const Value.absent(),
+    int? proximityRadiusMeters,
+    Map<String, double>? startCoordinates,
+    Map<String, double>? finishCoordinates,
   }) => competence_drift_model(
     id: id ?? this.id,
     externalId: externalId ?? this.externalId,
@@ -1813,6 +1920,11 @@ class competence_drift_model extends DataClass
     isActive: isActive ?? this.isActive,
     isFinished: isFinished ?? this.isFinished,
     createdBy: createdBy ?? this.createdBy,
+    timerStarted: timerStarted ?? this.timerStarted,
+    timerStartTime: timerStartTime.present
+        ? timerStartTime.value
+        : this.timerStartTime,
+    proximityRadiusMeters: proximityRadiusMeters ?? this.proximityRadiusMeters,
     startCoordinates: startCoordinates ?? this.startCoordinates,
     finishCoordinates: finishCoordinates ?? this.finishCoordinates,
   );
@@ -1839,6 +1951,15 @@ class competence_drift_model extends DataClass
           ? data.isFinished.value
           : this.isFinished,
       createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      timerStarted: data.timerStarted.present
+          ? data.timerStarted.value
+          : this.timerStarted,
+      timerStartTime: data.timerStartTime.present
+          ? data.timerStartTime.value
+          : this.timerStartTime,
+      proximityRadiusMeters: data.proximityRadiusMeters.present
+          ? data.proximityRadiusMeters.value
+          : this.proximityRadiusMeters,
       startCoordinates: data.startCoordinates.present
           ? data.startCoordinates.value
           : this.startCoordinates,
@@ -1863,6 +1984,9 @@ class competence_drift_model extends DataClass
           ..write('isActive: $isActive, ')
           ..write('isFinished: $isFinished, ')
           ..write('createdBy: $createdBy, ')
+          ..write('timerStarted: $timerStarted, ')
+          ..write('timerStartTime: $timerStartTime, ')
+          ..write('proximityRadiusMeters: $proximityRadiusMeters, ')
           ..write('startCoordinates: $startCoordinates, ')
           ..write('finishCoordinates: $finishCoordinates')
           ..write(')'))
@@ -1881,6 +2005,9 @@ class competence_drift_model extends DataClass
     isActive,
     isFinished,
     createdBy,
+    timerStarted,
+    timerStartTime,
+    proximityRadiusMeters,
     startCoordinates,
     finishCoordinates,
   );
@@ -1899,6 +2026,9 @@ class competence_drift_model extends DataClass
           other.isActive == this.isActive &&
           other.isFinished == this.isFinished &&
           other.createdBy == this.createdBy &&
+          other.timerStarted == this.timerStarted &&
+          other.timerStartTime == this.timerStartTime &&
+          other.proximityRadiusMeters == this.proximityRadiusMeters &&
           other.startCoordinates == this.startCoordinates &&
           other.finishCoordinates == this.finishCoordinates);
 }
@@ -1914,8 +2044,11 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
   final Value<bool> isActive;
   final Value<bool> isFinished;
   final Value<String> createdBy;
-  final Value<Map<String, List<double>>> startCoordinates;
-  final Value<Map<String, List<double>>> finishCoordinates;
+  final Value<bool> timerStarted;
+  final Value<DateTime?> timerStartTime;
+  final Value<int> proximityRadiusMeters;
+  final Value<Map<String, double>> startCoordinates;
+  final Value<Map<String, double>> finishCoordinates;
   const CompetenceTableCompanion({
     this.id = const Value.absent(),
     this.externalId = const Value.absent(),
@@ -1927,6 +2060,9 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     this.isActive = const Value.absent(),
     this.isFinished = const Value.absent(),
     this.createdBy = const Value.absent(),
+    this.timerStarted = const Value.absent(),
+    this.timerStartTime = const Value.absent(),
+    this.proximityRadiusMeters = const Value.absent(),
     this.startCoordinates = const Value.absent(),
     this.finishCoordinates = const Value.absent(),
   });
@@ -1941,8 +2077,11 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     this.isActive = const Value.absent(),
     this.isFinished = const Value.absent(),
     required String createdBy,
-    required Map<String, List<double>> startCoordinates,
-    required Map<String, List<double>> finishCoordinates,
+    this.timerStarted = const Value.absent(),
+    this.timerStartTime = const Value.absent(),
+    this.proximityRadiusMeters = const Value.absent(),
+    required Map<String, double> startCoordinates,
+    required Map<String, double> finishCoordinates,
   }) : externalId = Value(externalId),
        name = Value(name),
        createdBy = Value(createdBy),
@@ -1959,6 +2098,9 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     Expression<bool>? isActive,
     Expression<bool>? isFinished,
     Expression<String>? createdBy,
+    Expression<bool>? timerStarted,
+    Expression<DateTime>? timerStartTime,
+    Expression<int>? proximityRadiusMeters,
     Expression<String>? startCoordinates,
     Expression<String>? finishCoordinates,
   }) {
@@ -1975,6 +2117,10 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
       if (isActive != null) 'is_active': isActive,
       if (isFinished != null) 'is_finished': isFinished,
       if (createdBy != null) 'created_by': createdBy,
+      if (timerStarted != null) 'timer_started': timerStarted,
+      if (timerStartTime != null) 'timer_start_time': timerStartTime,
+      if (proximityRadiusMeters != null)
+        'proximity_radius_meters': proximityRadiusMeters,
       if (startCoordinates != null) 'start_coordinates': startCoordinates,
       if (finishCoordinates != null) 'finish_coordinates': finishCoordinates,
     });
@@ -1991,8 +2137,11 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     Value<bool>? isActive,
     Value<bool>? isFinished,
     Value<String>? createdBy,
-    Value<Map<String, List<double>>>? startCoordinates,
-    Value<Map<String, List<double>>>? finishCoordinates,
+    Value<bool>? timerStarted,
+    Value<DateTime?>? timerStartTime,
+    Value<int>? proximityRadiusMeters,
+    Value<Map<String, double>>? startCoordinates,
+    Value<Map<String, double>>? finishCoordinates,
   }) {
     return CompetenceTableCompanion(
       id: id ?? this.id,
@@ -2007,6 +2156,10 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
       isActive: isActive ?? this.isActive,
       isFinished: isFinished ?? this.isFinished,
       createdBy: createdBy ?? this.createdBy,
+      timerStarted: timerStarted ?? this.timerStarted,
+      timerStartTime: timerStartTime ?? this.timerStartTime,
+      proximityRadiusMeters:
+          proximityRadiusMeters ?? this.proximityRadiusMeters,
       startCoordinates: startCoordinates ?? this.startCoordinates,
       finishCoordinates: finishCoordinates ?? this.finishCoordinates,
     );
@@ -2047,6 +2200,17 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     if (createdBy.present) {
       map['created_by'] = Variable<String>(createdBy.value);
     }
+    if (timerStarted.present) {
+      map['timer_started'] = Variable<bool>(timerStarted.value);
+    }
+    if (timerStartTime.present) {
+      map['timer_start_time'] = Variable<DateTime>(timerStartTime.value);
+    }
+    if (proximityRadiusMeters.present) {
+      map['proximity_radius_meters'] = Variable<int>(
+        proximityRadiusMeters.value,
+      );
+    }
     if (startCoordinates.present) {
       map['start_coordinates'] = Variable<String>(
         $CompetenceTableTable.$converterstartCoordinates.toSql(
@@ -2079,6 +2243,9 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
           ..write('isActive: $isActive, ')
           ..write('isFinished: $isFinished, ')
           ..write('createdBy: $createdBy, ')
+          ..write('timerStarted: $timerStarted, ')
+          ..write('timerStartTime: $timerStartTime, ')
+          ..write('proximityRadiusMeters: $proximityRadiusMeters, ')
           ..write('startCoordinates: $startCoordinates, ')
           ..write('finishCoordinates: $finishCoordinates')
           ..write(')'))
@@ -2608,6 +2775,58 @@ class $CompetitionTimeRecordTableTable extends CompetitionTimeRecordTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _recordedByDniMeta = const VerificationMeta(
+    'recordedByDni',
+  );
+  @override
+  late final GeneratedColumn<String> recordedByDni = GeneratedColumn<String>(
+    'recorded_by_dni',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isEarlyMeta = const VerificationMeta(
+    'isEarly',
+  );
+  @override
+  late final GeneratedColumn<bool> isEarly = GeneratedColumn<bool>(
+    'is_early',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_early" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isReferenceMeta = const VerificationMeta(
+    'isReference',
+  );
+  @override
+  late final GeneratedColumn<bool> isReference = GeneratedColumn<bool>(
+    'is_reference',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_reference" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _competenceIdMeta = const VerificationMeta(
     'competenceId',
   );
@@ -2646,6 +2865,10 @@ class $CompetitionTimeRecordTableTable extends CompetitionTimeRecordTable
     id,
     registrationNumber,
     time,
+    position,
+    recordedByDni,
+    isEarly,
+    isReference,
     competenceId,
     createdAt,
     updatedAt,
@@ -2681,6 +2904,38 @@ class $CompetitionTimeRecordTableTable extends CompetitionTimeRecordTable
       );
     } else if (isInserting) {
       context.missing(_timeMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    }
+    if (data.containsKey('recorded_by_dni')) {
+      context.handle(
+        _recordedByDniMeta,
+        recordedByDni.isAcceptableOrUnknown(
+          data['recorded_by_dni']!,
+          _recordedByDniMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_recordedByDniMeta);
+    }
+    if (data.containsKey('is_early')) {
+      context.handle(
+        _isEarlyMeta,
+        isEarly.isAcceptableOrUnknown(data['is_early']!, _isEarlyMeta),
+      );
+    }
+    if (data.containsKey('is_reference')) {
+      context.handle(
+        _isReferenceMeta,
+        isReference.isAcceptableOrUnknown(
+          data['is_reference']!,
+          _isReferenceMeta,
+        ),
+      );
     }
     if (data.containsKey('competence_id')) {
       context.handle(
@@ -2733,6 +2988,22 @@ class $CompetitionTimeRecordTableTable extends CompetitionTimeRecordTable
         DriftSqlType.int,
         data['${effectivePrefix}time'],
       )!,
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      ),
+      recordedByDni: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recorded_by_dni'],
+      )!,
+      isEarly: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_early'],
+      )!,
+      isReference: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_reference'],
+      )!,
       competenceId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}competence_id'],
@@ -2759,6 +3030,10 @@ class competition_time_record_drift_model extends DataClass
   final int id;
   final String? registrationNumber;
   final int time;
+  final int? position;
+  final String recordedByDni;
+  final bool isEarly;
+  final bool isReference;
   final int competenceId;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -2766,6 +3041,10 @@ class competition_time_record_drift_model extends DataClass
     required this.id,
     this.registrationNumber,
     required this.time,
+    this.position,
+    required this.recordedByDni,
+    required this.isEarly,
+    required this.isReference,
     required this.competenceId,
     required this.createdAt,
     required this.updatedAt,
@@ -2778,6 +3057,12 @@ class competition_time_record_drift_model extends DataClass
       map['registration_number'] = Variable<String>(registrationNumber);
     }
     map['time'] = Variable<int>(time);
+    if (!nullToAbsent || position != null) {
+      map['position'] = Variable<int>(position);
+    }
+    map['recorded_by_dni'] = Variable<String>(recordedByDni);
+    map['is_early'] = Variable<bool>(isEarly);
+    map['is_reference'] = Variable<bool>(isReference);
     map['competence_id'] = Variable<int>(competenceId);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -2791,6 +3076,12 @@ class competition_time_record_drift_model extends DataClass
           ? const Value.absent()
           : Value(registrationNumber),
       time: Value(time),
+      position: position == null && nullToAbsent
+          ? const Value.absent()
+          : Value(position),
+      recordedByDni: Value(recordedByDni),
+      isEarly: Value(isEarly),
+      isReference: Value(isReference),
       competenceId: Value(competenceId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -2808,6 +3099,10 @@ class competition_time_record_drift_model extends DataClass
         json['registrationNumber'],
       ),
       time: serializer.fromJson<int>(json['time']),
+      position: serializer.fromJson<int?>(json['position']),
+      recordedByDni: serializer.fromJson<String>(json['recordedByDni']),
+      isEarly: serializer.fromJson<bool>(json['isEarly']),
+      isReference: serializer.fromJson<bool>(json['isReference']),
       competenceId: serializer.fromJson<int>(json['competenceId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -2820,6 +3115,10 @@ class competition_time_record_drift_model extends DataClass
       'id': serializer.toJson<int>(id),
       'registrationNumber': serializer.toJson<String?>(registrationNumber),
       'time': serializer.toJson<int>(time),
+      'position': serializer.toJson<int?>(position),
+      'recordedByDni': serializer.toJson<String>(recordedByDni),
+      'isEarly': serializer.toJson<bool>(isEarly),
+      'isReference': serializer.toJson<bool>(isReference),
       'competenceId': serializer.toJson<int>(competenceId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -2830,6 +3129,10 @@ class competition_time_record_drift_model extends DataClass
     int? id,
     Value<String?> registrationNumber = const Value.absent(),
     int? time,
+    Value<int?> position = const Value.absent(),
+    String? recordedByDni,
+    bool? isEarly,
+    bool? isReference,
     int? competenceId,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -2839,6 +3142,10 @@ class competition_time_record_drift_model extends DataClass
         ? registrationNumber.value
         : this.registrationNumber,
     time: time ?? this.time,
+    position: position.present ? position.value : this.position,
+    recordedByDni: recordedByDni ?? this.recordedByDni,
+    isEarly: isEarly ?? this.isEarly,
+    isReference: isReference ?? this.isReference,
     competenceId: competenceId ?? this.competenceId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -2852,6 +3159,14 @@ class competition_time_record_drift_model extends DataClass
           ? data.registrationNumber.value
           : this.registrationNumber,
       time: data.time.present ? data.time.value : this.time,
+      position: data.position.present ? data.position.value : this.position,
+      recordedByDni: data.recordedByDni.present
+          ? data.recordedByDni.value
+          : this.recordedByDni,
+      isEarly: data.isEarly.present ? data.isEarly.value : this.isEarly,
+      isReference: data.isReference.present
+          ? data.isReference.value
+          : this.isReference,
       competenceId: data.competenceId.present
           ? data.competenceId.value
           : this.competenceId,
@@ -2866,6 +3181,10 @@ class competition_time_record_drift_model extends DataClass
           ..write('id: $id, ')
           ..write('registrationNumber: $registrationNumber, ')
           ..write('time: $time, ')
+          ..write('position: $position, ')
+          ..write('recordedByDni: $recordedByDni, ')
+          ..write('isEarly: $isEarly, ')
+          ..write('isReference: $isReference, ')
           ..write('competenceId: $competenceId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -2878,6 +3197,10 @@ class competition_time_record_drift_model extends DataClass
     id,
     registrationNumber,
     time,
+    position,
+    recordedByDni,
+    isEarly,
+    isReference,
     competenceId,
     createdAt,
     updatedAt,
@@ -2889,6 +3212,10 @@ class competition_time_record_drift_model extends DataClass
           other.id == this.id &&
           other.registrationNumber == this.registrationNumber &&
           other.time == this.time &&
+          other.position == this.position &&
+          other.recordedByDni == this.recordedByDni &&
+          other.isEarly == this.isEarly &&
+          other.isReference == this.isReference &&
           other.competenceId == this.competenceId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -2899,6 +3226,10 @@ class CompetitionTimeRecordTableCompanion
   final Value<int> id;
   final Value<String?> registrationNumber;
   final Value<int> time;
+  final Value<int?> position;
+  final Value<String> recordedByDni;
+  final Value<bool> isEarly;
+  final Value<bool> isReference;
   final Value<int> competenceId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -2906,6 +3237,10 @@ class CompetitionTimeRecordTableCompanion
     this.id = const Value.absent(),
     this.registrationNumber = const Value.absent(),
     this.time = const Value.absent(),
+    this.position = const Value.absent(),
+    this.recordedByDni = const Value.absent(),
+    this.isEarly = const Value.absent(),
+    this.isReference = const Value.absent(),
     this.competenceId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -2914,10 +3249,15 @@ class CompetitionTimeRecordTableCompanion
     this.id = const Value.absent(),
     this.registrationNumber = const Value.absent(),
     required int time,
+    this.position = const Value.absent(),
+    required String recordedByDni,
+    this.isEarly = const Value.absent(),
+    this.isReference = const Value.absent(),
     required int competenceId,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) : time = Value(time),
+       recordedByDni = Value(recordedByDni),
        competenceId = Value(competenceId),
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
@@ -2925,6 +3265,10 @@ class CompetitionTimeRecordTableCompanion
     Expression<int>? id,
     Expression<String>? registrationNumber,
     Expression<int>? time,
+    Expression<int>? position,
+    Expression<String>? recordedByDni,
+    Expression<bool>? isEarly,
+    Expression<bool>? isReference,
     Expression<int>? competenceId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -2933,6 +3277,10 @@ class CompetitionTimeRecordTableCompanion
       if (id != null) 'id': id,
       if (registrationNumber != null) 'registration_number': registrationNumber,
       if (time != null) 'time': time,
+      if (position != null) 'position': position,
+      if (recordedByDni != null) 'recorded_by_dni': recordedByDni,
+      if (isEarly != null) 'is_early': isEarly,
+      if (isReference != null) 'is_reference': isReference,
       if (competenceId != null) 'competence_id': competenceId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -2943,6 +3291,10 @@ class CompetitionTimeRecordTableCompanion
     Value<int>? id,
     Value<String?>? registrationNumber,
     Value<int>? time,
+    Value<int?>? position,
+    Value<String>? recordedByDni,
+    Value<bool>? isEarly,
+    Value<bool>? isReference,
     Value<int>? competenceId,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -2951,6 +3303,10 @@ class CompetitionTimeRecordTableCompanion
       id: id ?? this.id,
       registrationNumber: registrationNumber ?? this.registrationNumber,
       time: time ?? this.time,
+      position: position ?? this.position,
+      recordedByDni: recordedByDni ?? this.recordedByDni,
+      isEarly: isEarly ?? this.isEarly,
+      isReference: isReference ?? this.isReference,
       competenceId: competenceId ?? this.competenceId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -2968,6 +3324,18 @@ class CompetitionTimeRecordTableCompanion
     }
     if (time.present) {
       map['time'] = Variable<int>(time.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (recordedByDni.present) {
+      map['recorded_by_dni'] = Variable<String>(recordedByDni.value);
+    }
+    if (isEarly.present) {
+      map['is_early'] = Variable<bool>(isEarly.value);
+    }
+    if (isReference.present) {
+      map['is_reference'] = Variable<bool>(isReference.value);
     }
     if (competenceId.present) {
       map['competence_id'] = Variable<int>(competenceId.value);
@@ -2987,6 +3355,10 @@ class CompetitionTimeRecordTableCompanion
           ..write('id: $id, ')
           ..write('registrationNumber: $registrationNumber, ')
           ..write('time: $time, ')
+          ..write('position: $position, ')
+          ..write('recordedByDni: $recordedByDni, ')
+          ..write('isEarly: $isEarly, ')
+          ..write('isReference: $isReference, ')
           ..write('competenceId: $competenceId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -3900,8 +4272,11 @@ typedef $$CompetenceTableTableCreateCompanionBuilder =
       Value<bool> isActive,
       Value<bool> isFinished,
       required String createdBy,
-      required Map<String, List<double>> startCoordinates,
-      required Map<String, List<double>> finishCoordinates,
+      Value<bool> timerStarted,
+      Value<DateTime?> timerStartTime,
+      Value<int> proximityRadiusMeters,
+      required Map<String, double> startCoordinates,
+      required Map<String, double> finishCoordinates,
     });
 typedef $$CompetenceTableTableUpdateCompanionBuilder =
     CompetenceTableCompanion Function({
@@ -3915,8 +4290,11 @@ typedef $$CompetenceTableTableUpdateCompanionBuilder =
       Value<bool> isActive,
       Value<bool> isFinished,
       Value<String> createdBy,
-      Value<Map<String, List<double>>> startCoordinates,
-      Value<Map<String, List<double>>> finishCoordinates,
+      Value<bool> timerStarted,
+      Value<DateTime?> timerStartTime,
+      Value<int> proximityRadiusMeters,
+      Value<Map<String, double>> startCoordinates,
+      Value<Map<String, double>> finishCoordinates,
     });
 
 class $$CompetenceTableTableFilterComposer
@@ -3979,9 +4357,24 @@ class $$CompetenceTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get timerStarted => $composableBuilder(
+    column: $table.timerStarted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get timerStartTime => $composableBuilder(
+    column: $table.timerStartTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get proximityRadiusMeters => $composableBuilder(
+    column: $table.proximityRadiusMeters,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnWithTypeConverterFilters<
-    Map<String, List<double>>,
-    Map<String, List<double>>,
+    Map<String, double>,
+    Map<String, double>,
     String
   >
   get startCoordinates => $composableBuilder(
@@ -3990,8 +4383,8 @@ class $$CompetenceTableTableFilterComposer
   );
 
   ColumnWithTypeConverterFilters<
-    Map<String, List<double>>,
-    Map<String, List<double>>,
+    Map<String, double>,
+    Map<String, double>,
     String
   >
   get finishCoordinates => $composableBuilder(
@@ -4060,6 +4453,21 @@ class $$CompetenceTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get timerStarted => $composableBuilder(
+    column: $table.timerStarted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get timerStartTime => $composableBuilder(
+    column: $table.timerStartTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get proximityRadiusMeters => $composableBuilder(
+    column: $table.proximityRadiusMeters,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get startCoordinates => $composableBuilder(
     column: $table.startCoordinates,
     builder: (column) => ColumnOrderings(column),
@@ -4121,13 +4529,28 @@ class $$CompetenceTableTableAnnotationComposer
   GeneratedColumn<String> get createdBy =>
       $composableBuilder(column: $table.createdBy, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<Map<String, List<double>>, String>
+  GeneratedColumn<bool> get timerStarted => $composableBuilder(
+    column: $table.timerStarted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get timerStartTime => $composableBuilder(
+    column: $table.timerStartTime,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get proximityRadiusMeters => $composableBuilder(
+    column: $table.proximityRadiusMeters,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<Map<String, double>, String>
   get startCoordinates => $composableBuilder(
     column: $table.startCoordinates,
     builder: (column) => column,
   );
 
-  GeneratedColumnWithTypeConverter<Map<String, List<double>>, String>
+  GeneratedColumnWithTypeConverter<Map<String, double>, String>
   get finishCoordinates => $composableBuilder(
     column: $table.finishCoordinates,
     builder: (column) => column,
@@ -4182,9 +4605,12 @@ class $$CompetenceTableTableTableManager
                 Value<bool> isActive = const Value.absent(),
                 Value<bool> isFinished = const Value.absent(),
                 Value<String> createdBy = const Value.absent(),
-                Value<Map<String, List<double>>> startCoordinates =
+                Value<bool> timerStarted = const Value.absent(),
+                Value<DateTime?> timerStartTime = const Value.absent(),
+                Value<int> proximityRadiusMeters = const Value.absent(),
+                Value<Map<String, double>> startCoordinates =
                     const Value.absent(),
-                Value<Map<String, List<double>>> finishCoordinates =
+                Value<Map<String, double>> finishCoordinates =
                     const Value.absent(),
               }) => CompetenceTableCompanion(
                 id: id,
@@ -4198,6 +4624,9 @@ class $$CompetenceTableTableTableManager
                 isActive: isActive,
                 isFinished: isFinished,
                 createdBy: createdBy,
+                timerStarted: timerStarted,
+                timerStartTime: timerStartTime,
+                proximityRadiusMeters: proximityRadiusMeters,
                 startCoordinates: startCoordinates,
                 finishCoordinates: finishCoordinates,
               ),
@@ -4214,8 +4643,11 @@ class $$CompetenceTableTableTableManager
                 Value<bool> isActive = const Value.absent(),
                 Value<bool> isFinished = const Value.absent(),
                 required String createdBy,
-                required Map<String, List<double>> startCoordinates,
-                required Map<String, List<double>> finishCoordinates,
+                Value<bool> timerStarted = const Value.absent(),
+                Value<DateTime?> timerStartTime = const Value.absent(),
+                Value<int> proximityRadiusMeters = const Value.absent(),
+                required Map<String, double> startCoordinates,
+                required Map<String, double> finishCoordinates,
               }) => CompetenceTableCompanion.insert(
                 id: id,
                 externalId: externalId,
@@ -4228,6 +4660,9 @@ class $$CompetenceTableTableTableManager
                 isActive: isActive,
                 isFinished: isFinished,
                 createdBy: createdBy,
+                timerStarted: timerStarted,
+                timerStartTime: timerStartTime,
+                proximityRadiusMeters: proximityRadiusMeters,
                 startCoordinates: startCoordinates,
                 finishCoordinates: finishCoordinates,
               ),
@@ -4522,6 +4957,10 @@ typedef $$CompetitionTimeRecordTableTableCreateCompanionBuilder =
       Value<int> id,
       Value<String?> registrationNumber,
       required int time,
+      Value<int?> position,
+      required String recordedByDni,
+      Value<bool> isEarly,
+      Value<bool> isReference,
       required int competenceId,
       required DateTime createdAt,
       required DateTime updatedAt,
@@ -4531,6 +4970,10 @@ typedef $$CompetitionTimeRecordTableTableUpdateCompanionBuilder =
       Value<int> id,
       Value<String?> registrationNumber,
       Value<int> time,
+      Value<int?> position,
+      Value<String> recordedByDni,
+      Value<bool> isEarly,
+      Value<bool> isReference,
       Value<int> competenceId,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -4557,6 +5000,26 @@ class $$CompetitionTimeRecordTableTableFilterComposer
 
   ColumnFilters<int> get time => $composableBuilder(
     column: $table.time,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recordedByDni => $composableBuilder(
+    column: $table.recordedByDni,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isEarly => $composableBuilder(
+    column: $table.isEarly,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isReference => $composableBuilder(
+    column: $table.isReference,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4600,6 +5063,26 @@ class $$CompetitionTimeRecordTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recordedByDni => $composableBuilder(
+    column: $table.recordedByDni,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isEarly => $composableBuilder(
+    column: $table.isEarly,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isReference => $composableBuilder(
+    column: $table.isReference,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get competenceId => $composableBuilder(
     column: $table.competenceId,
     builder: (column) => ColumnOrderings(column),
@@ -4635,6 +5118,22 @@ class $$CompetitionTimeRecordTableTableAnnotationComposer
 
   GeneratedColumn<int> get time =>
       $composableBuilder(column: $table.time, builder: (column) => column);
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<String> get recordedByDni => $composableBuilder(
+    column: $table.recordedByDni,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isEarly =>
+      $composableBuilder(column: $table.isEarly, builder: (column) => column);
+
+  GeneratedColumn<bool> get isReference => $composableBuilder(
+    column: $table.isReference,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get competenceId => $composableBuilder(
     column: $table.competenceId,
@@ -4697,6 +5196,10 @@ class $$CompetitionTimeRecordTableTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<String?> registrationNumber = const Value.absent(),
                 Value<int> time = const Value.absent(),
+                Value<int?> position = const Value.absent(),
+                Value<String> recordedByDni = const Value.absent(),
+                Value<bool> isEarly = const Value.absent(),
+                Value<bool> isReference = const Value.absent(),
                 Value<int> competenceId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -4704,6 +5207,10 @@ class $$CompetitionTimeRecordTableTableTableManager
                 id: id,
                 registrationNumber: registrationNumber,
                 time: time,
+                position: position,
+                recordedByDni: recordedByDni,
+                isEarly: isEarly,
+                isReference: isReference,
                 competenceId: competenceId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -4713,6 +5220,10 @@ class $$CompetitionTimeRecordTableTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<String?> registrationNumber = const Value.absent(),
                 required int time,
+                Value<int?> position = const Value.absent(),
+                required String recordedByDni,
+                Value<bool> isEarly = const Value.absent(),
+                Value<bool> isReference = const Value.absent(),
                 required int competenceId,
                 required DateTime createdAt,
                 required DateTime updatedAt,
@@ -4720,6 +5231,10 @@ class $$CompetitionTimeRecordTableTableTableManager
                 id: id,
                 registrationNumber: registrationNumber,
                 time: time,
+                position: position,
+                recordedByDni: recordedByDni,
+                isEarly: isEarly,
+                isReference: isReference,
                 competenceId: competenceId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,

@@ -3,9 +3,9 @@ __pycache__/
 *.py[codz]
 *$py.class
 
-/migrations/versions/*.pyc
-/migrations/versions/*.py
-/migrations/versions/*.pyo
+# /migrations/versions/*.pyc
+# /migrations/versions/*.py
+# /migrations/versions/*.pyo
 
 # C extensions
 *.so

@@ -12,16 +12,18 @@ class CompetitionTimeRecordRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create(self, time_record_data: CompetitionTimeRecordCreate) -> CompetitionTimeRecordModel:
+    async def create(self, time_record_data: CompetitionTimeRecordCreate, is_reference: bool = False) -> CompetitionTimeRecordModel:
         """Creates a new time record"""
         time_record = CompetitionTimeRecordModel(
             registration_number=time_record_data.registration_number,
             time=time_record_data.time,
+            recorded_by_dni=time_record_data.recorded_by_dni,
+            is_early=time_record_data.is_early,
+            is_reference=is_reference,
             competence_id=time_record_data.competence_id,
         )
         self.session.add(time_record)
-        await self.session.commit()
-        await self.session.refresh(time_record)
+        await self.session.flush()
         return time_record
 
     async def get_by_id(self, time_record_id: int) -> Optional[CompetitionTimeRecordModel]:
@@ -122,3 +124,27 @@ class CompetitionTimeRecordRepository:
             )
         )
         return result.scalar()
+    
+    async def count_by_moderator(
+        self,
+        competence_id: int,
+        recorded_by_dni: str
+    ) -> int:
+        """Counts time records created by a specific moderator in a competence"""
+        result = await self.session.execute(
+            select(func.count()).select_from(CompetitionTimeRecordModel).where(
+                CompetitionTimeRecordModel.competence_id == competence_id,
+                CompetitionTimeRecordModel.recorded_by_dni == recorded_by_dni
+            )
+        )
+        return result.scalar()
+    
+    async def get_reference_record(self, competence_id: int) -> Optional[CompetitionTimeRecordModel]:
+        """Gets the reference time record (first moderator record) for a competence"""
+        result = await self.session.execute(
+            select(CompetitionTimeRecordModel).where(
+                CompetitionTimeRecordModel.competence_id == competence_id,
+                CompetitionTimeRecordModel.is_reference == True
+            ).order_by(CompetitionTimeRecordModel.time.asc()).limit(1)
+        )
+        return result.scalar_one_or_none()

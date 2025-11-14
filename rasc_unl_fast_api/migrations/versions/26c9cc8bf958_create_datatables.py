@@ -1,8 +1,8 @@
-"""Add tables competetition
+"""create datatables
 
-Revision ID: d0b2d728a2a2
-Revises: 65c7f6098c77
-Create Date: 2025-11-13 00:16:53.730411
+Revision ID: 26c9cc8bf958
+Revises: 
+Create Date: 2025-11-14 07:47:16.400135
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'd0b2d728a2a2'
-down_revision: Union[str, Sequence[str], None] = '65c7f6098c77'
+revision: str = '26c9cc8bf958'
+down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -25,13 +25,18 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('external_id', sa.String(length=255), nullable=True),
     sa.Column('name', sa.String(length=255), nullable=False),
-    sa.Column('competition_date', sa.Date(), nullable=False),
-    sa.Column('competition_limit_for_registration_date', sa.Date(), nullable=True),
+    sa.Column('competition_date', sa.DateTime(timezone=True), nullable=False),
+    sa.Column('competition_limit_for_registration_date', sa.DateTime(timezone=True), nullable=True),
     sa.Column('n_turns', sa.Integer(), nullable=True),
+    sa.Column('max_registrations', sa.Integer(), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.Column('is_finished', sa.Boolean(), server_default='false', nullable=False),
+    sa.Column('timer_started', sa.Boolean(), nullable=False),
+    sa.Column('timer_start_time', sa.DateTime(timezone=True), nullable=True),
     sa.Column('created_by', sa.String(length=50), nullable=False),
     sa.Column('start_coordinates', sa.JSON(), nullable=True),
     sa.Column('finish_coordinates', sa.JSON(), nullable=True),
+    sa.Column('proximity_radius_meters', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.PrimaryKeyConstraint('id')
@@ -39,6 +44,23 @@ def upgrade() -> None:
     op.create_index(op.f('ix_competences_external_id'), 'competences', ['external_id'], unique=True)
     op.create_index(op.f('ix_competences_id'), 'competences', ['id'], unique=False)
     op.create_index(op.f('ix_competences_name'), 'competences', ['name'], unique=False)
+    op.create_table('users',
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('first_name', sa.String(), nullable=False),
+    sa.Column('last_name', sa.String(), nullable=False),
+    sa.Column('dni', sa.String(), nullable=False),
+    sa.Column('date_of_birth', sa.Date(), nullable=True),
+    sa.Column('role', sa.Enum('ADMINISTRATOR', 'COMPETITOR', 'MODERATOR', name='roleenum'), nullable=False),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.Column('email', sa.String(), nullable=False),
+    sa.Column('password', sa.String(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_users_dni'), 'users', ['dni'], unique=True)
+    op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
+    op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
     op.create_table('competition_registrations',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('external_id', sa.String(length=255), nullable=True),
@@ -69,6 +91,10 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_competition_registrations_external_id'), table_name='competition_registrations')
     op.drop_index(op.f('ix_competition_registrations_competence_id'), table_name='competition_registrations')
     op.drop_table('competition_registrations')
+    op.drop_index(op.f('ix_users_id'), table_name='users')
+    op.drop_index(op.f('ix_users_email'), table_name='users')
+    op.drop_index(op.f('ix_users_dni'), table_name='users')
+    op.drop_table('users')
     op.drop_index(op.f('ix_competences_name'), table_name='competences')
     op.drop_index(op.f('ix_competences_id'), table_name='competences')
     op.drop_index(op.f('ix_competences_external_id'), table_name='competences')

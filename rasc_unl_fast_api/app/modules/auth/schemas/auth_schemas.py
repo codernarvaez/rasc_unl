@@ -15,6 +15,15 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8, max_length=100)
 
+class UserCreateByAdmin(BaseModel):
+    """Schema for admin creating users - password defaults to DNI"""
+    email: EmailStr
+    first_name: str = Field(..., min_length=1, max_length=100)
+    last_name: str = Field(..., min_length=1, max_length=100)
+    dni: str = Field(..., min_length=10, max_length=13)
+    date_of_birth: Optional[date] = Field(None, description="Date of birth (YYYY-MM-DD)")
+    password: Optional[str] = Field(None, min_length=8, max_length=100, description="Password (defaults to DNI if not provided)")
+    role: Optional[RoleEnum] = Field(RoleEnum.COMPETITOR, description="Role for the user")
 
 class UserUpdate(BaseModel):
     first_name: Optional[str] = Field(None, min_length=1, max_length=100)
@@ -23,7 +32,8 @@ class UserUpdate(BaseModel):
 
 
 class UserUpdateAdmin(UserUpdate):
-    """Schema para actualización de usuarios por parte de administradores"""
+    """Schema para actualización de usuarios por parte de administradores.
+    Admin CANNOT update dni or email for existing users."""
     role: Optional[RoleEnum] = None
     is_active: Optional[bool] = None
 

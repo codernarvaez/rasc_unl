@@ -6,6 +6,10 @@ abstract class CompetitionTimeRecordRepository {
     required String? registrationNumber,
     required int timeInMilliseconds,
     required int competenceId,
+    required String recordedByDni,
+    int? position,
+    bool isEarly = false,
+    bool isReference = false,
   });
 
   /// Get all time records with pagination
@@ -28,6 +32,9 @@ abstract class CompetitionTimeRecordRepository {
     required int id,
     String? registrationNumber,
     int? timeInMilliseconds,
+    int? position,
+    bool? isEarly,
+    bool? isReference,
   });
 
   /// Delete a time record

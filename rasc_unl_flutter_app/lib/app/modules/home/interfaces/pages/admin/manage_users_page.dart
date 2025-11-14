@@ -62,7 +62,9 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
       // Mapear String role a UserRole
       final role = userModel.rol == 'ADMINISTRATOR'
           ? UserRole.admin
-          : UserRole.user;
+          : userModel.rol == 'MODERATOR'
+              ? UserRole.moderator
+              : UserRole.user;
       
       return UserData(
         id: userModel.id,
@@ -768,9 +770,55 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
               (role) async {
                 try {
                   // Convertir UserRole a String
-                  final roleType = role == UserRole.admin
-                      ? 'ADMINISTRATOR'
-                      : 'COMPETITOR';
+                  final roleType = 'ADMINISTRATOR';
+
+                  final updatedUser = UserModel(
+                    id: user.id,
+                    dni: user.dni,
+                    name: user.name,
+                    lastName: user.lastName,
+                    email: user.email,
+                    rol: roleType,
+                    isActive: user.isActive,
+                    birthDate: user.birthDate,
+                  );
+
+                  await repository!.userRepository.updateUser(updatedUser);
+
+                  Navigator.pop(context);
+                  
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Rol actualizado exitosamente'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    await _loadUsers(); // Recargar la lista desde la BD
+                  }
+                } catch (e) {
+                  Navigator.pop(context);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error al actualizar rol: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+            SizedBox(height: 12),
+            _buildRoleOptionDialog(
+              UserRole.moderator,
+              'Moderador',
+              'Registra tiempos y valida competencias',
+              Icons.timer,
+              user.rol,
+              (role) async {
+                try {
+                  final roleType = 'MODERATOR';
 
                   final updatedUser = UserModel(
                     id: user.id,
@@ -818,9 +866,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
               user.rol,
               (role) async {
                 try {
-                  final roleType = role == UserRole.admin
-                      ? 'ADMINISTRATOR'
-                      : 'COMPETITOR';
+                  final roleType = 'COMPETITOR';
 
                   final updatedUser = UserModel(
                     id: user.id,
@@ -944,7 +990,9 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
       // Convertir UserRole a String
       final roleType = user.rol == UserRole.admin
           ? 'ADMINISTRATOR'
-          : 'COMPETITOR';
+          : user.rol == UserRole.moderator
+              ? 'MODERATOR'
+              : 'COMPETITOR';
 
       final updatedUser = UserModel(
         id: user.id,

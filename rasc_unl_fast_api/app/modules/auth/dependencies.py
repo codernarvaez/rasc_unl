@@ -178,9 +178,82 @@ async def require_competitor(
     return current_user
 
 
+async def require_moderator(
+    current_user: Annotated[User, Depends(get_current_active_user)]
+) -> User:
+    """
+    Requiere que el usuario actual sea moderador.
+    
+    Args:
+        current_user: Usuario autenticado
+        
+    Returns:
+        Usuario con rol moderator
+        
+    Raises:
+        HTTPException 403: Si el usuario no es moderador
+    """
+    if current_user.role != RoleEnum.MODERATOR:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Se requieren privilegios de moderador"
+        )
+    return current_user
+
+
+async def require_admin_or_moderator(
+    current_user: Annotated[User, Depends(get_current_active_user)]
+) -> User:
+    """
+    Requiere que el usuario sea administrador O moderador.
+    
+    Args:
+        current_user: Usuario autenticado
+        
+    Returns:
+        Usuario con rol administrator o moderator
+        
+    Raises:
+        HTTPException 403: Si el usuario no es admin ni moderador
+    """
+    if current_user.role not in [RoleEnum.ADMINISTRATOR, RoleEnum.MODERATOR]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Se requieren privilegios de administrador o moderador"
+        )
+    return current_user
+
+
+async def require_competitor_or_admin(
+    current_user: Annotated[User, Depends(get_current_active_user)]
+) -> User:
+    """
+    Requiere que el usuario sea competidor O administrador.
+    Permite que administradores participen en competencias.
+    
+    Args:
+        current_user: Usuario autenticado
+        
+    Returns:
+        Usuario con rol competitor o administrator
+        
+    Raises:
+        HTTPException 403: Si el usuario no es competidor ni admin
+    """
+    if current_user.role not in [RoleEnum.COMPETITOR, RoleEnum.ADMINISTRATOR]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo competidores y administradores pueden participar en competencias"
+        )
+    return current_user
+
+
 # Type aliases para usar en otras rutas
 # Esto facilita el uso de las dependencias en otros módulos
 CurrentUser = Annotated[User, Depends(get_current_user)]
 CurrentActiveUser = Annotated[User, Depends(get_current_active_user)]
 AdminUser = Annotated[User, Depends(require_admin)]
 CompetitorUser = Annotated[User, Depends(require_competitor)]
+ModeratorUser = Annotated[User, Depends(require_moderator)]
+AdminOrModeratorUser = Annotated[User, Depends(require_admin_or_moderator)]
+CompetitorOrAdminUser = Annotated[User, Depends(require_competitor_or_admin)]

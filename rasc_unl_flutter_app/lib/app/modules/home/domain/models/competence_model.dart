@@ -15,8 +15,14 @@ class CompetenceModel {
   final bool isActive;
   final bool isFinished; // Indica si la competencia finalizó
   final String createdBy; // User DNI of the creator
-  final Map<String, List<double>> startCoordinates;
-  final Map<String, List<double>> finishCoordinates;
+  
+  // Timer fields - NEW
+  final bool timerStarted; // Indica si el cronómetro ha iniciado
+  final DateTime? timerStartTime; // Momento exacto de inicio del cronómetro
+  final int proximityRadiusMeters; // Radio de proximidad en metros
+  
+  final Map<String, double> startCoordinates;
+  final Map<String, double> finishCoordinates;
 
 
   CompetenceModel({
@@ -30,13 +36,16 @@ class CompetenceModel {
     required this.isActive,
     required this.isFinished,
     required this.createdBy,
+    this.timerStarted = false,
+    this.timerStartTime,
+    this.proximityRadiusMeters = 50,
     this.startCoordinates = const {
-        "point_x": [0.0, 0.0],
-        "point_y": [0.0, 0.0],
+        "latitude": 0.0,
+        "longitude": 0.0,
     },
     this.finishCoordinates = const {
-        "point_x": [0.0, 0.0],
-        "point_y": [0.0, 0.0],
+        "latitude": 0.0,
+        "longitude": 0.0,
     },
    
   });

@@ -25,28 +25,22 @@ CompetenceModel _$CompetenceModelFromJson(Map<String, dynamic> json) =>
       isActive: json['is_active'] as bool,
       isFinished: json['is_finished'] as bool,
       createdBy: json['created_by'] as String,
+      timerStarted: json['timer_started'] as bool? ?? false,
+      timerStartTime: json['timer_start_time'] == null
+          ? null
+          : DateTime.parse(json['timer_start_time'] as String),
+      proximityRadiusMeters:
+          (json['proximity_radius_meters'] as num?)?.toInt() ?? 50,
       startCoordinates:
           (json['start_coordinates'] as Map<String, dynamic>?)?.map(
-            (k, e) => MapEntry(
-              k,
-              (e as List<dynamic>).map((e) => (e as num).toDouble()).toList(),
-            ),
+            (k, e) => MapEntry(k, (e as num).toDouble()),
           ) ??
-          const {
-            "point_x": [0.0, 0.0],
-            "point_y": [0.0, 0.0],
-          },
+          const {"latitude": 0.0, "longitude": 0.0},
       finishCoordinates:
           (json['finish_coordinates'] as Map<String, dynamic>?)?.map(
-            (k, e) => MapEntry(
-              k,
-              (e as List<dynamic>).map((e) => (e as num).toDouble()).toList(),
-            ),
+            (k, e) => MapEntry(k, (e as num).toDouble()),
           ) ??
-          const {
-            "point_x": [0.0, 0.0],
-            "point_y": [0.0, 0.0],
-          },
+          const {"latitude": 0.0, "longitude": 0.0},
     );
 
 Map<String, dynamic> _$CompetenceModelToJson(CompetenceModel instance) =>
@@ -63,6 +57,9 @@ Map<String, dynamic> _$CompetenceModelToJson(CompetenceModel instance) =>
       'is_active': instance.isActive,
       'is_finished': instance.isFinished,
       'created_by': instance.createdBy,
+      'timer_started': instance.timerStarted,
+      'timer_start_time': instance.timerStartTime?.toIso8601String(),
+      'proximity_radius_meters': instance.proximityRadiusMeters,
       'start_coordinates': instance.startCoordinates,
       'finish_coordinates': instance.finishCoordinates,
     };
