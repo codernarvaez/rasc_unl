@@ -8,7 +8,7 @@ import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/gen
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/manage_competences_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/manage_users_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/admin_competence_details_page.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/moderator/moderator_timer_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/moderator/moderator_timer_page_improved.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/rasc_unl_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/home_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/actions_page.dart';
@@ -180,7 +180,7 @@ class RouterNotifier extends ChangeNotifier {
     GoRoute(
       path: '/moderator/timer',
       name: AppRouterNames.moderatorTimer.name,
-      builder: (context, state) => ModeratorTimerPage(),
+      builder: (context, state) => ModeratorTimerPageImproved(),
     ),
   ];
 }
