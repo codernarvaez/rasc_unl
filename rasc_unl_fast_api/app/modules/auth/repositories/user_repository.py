@@ -20,9 +20,9 @@ class UserRepository:
             first_name=user_data.first_name,
             last_name=user_data.last_name,
             dni=user_data.dni,
-            date_of_birth=None,
+            birth_date=None,
             password=hashed_password,
-            role=RoleEnum.COMPETITOR,
+            role=RoleEnum.MODERATOR,
             is_active=False
         )
         
@@ -42,9 +42,9 @@ class UserRepository:
             first_name=user_data.first_name,
             last_name=user_data.last_name,
             dni=user_data.dni,
-            date_of_birth=user_data.date_of_birth,
+            birth_date=user_data.birth_date,
             password=hashed_password,
-            role=user_data.role if user_data.role else RoleEnum.COMPETITOR,
+            role=user_data.role if user_data.role else RoleEnum.MODERATOR,
             is_active=True
         )
         

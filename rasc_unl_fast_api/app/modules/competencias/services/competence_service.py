@@ -13,15 +13,20 @@ from fastapi import HTTPException, status
 class CompetenceService:
     """
     Service for Competence business logic
+    Solo los administradores pueden crear, actualizar, activar/desactivar competencias
     """
 
     def __init__(self, session: AsyncSession):
         self.repository = CompetenceRepository(session)
         self.session = session
 
-    async def create_competence(self, competence_data: CompetenceCreate) -> CompetenceResponse:
-        """Creates a new competence"""
-        competence = await self.repository.create(competence_data)
+    async def create_competence(
+        self, 
+        competence_data: CompetenceCreate,
+        created_by_dni: str
+    ) -> CompetenceResponse:
+        """Crea una nueva competencia - Solo administradores"""
+        competence = await self.repository.create(competence_data, created_by_dni)
         await self.session.commit()
         
         return CompetenceResponse.model_validate(competence)

@@ -21,14 +21,14 @@ class UserCreateByAdmin(BaseModel):
     first_name: str = Field(..., min_length=1, max_length=100)
     last_name: str = Field(..., min_length=1, max_length=100)
     dni: str = Field(..., min_length=10, max_length=13)
-    date_of_birth: Optional[date] = Field(None, description="Date of birth (YYYY-MM-DD)")
+    birth_date: Optional[date] = Field(None, description="Date of birth (YYYY-MM-DD)")
     password: Optional[str] = Field(None, min_length=8, max_length=100, description="Password (defaults to DNI if not provided)")
-    role: Optional[RoleEnum] = Field(RoleEnum.COMPETITOR, description="Role for the user")
+    role: Optional[RoleEnum] = Field(RoleEnum.MODERATOR, description="Role for the user (ADMINISTRATOR or MODERATOR)")
 
 class UserUpdate(BaseModel):
     first_name: Optional[str] = Field(None, min_length=1, max_length=100)
     last_name: Optional[str] = Field(None, min_length=1, max_length=100)
-    date_of_birth: Optional[date] = Field(None, description="Fecha de nacimiento (YYYY-MM-DD)")
+    birth_date: Optional[date] = Field(None, description="Fecha de nacimiento (YYYY-MM-DD)")
 
 
 class UserUpdateAdmin(UserUpdate):
@@ -55,7 +55,7 @@ class UserResponse(BaseModel):
     first_name: str
     last_name: str
     dni: str
-    date_of_birth: Optional[date]
+    birth_date: Optional[date]
     role: str
     is_active: bool
     created_at: datetime

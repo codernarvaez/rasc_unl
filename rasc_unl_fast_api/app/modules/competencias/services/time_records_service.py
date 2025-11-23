@@ -1,183 +1,159 @@
-from typing import List, Optional
+from typing import List
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.modules.competencias.repositories.time_records_repository import CompetitionTimeRecordRepository
-from app.modules.competencias.repositories.competence_repository import CompetenceRepository
+from app.modules.competencias.repositories.time_records_repository import TimeRecordRepository
+from app.modules.competencias.repositories.competition_registration_repository import CompetitionRegistrationRepository
+from app.modules.auth.repositories.user_repository import UserRepository
+from app.modules.auth.models.user_model import RoleEnum
 from app.modules.competencias.domain.schemas.schemas import (
-    CompetitionTimeRecordCreate,
-    CompetitionTimeRecordUpdate,
-    CompetitionTimeRecordResponse,
+    TimeRecordCreate,
+    TimeRecordUpdate,
+    TimeRecordResponse,
+    TimeRecordListResponse
 )
-from app.modules.competencias.domain.models.time_record_model import TimeRecordModel
 
 
-class CompetitionTimeRecordService:
-    """Service for managing competition time records"""
+class TimeRecordService:
+    """
+    Service for managing time records
+    Los moderadores registran tiempos de participantes durante las competencias
+    """
 
-    def __init__(
-        self, 
-        time_record_repository: CompetitionTimeRecordRepository,
-        competence_repository: CompetenceRepository,
-        session: AsyncSession
-    ):
-        self.time_record_repository = time_record_repository
-        self.competence_repository = competence_repository
+    def __init__(self, session: AsyncSession):
+        self.repository = TimeRecordRepository(session)
+        self.registration_repository = CompetitionRegistrationRepository(session)
+        self.user_repository = UserRepository(session)
         self.session = session
 
     async def create_time_record(
         self, 
-        time_record_data: CompetitionTimeRecordCreate
-    ) -> CompetitionTimeRecordResponse:
+        time_record_data: TimeRecordCreate,
+        user_dni: str
+    ) -> TimeRecordResponse:
         """
-        Creates a new time record.
-        Implementa lógica de consenso: el primer registro del moderador es la referencia.
+        Crea un nuevo registro de tiempo - Solo moderadores/admins
         """
-        # Verify competence exists and timer has started
-        competence = await self.competence_repository.get_by_id(time_record_data.competence_id)
-        if not competence:
+        # Verificar que el usuario es moderador o admin
+        user = await self.user_repository.get_by_dni(user_dni)
+        if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Competence with id {time_record_data.competence_id} not found"
+                detail=f"User with DNI {user_dni} not found"
             )
         
-        if not competence.timer_started:
+        if user.role not in [RoleEnum.MODERATOR, RoleEnum.ADMINISTRATOR]:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Competition timer has not started yet"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only moderators and administrators can record times"
             )
 
-        # Check if this is the first time record (reference time)
-        existing_records, total = await self.time_record_repository.get_by_competence_id(
-            competence_id=time_record_data.competence_id,
-            registration_number=None,
-            skip=0,
-            limit=1
-        )
-        
-        is_reference = total == 0  # Primer registro = referencia
-        
-        # Check max_registrations limit per moderator
-        if competence.max_registrations:
-            moderator_count = await self.time_record_repository.count_by_moderator(
-                competence_id=time_record_data.competence_id,
-                recorded_by_dni=time_record_data.recorded_by_dni
+        # Verificar que el competition_registration existe
+        registration = await self.registration_repository.get_by_id(time_record_data.competition_registration_id)
+        if not registration:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Competition registration with id {time_record_data.competition_registration_id} not found"
             )
-            if moderator_count >= competence.max_registrations:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Maximum number of time records ({competence.max_registrations}) reached for this moderator"
-                )
         
-        # Crear el registro con is_reference
-        time_record = await self.time_record_repository.create(time_record_data, is_reference=is_reference)
+        # Verificar que la competencia esté activa
+        if not registration.competence.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Competition is not active"
+            )
         
-        # Si no es el primer registro, recalcular posiciones
-        if not is_reference:
-            await self._recalculate_positions(time_record_data.competence_id)
+        # Crear el registro
+        time_record = await self.repository.create(time_record_data)
         
         await self.session.commit()
         await self.session.refresh(time_record)
         
-        return CompetitionTimeRecordResponse.model_validate(time_record)
-    
-    async def _recalculate_positions(self, competence_id: int):
-        """
-        Recalcula las posiciones de todos los registros de una competencia.
-        Ordena por tiempo ascendente y asigna posiciones.
-        """
-        all_records, _ = await self.time_record_repository.get_by_competence_id(
-            competence_id=competence_id,
-            registration_number=None,
-            skip=0,
-            limit=10000  # Obtener todos
-        )
-        
-        # Ordenar por tiempo ascendente
-        sorted_records = sorted(all_records, key=lambda r: r.time)
-        
-        # Asignar posiciones
-        for index, record in enumerate(sorted_records, start=1):
-            record.position = index
-        
-        await self.session.flush()
-    
-    async def get_reference_time(self, competence_id: int) -> Optional[int]:
-        """
-        Obtiene el tiempo de referencia (primer registro del moderador) para una competencia.
-        
-        Returns:
-            Tiempo en milisegundos del registro de referencia, None si no existe
-        """
-        reference_record = await self.time_record_repository.get_reference_record(competence_id)
-        
-        if reference_record:
-            return reference_record.time
-        
-        return None
+        return TimeRecordResponse.model_validate(time_record)
 
-    async def get_time_record(self, time_record_id: int) -> CompetitionTimeRecordResponse:
-        """Gets a time record by ID"""
-        time_record = await self.time_record_repository.get_by_id(time_record_id)
+    async def get_time_record(self, time_record_id: int) -> TimeRecordResponse:
+        """Obtiene un registro de tiempo por ID"""
+        time_record = await self.repository.get_by_id(time_record_id)
         if not time_record:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Time record with id {time_record_id} not found"
             )
-        return CompetitionTimeRecordResponse.model_validate(time_record)
+        return TimeRecordResponse.model_validate(time_record)
 
-    async def get_time_records_by_competence(
+    async def get_time_records_by_registration(
         self,
-        competence_id: int,
-        registration_number: Optional[str] = None,
+        competition_registration_id: int,
         skip: int = 0,
         limit: int = 100
-    ) -> tuple[List[CompetitionTimeRecordResponse], int]:
-        """Gets time records for a specific competence"""
-        # Verify competence exists
-        competence = await self.competence_repository.get_by_id(competence_id)
-        if not competence:
+    ) -> TimeRecordListResponse:
+        """Obtiene registros de tiempo de un competition registration específico"""
+        registration = await self.registration_repository.get_by_id(competition_registration_id)
+        if not registration:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Competence with id {competence_id} not found"
+                detail=f"Competition registration with id {competition_registration_id} not found"
             )
 
-        time_record, total = await self.time_record_repository.get_by_competence_id(
-            competence_id=competence_id,
-            registration_number=registration_number,
+        time_records = await self.repository.get_by_competition_registration(
+            competition_registration_id=competition_registration_id,
             skip=skip,
             limit=limit
         )
-        return [CompetitionTimeRecordResponse.model_validate(tr) for tr in time_record], total
+        total = await self.repository.count_by_competition_registration(competition_registration_id)
+        
+        return TimeRecordListResponse(
+            time_records=[TimeRecordResponse.model_validate(tr) for tr in time_records],
+            total=total
+        )
 
     async def get_all_time_records(
         self,
         skip: int = 0,
         limit: int = 100
-    ) -> tuple[List[CompetitionTimeRecordResponse], int]:
-        """Gets all time records"""
-        time_record, total = await self.time_record_repository.get_all(skip=skip, limit=limit)
-        return [CompetitionTimeRecordResponse.model_validate(tr) for tr in time_record], total
+    ) -> TimeRecordListResponse:
+        """Obtiene todos los registros de tiempo"""
+        time_records = await self.repository.get_all(skip=skip, limit=limit)
+        total = await self.repository.count_all()
+        
+        return TimeRecordListResponse(
+            time_records=[TimeRecordResponse.model_validate(tr) for tr in time_records],
+            total=total
+        )
 
     async def update_time_record(
         self,
         time_record_id: int,
-        time_record_data: CompetitionTimeRecordUpdate
-    ) -> CompetitionTimeRecordResponse:
-        """Updates a time record"""
-        time_record = await self.time_record_repository.update(time_record_id, time_record_data)
+        time_record_data: TimeRecordUpdate
+    ) -> TimeRecordResponse:
+        """Actualiza un registro de tiempo"""
+        time_record = await self.repository.update(time_record_id, time_record_data)
         if not time_record:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Time record with id {time_record_id} not found"
             )
-        return CompetitionTimeRecordResponse.model_validate(time_record)
+        
+        await self.session.commit()
+        await self.session.refresh(time_record)
+        
+        return TimeRecordResponse.model_validate(time_record)
 
     async def delete_time_record(self, time_record_id: int) -> dict:
-        """Deletes a time record"""
-        deleted = await self.time_record_repository.delete(time_record_id)
+        """Elimina un registro de tiempo"""
+        time_record = await self.repository.get_by_id(time_record_id)
+        if not time_record:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Time record with id {time_record_id} not found"
+            )
+        
+        deleted = await self.repository.delete(time_record_id)
         if not deleted:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Time record with id {time_record_id} not found"
             )
+        
+        await self.session.commit()
+        
         return {"message": "Time record deleted successfully"}

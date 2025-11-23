@@ -19,7 +19,7 @@ class UserModel(Base):
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
     birth_date = Column(Date, nullable=True, default=None)
-    is_active = Column(Boolean, default=True, nullable=False)
+    is_active = Column(Boolean, default=False, nullable=False)  # Por defecto False, el admin debe aprobar
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

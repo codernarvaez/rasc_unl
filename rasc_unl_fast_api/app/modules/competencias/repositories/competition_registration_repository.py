@@ -13,9 +13,16 @@ class CompetitionRegistrationRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create(self, registration_data: CompetitionRegistrationCreate) -> CompetitionRegistrationModel:
-        """Creates a new competition registration"""
-        registration = CompetitionRegistrationModel(**registration_data.model_dump())
+    async def create(
+        self, 
+        registration_data: CompetitionRegistrationCreate,
+        user_dni: str
+    ) -> CompetitionRegistrationModel:
+        """Crea un nuevo registro de equipo en competencia"""
+        registration = CompetitionRegistrationModel(
+            **registration_data.model_dump(),
+            user_dni=user_dni
+        )
         self.session.add(registration)
         await self.session.flush()
         await self.session.refresh(registration)
@@ -32,20 +39,13 @@ class CompetitionRegistrationRepository:
         self,
         skip: int = 0,
         limit: int = 100,
-        competence_id: Optional[int] = None,
-        user_dni: Optional[str] = None
+        competence_id: Optional[int] = None
     ) -> List[CompetitionRegistrationModel]:
         """Gets all registrations with pagination and optional filters"""
         query = select(CompetitionRegistrationModel)
         
-        filters = []
         if competence_id is not None:
-            filters.append(CompetitionRegistrationModel.competence_id == competence_id)
-        if user_dni is not None:
-            filters.append(CompetitionRegistrationModel.user_dni == user_dni)
-        
-        if filters:
-            query = query.where(and_(*filters))
+            query = query.where(CompetitionRegistrationModel.competence_id == competence_id)
         
         query = query.offset(skip).limit(limit).order_by(CompetitionRegistrationModel.created_at.desc())
         
@@ -61,22 +61,12 @@ class CompetitionRegistrationRepository:
         """Gets all registrations for a specific competence"""
         return await self.get_all(skip=skip, limit=limit, competence_id=competence_id)
 
-    async def count(
-        self,
-        competence_id: Optional[int] = None,
-        user_dni: Optional[str] = None
-    ) -> int:
+    async def count(self, competence_id: Optional[int] = None) -> int:
         """Counts total registrations"""
         query = select(func.count(CompetitionRegistrationModel.id))
         
-        filters = []
         if competence_id is not None:
-            filters.append(CompetitionRegistrationModel.competence_id == competence_id)
-        if user_dni is not None:
-            filters.append(CompetitionRegistrationModel.user_dni == user_dni)
-        
-        if filters:
-            query = query.where(and_(*filters))
+            query = query.where(CompetitionRegistrationModel.competence_id == competence_id)
         
         result = await self.session.execute(query)
         return result.scalar_one()
@@ -110,34 +100,17 @@ class CompetitionRegistrationRepository:
         await self.session.flush()
         return True
 
-    async def check_user_registered(
+    async def get_by_dorsal_and_competence(
         self,
-        competence_id: int,
-        user_dni: str
-    ) -> bool:
-        """Checks if a user is already registered in a competence"""
-        result = await self.session.execute(
-            select(func.count(CompetitionRegistrationModel.id)).where(
-                and_(
-                    CompetitionRegistrationModel.competence_id == competence_id,
-                    CompetitionRegistrationModel.user_dni == user_dni
-                )
-            )
-        )
-        count = result.scalar_one()
-        return count > 0
-
-    async def get_by_user_and_competence(
-        self,
-        competence_id: int,
-        user_dni: str
+        dorsal_number: str,
+        competence_id: int
     ) -> Optional[CompetitionRegistrationModel]:
-        """Gets a registration by user DNI and competence"""
+        """Verifica si un número de dorsal ya está registrado en una competencia"""
         result = await self.session.execute(
             select(CompetitionRegistrationModel).where(
                 and_(
                     CompetitionRegistrationModel.competence_id == competence_id,
-                    CompetitionRegistrationModel.user_dni == user_dni
+                    CompetitionRegistrationModel.dorsal_number == dorsal_number
                 )
             )
         )

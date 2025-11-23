@@ -13,9 +13,12 @@ class CompetenceRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create(self, competence_data: CompetenceCreate) -> CompetenceModel:
-        """Creates a new competence"""
-        competence = CompetenceModel(**competence_data.model_dump())
+    async def create(self, competence_data: CompetenceCreate, created_by_dni: str) -> CompetenceModel:
+        """Crea una nueva competencia"""
+        competence = CompetenceModel(
+            **competence_data.model_dump(),
+            created_by=created_by_dni
+        )
         self.session.add(competence)
         await self.session.flush()
         await self.session.refresh(competence)

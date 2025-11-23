@@ -3,92 +3,78 @@ from sqlalchemy.future import select
 from sqlalchemy import func
 from typing import List, Optional
 from app.modules.competencias.domain.models.time_record_model import TimeRecordModel
-from app.modules.competencias.domain.schemas.schemas import CompetitionTimeRecordCreate, CompetitionTimeRecordUpdate
+from app.modules.competencias.domain.schemas.schemas import TimeRecordCreate, TimeRecordUpdate
 
 
-class CompetitionTimeRecordRepository:
+class TimeRecordRepository:
     """Repository para manejar registros de tiempo de competencias"""
 
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create(self, time_record_data: CompetitionTimeRecordCreate, is_reference: bool = False) -> TimeRecordModel:
-        """Creates a new time record"""
+    async def create(self, time_record_data: TimeRecordCreate) -> TimeRecordModel:
+        """Crea un nuevo registro de tiempo"""
         time_record = TimeRecordModel(
-            registration_number=time_record_data.registration_number,
             time=time_record_data.time,
-            recorded_by_dni=time_record_data.recorded_by_dni,
-            is_early=time_record_data.is_early,
-            is_reference=is_reference,
-            competence_id=time_record_data.competence_id,
+            competition_registration_id=time_record_data.competition_registration_id,
         )
         self.session.add(time_record)
         await self.session.flush()
         return time_record
 
     async def get_by_id(self, time_record_id: int) -> Optional[TimeRecordModel]:
-        """Gets a time record by ID"""
+        """Obtiene un registro de tiempo por ID"""
         result = await self.session.execute(
             select(TimeRecordModel).where(TimeRecordModel.id == time_record_id)
         )
         return result.scalar_one_or_none()
 
-    async def get_by_competence_id(
+    async def get_by_competition_registration(
         self, 
-        competence_id: int, 
-        registration_number: Optional[str] = None,
+        competition_registration_id: int,
         skip: int = 0, 
         limit: int = 100
-    ) -> tuple[List[TimeRecordModel], int]:
-        """Gets time records by competence ID, optionally filtered by registration number"""
+    ) -> List[TimeRecordModel]:
+        """Obtiene registros de tiempo por registration con paginación"""
         query = select(TimeRecordModel).where(
-            TimeRecordModel.competence_id == competence_id
-        )
+            TimeRecordModel.competition_registration_id == competition_registration_id
+        ).offset(skip).limit(limit).order_by(TimeRecordModel.created_at.asc())
         
-        if registration_number:
-            query = query.where(TimeRecordModel.registration_number == registration_number)
-        
-        # Get total count
-        count_query = select(func.count()).select_from(query.subquery())
-        total_result = await self.session.execute(count_query)
-        total = total_result.scalar()
-        
-        # Get paginated results
-        query = query.offset(skip).limit(limit).order_by(TimeRecordModel.time.asc())
         result = await self.session.execute(query)
-        time_record = result.scalars().all()
-        
-        return list(time_record), total
+        return list(result.scalars().all())
 
-    async def get_all(
-        self, 
-        skip: int = 0, 
-        limit: int = 100
-    ) -> tuple[List[TimeRecordModel], int]:
-        """Gets all time records with pagination"""
-        # Get total count
-        count_result = await self.session.execute(
-            select(func.count()).select_from(TimeRecordModel)
+    async def count_by_competition_registration(self, competition_registration_id: int) -> int:
+        """Cuenta registros de tiempo de un registration"""
+        result = await self.session.execute(
+            select(func.count()).select_from(TimeRecordModel).where(
+                TimeRecordModel.competition_registration_id == competition_registration_id
+            )
         )
-        total = count_result.scalar()
-        
-        # Get paginated results
+        return result.scalar()
+
+    async def get_all(self, skip: int = 0, limit: int = 100) -> List[TimeRecordModel]:
+        """Obtiene todos los registros de tiempo con paginación"""
         result = await self.session.execute(
             select(TimeRecordModel)
             .offset(skip)
             .limit(limit)
             .order_by(TimeRecordModel.created_at.desc())
         )
-        time_record = result.scalars().all()
-        
-        return list(time_record), total
+        return list(result.scalars().all())
+    
+    async def count_all(self) -> int:
+        """Cuenta todos los registros de tiempo"""
+        result = await self.session.execute(
+            select(func.count()).select_from(TimeRecordModel)
+        )
+        return result.scalar()
 
     async def update(
         self, 
         time_record_id: int, 
-        time_record_data: CompetitionTimeRecordUpdate
+        time_record_data: TimeRecordUpdate
     ) -> Optional[TimeRecordModel]:
-        """Updates an existing time record"""
+        """Actualiza un registro de tiempo existente"""
         time_record = await self.get_by_id(time_record_id)
         if not time_record:
             return None
@@ -97,54 +83,16 @@ class CompetitionTimeRecordRepository:
         for key, value in update_data.items():
             setattr(time_record, key, value)
 
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(time_record)
         return time_record
 
     async def delete(self, time_record_id: int) -> bool:
-        """Deletes a time record"""
+        """Elimina un registro de tiempo"""
         time_record = await self.get_by_id(time_record_id)
         if not time_record:
             return False
 
         await self.session.delete(time_record)
-        await self.session.commit()
+        await self.session.flush()
         return True
-
-    async def count_by_competence_and_registration(
-        self, 
-        competence_id: int, 
-        registration_number: str
-    ) -> int:
-        """Counts time records for a specific competence and registration number"""
-        result = await self.session.execute(
-            select(func.count()).select_from(TimeRecordModel).where(
-                TimeRecordModel.competence_id == competence_id,
-                TimeRecordModel.registration_number == registration_number
-            )
-        )
-        return result.scalar()
-    
-    async def count_by_moderator(
-        self,
-        competence_id: int,
-        recorded_by_dni: str
-    ) -> int:
-        """Counts time records created by a specific moderator in a competence"""
-        result = await self.session.execute(
-            select(func.count()).select_from(TimeRecordModel).where(
-                TimeRecordModel.competence_id == competence_id,
-                TimeRecordModel.recorded_by_dni == recorded_by_dni
-            )
-        )
-        return result.scalar()
-    
-    async def get_reference_record(self, competence_id: int) -> Optional[TimeRecordModel]:
-        """Gets the reference time record (first moderator record) for a competence"""
-        result = await self.session.execute(
-            select(TimeRecordModel).where(
-                TimeRecordModel.competence_id == competence_id,
-                TimeRecordModel.is_reference == True
-            ).order_by(TimeRecordModel.time.asc()).limit(1)
-        )
-        return result.scalar_one_or_none()
