@@ -3,9 +3,9 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:rasc_unl_flutter_app/app/modules/auth/domain/drift_models/user_drift_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/auth/domain/drift_models/session_drift_model.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/domain/drift_models/competence_drift_model.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/domain/drift_models/competition_registration_drift_model.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/domain/drift_models/competition_time_record_drift_model.dart';
+import 'package:rasc_unl_flutter_app/app/modules/competition/domain/drift_models/competence_drift_model.dart';
+import 'package:rasc_unl_flutter_app/app/modules/competition/domain/drift_models/competition_registration_drift_model.dart';
+import 'package:rasc_unl_flutter_app/app/modules/competition/domain/drift_models/time_record_drift_model.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 import 'connection/connection.dart';
 

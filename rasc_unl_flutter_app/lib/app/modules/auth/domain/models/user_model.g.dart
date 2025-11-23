@@ -9,14 +9,14 @@ part of 'user_model.dart';
 UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
   id: (json['id'] as num).toInt(),
   dni: json['dni'] as String,
-  rol: json['role'] as String? ?? 'COMPETITOR',
-  name: json['first_name'] as String,
+  role: json['role'] as String? ?? 'MODERATOR',
+  firstName: json['first_name'] as String,
   lastName: json['last_name'] as String,
   email: json['email'] as String,
   isActive: json['is_active'] as bool? ?? true,
-  birthDate: json['date_of_birth'] == null
+  birthDate: json['birth_date'] == null
       ? null
-      : DateTime.parse(json['date_of_birth'] as String),
+      : DateTime.parse(json['birth_date'] as String),
   createdAt: json['created_at'] == null
       ? null
       : DateTime.parse(json['created_at'] as String),
@@ -28,12 +28,12 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
 Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
   'id': instance.id,
   'dni': instance.dni,
-  'role': instance.rol,
-  'first_name': instance.name,
+  'role': instance.role,
+  'first_name': instance.firstName,
   'last_name': instance.lastName,
   'email': instance.email,
+  'birth_date': instance.birthDate?.toIso8601String(),
   'is_active': instance.isActive,
-  'date_of_birth': instance.birthDate?.toIso8601String(),
   'created_at': instance.createdAt?.toIso8601String(),
   'updated_at': instance.updatedAt?.toIso8601String(),
 };

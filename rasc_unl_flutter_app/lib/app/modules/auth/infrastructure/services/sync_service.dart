@@ -54,7 +54,7 @@ class SyncService {
       final session = await _sessionRepo.getActiveSession();
       if (session != null) {
         final localUser = await _localUserRepo.getUserById(session.userId);
-        if (localUser != null && localUser.rol == 'ADMINISTRATOR') {
+        if (localUser != null && localUser.role == 'ADMINISTRATOR') {
           final allUsersResult = await _syncAllUsers(accessToken);
           usersDownloaded = allUsersResult.usersDownloaded;
           usersUploaded = allUsersResult.usersUploaded;
@@ -96,8 +96,8 @@ class SyncService {
       final user = UserModel(
         id: userApiResponse.id,
         dni: userApiResponse.dni,
-        rol: userApiResponse.role,
-        name: userApiResponse.firstName,
+        role: userApiResponse.role,
+        firstName: userApiResponse.firstName,
         lastName: userApiResponse.lastName,
         email: userApiResponse.email,
         isActive: userApiResponse.isActive,
@@ -149,8 +149,8 @@ class SyncService {
           final user = UserModel(
             id: userApiResponse.id,
             dni: userApiResponse.dni,
-            rol: userApiResponse.role,
-            name: userApiResponse.firstName,
+            role: userApiResponse.role,
+            firstName: userApiResponse.firstName,
             lastName: userApiResponse.lastName,
             email: userApiResponse.email,
             isActive: userApiResponse.isActive,
@@ -251,8 +251,8 @@ extension UserModelCopyWithSync on UserModel {
     return UserModel(
       id: id ?? this.id,
       dni: dni ?? this.dni,
-      rol: rol ?? this.rol,
-      name: name ?? this.name,
+      role: role ?? this.role,
+      firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
       email: email ?? this.email,
       isActive: isActive ?? this.isActive,

@@ -4,17 +4,16 @@ import 'package:go_router/go_router.dart';
 import 'package:rasc_unl_flutter_app/app/modules/auth/interfaces/pages/forgot_password_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/auth/interfaces/pages/login_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/auth/interfaces/pages/singup_page.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/generate_reports_page.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/manage_competences_page.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/manage_users_page.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/admin/admin_competence_details_page.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/moderator/moderator_timer_page_improved.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/rasc_unl_page.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/home_page.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/actions_page.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/user/available_competences_page.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/user/components/competence_details_page.dart';
-import 'package:rasc_unl_flutter_app/app/modules/home/interfaces/pages/user/my_records_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/admin/generate_reports_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/admin/manage_competences_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/admin/manage_users_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/admin/admin_competence_details_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/moderator/moderator_timer_page_improved.dart';
+import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/rasc_unl_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/home_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/actions_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/user/available_competences_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/user/components/competence_details_page.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 
 enum AppRouterNames {
@@ -115,11 +114,6 @@ class RouterNotifier extends ChangeNotifier {
       path: '/actions',
       name: AppRouterNames.actions.name,
       builder: (context, state) => const ActionsPage(),
-    ),
-    GoRoute(
-      path: '/my-records',
-      name: AppRouterNames.myRecords.name,
-      builder: (context, state) => MyRecordsPage(),
     ),
     GoRoute(
       path: '/user/competence-details',

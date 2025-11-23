@@ -347,8 +347,8 @@ class AuthService {
     return UserModel(
       id: apiResponse.id,
       dni: apiResponse.dni,
-      rol: apiResponse.role,
-      name: apiResponse.firstName,
+      role: apiResponse.role,
+      firstName: apiResponse.firstName,
       lastName: apiResponse.lastName,
       email: apiResponse.email,
       isActive: apiResponse.isActive,
@@ -376,8 +376,8 @@ extension UserModelCopyWith on UserModel {
     return UserModel(
       id: id ?? this.id,
       dni: dni ?? this.dni,
-      rol: rol ?? this.rol,
-      name: name ?? this.name,
+      role: role ?? this.role,
+      firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
       email: email ?? this.email,
       isActive: isActive ?? this.isActive,

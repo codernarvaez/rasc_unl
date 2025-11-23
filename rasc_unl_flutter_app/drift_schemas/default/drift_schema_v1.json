@@ -32,16 +32,6 @@
                         ]
                     },
                     {
-                        "name": "remote_id",
-                        "getter_name": "remoteId",
-                        "moor_type": "int",
-                        "nullable": true,
-                        "customConstraints": null,
-                        "default_dart": null,
-                        "default_client_dart": null,
-                        "dsl_features": []
-                    },
-                    {
                         "name": "dni",
                         "getter_name": "dni",
                         "moor_type": "string",
@@ -58,18 +48,18 @@
                         ]
                     },
                     {
-                        "name": "rol",
-                        "getter_name": "rol",
+                        "name": "role",
+                        "getter_name": "role",
                         "moor_type": "string",
                         "nullable": false,
                         "customConstraints": null,
-                        "default_dart": "const CustomExpression('\\'COMPETITOR\\'')",
+                        "default_dart": "const CustomExpression('\\'MODERATOR\\'')",
                         "default_client_dart": null,
                         "dsl_features": []
                     },
                     {
-                        "name": "name",
-                        "getter_name": "name",
+                        "name": "first_name",
+                        "getter_name": "firstName",
                         "moor_type": "string",
                         "nullable": false,
                         "customConstraints": null,
@@ -104,6 +94,16 @@
                         ]
                     },
                     {
+                        "name": "birth_date",
+                        "getter_name": "birthDate",
+                        "moor_type": "dateTime",
+                        "nullable": true,
+                        "customConstraints": null,
+                        "default_dart": null,
+                        "default_client_dart": null,
+                        "dsl_features": []
+                    },
+                    {
                         "name": "is_active",
                         "getter_name": "isActive",
                         "moor_type": "bool",
@@ -114,16 +114,6 @@
                             "sqlite": "CHECK (\"is_active\" IN (0, 1))"
                         },
                         "default_dart": "const CustomExpression('1')",
-                        "default_client_dart": null,
-                        "dsl_features": []
-                    },
-                    {
-                        "name": "birth_date",
-                        "getter_name": "birthDate",
-                        "moor_type": "dateTime",
-                        "nullable": true,
-                        "customConstraints": null,
-                        "default_dart": null,
                         "default_client_dart": null,
                         "dsl_features": []
                     },
@@ -144,30 +134,6 @@
                         "nullable": false,
                         "customConstraints": null,
                         "default_dart": "const CustomExpression('CAST(strftime(\\'%s\\', CURRENT_TIMESTAMP) AS INTEGER)')",
-                        "default_client_dart": null,
-                        "dsl_features": []
-                    },
-                    {
-                        "name": "last_synced_at",
-                        "getter_name": "lastSyncedAt",
-                        "moor_type": "dateTime",
-                        "nullable": true,
-                        "customConstraints": null,
-                        "default_dart": null,
-                        "default_client_dart": null,
-                        "dsl_features": []
-                    },
-                    {
-                        "name": "needs_sync",
-                        "getter_name": "needsSync",
-                        "moor_type": "bool",
-                        "nullable": false,
-                        "customConstraints": null,
-                        "defaultConstraints": "CHECK (\"needs_sync\" IN (0, 1))",
-                        "dialectAwareDefaultConstraints": {
-                            "sqlite": "CHECK (\"needs_sync\" IN (0, 1))"
-                        },
-                        "default_dart": "const CustomExpression('0')",
                         "default_client_dart": null,
                         "dsl_features": []
                     }
@@ -340,16 +306,6 @@
                         ]
                     },
                     {
-                        "name": "external_id",
-                        "getter_name": "externalId",
-                        "moor_type": "string",
-                        "nullable": false,
-                        "customConstraints": null,
-                        "default_dart": null,
-                        "default_client_dart": null,
-                        "dsl_features": []
-                    },
-                    {
                         "name": "name",
                         "getter_name": "name",
                         "moor_type": "string",
@@ -363,36 +319,6 @@
                         "name": "competition_date",
                         "getter_name": "competitionDate",
                         "moor_type": "dateTime",
-                        "nullable": true,
-                        "customConstraints": null,
-                        "default_dart": null,
-                        "default_client_dart": null,
-                        "dsl_features": []
-                    },
-                    {
-                        "name": "competition_limit_for_registration_date",
-                        "getter_name": "competitionLimitForRegistrationDate",
-                        "moor_type": "dateTime",
-                        "nullable": true,
-                        "customConstraints": null,
-                        "default_dart": null,
-                        "default_client_dart": null,
-                        "dsl_features": []
-                    },
-                    {
-                        "name": "n_turns",
-                        "getter_name": "nTurns",
-                        "moor_type": "int",
-                        "nullable": false,
-                        "customConstraints": null,
-                        "default_dart": "const CustomExpression('0')",
-                        "default_client_dart": null,
-                        "dsl_features": []
-                    },
-                    {
-                        "name": "max_registrations",
-                        "getter_name": "maxRegistrations",
-                        "moor_type": "int",
                         "nullable": true,
                         "customConstraints": null,
                         "default_dart": null,
@@ -438,66 +364,24 @@
                         "dsl_features": []
                     },
                     {
-                        "name": "timer_started",
-                        "getter_name": "timerStarted",
-                        "moor_type": "bool",
+                        "name": "created_at",
+                        "getter_name": "createdAt",
+                        "moor_type": "dateTime",
                         "nullable": false,
                         "customConstraints": null,
-                        "defaultConstraints": "CHECK (\"timer_started\" IN (0, 1))",
-                        "dialectAwareDefaultConstraints": {
-                            "sqlite": "CHECK (\"timer_started\" IN (0, 1))"
-                        },
-                        "default_dart": "const CustomExpression('0')",
+                        "default_dart": "const CustomExpression('CAST(strftime(\\'%s\\', CURRENT_TIMESTAMP) AS INTEGER)')",
                         "default_client_dart": null,
                         "dsl_features": []
                     },
                     {
-                        "name": "timer_start_time",
-                        "getter_name": "timerStartTime",
+                        "name": "updated_at",
+                        "getter_name": "updatedAt",
                         "moor_type": "dateTime",
                         "nullable": true,
                         "customConstraints": null,
                         "default_dart": null,
                         "default_client_dart": null,
                         "dsl_features": []
-                    },
-                    {
-                        "name": "proximity_radius_meters",
-                        "getter_name": "proximityRadiusMeters",
-                        "moor_type": "int",
-                        "nullable": false,
-                        "customConstraints": null,
-                        "default_dart": "const CustomExpression('50')",
-                        "default_client_dart": null,
-                        "dsl_features": []
-                    },
-                    {
-                        "name": "start_coordinates",
-                        "getter_name": "startCoordinates",
-                        "moor_type": "string",
-                        "nullable": false,
-                        "customConstraints": null,
-                        "default_dart": null,
-                        "default_client_dart": null,
-                        "dsl_features": [],
-                        "type_converter": {
-                            "dart_expr": "const CoordinatesMapConverter()",
-                            "dart_type_name": "Map<String, List<double>>"
-                        }
-                    },
-                    {
-                        "name": "finish_coordinates",
-                        "getter_name": "finishCoordinates",
-                        "moor_type": "string",
-                        "nullable": false,
-                        "customConstraints": null,
-                        "default_dart": null,
-                        "default_client_dart": null,
-                        "dsl_features": [],
-                        "type_converter": {
-                            "dart_expr": "const CoordinatesMapConverter()",
-                            "dart_type_name": "Map<String, List<double>>"
-                        }
                     }
                 ],
                 "is_virtual": false,
@@ -530,30 +414,30 @@
                         ]
                     },
                     {
-                        "name": "external_id",
-                        "getter_name": "externalId",
+                        "name": "dorsal_number",
+                        "getter_name": "dorsalNumber",
                         "moor_type": "string",
-                        "nullable": true,
+                        "nullable": false,
                         "customConstraints": null,
                         "default_dart": null,
                         "default_client_dart": null,
                         "dsl_features": []
                     },
                     {
-                        "name": "registration_number",
-                        "getter_name": "registrationNumber",
-                        "moor_type": "string",
-                        "nullable": true,
-                        "customConstraints": null,
-                        "default_dart": null,
-                        "default_client_dart": null,
-                        "dsl_features": []
-                    },
-                    {
-                        "name": "time",
-                        "getter_name": "time",
+                        "name": "n_participants",
+                        "getter_name": "nParticipants",
                         "moor_type": "int",
-                        "nullable": true,
+                        "nullable": false,
+                        "customConstraints": null,
+                        "default_dart": null,
+                        "default_client_dart": null,
+                        "dsl_features": []
+                    },
+                    {
+                        "name": "name",
+                        "getter_name": "name",
+                        "moor_type": "string",
+                        "nullable": false,
                         "customConstraints": null,
                         "default_dart": null,
                         "default_client_dart": null,
@@ -570,20 +454,30 @@
                         "dsl_features": []
                     },
                     {
-                        "name": "n_turns",
-                        "getter_name": "nTurns",
+                        "name": "competence_id",
+                        "getter_name": "competenceId",
                         "moor_type": "int",
-                        "nullable": true,
+                        "nullable": false,
                         "customConstraints": null,
                         "default_dart": null,
                         "default_client_dart": null,
                         "dsl_features": []
                     },
                     {
-                        "name": "competence_id",
-                        "getter_name": "competenceId",
-                        "moor_type": "int",
+                        "name": "created_at",
+                        "getter_name": "createdAt",
+                        "moor_type": "dateTime",
                         "nullable": false,
+                        "customConstraints": null,
+                        "default_dart": null,
+                        "default_client_dart": null,
+                        "dsl_features": []
+                    },
+                    {
+                        "name": "updated_at",
+                        "getter_name": "updatedAt",
+                        "moor_type": "dateTime",
+                        "nullable": true,
                         "customConstraints": null,
                         "default_dart": null,
                         "default_client_dart": null,
@@ -620,16 +514,6 @@
                         ]
                     },
                     {
-                        "name": "registration_number",
-                        "getter_name": "registrationNumber",
-                        "moor_type": "string",
-                        "nullable": true,
-                        "customConstraints": null,
-                        "default_dart": null,
-                        "default_client_dart": null,
-                        "dsl_features": []
-                    },
-                    {
                         "name": "time",
                         "getter_name": "time",
                         "moor_type": "int",
@@ -640,56 +524,8 @@
                         "dsl_features": []
                     },
                     {
-                        "name": "position",
-                        "getter_name": "position",
-                        "moor_type": "int",
-                        "nullable": true,
-                        "customConstraints": null,
-                        "default_dart": null,
-                        "default_client_dart": null,
-                        "dsl_features": []
-                    },
-                    {
-                        "name": "recorded_by_dni",
-                        "getter_name": "recordedByDni",
-                        "moor_type": "string",
-                        "nullable": false,
-                        "customConstraints": null,
-                        "default_dart": null,
-                        "default_client_dart": null,
-                        "dsl_features": []
-                    },
-                    {
-                        "name": "is_early",
-                        "getter_name": "isEarly",
-                        "moor_type": "bool",
-                        "nullable": false,
-                        "customConstraints": null,
-                        "defaultConstraints": "CHECK (\"is_early\" IN (0, 1))",
-                        "dialectAwareDefaultConstraints": {
-                            "sqlite": "CHECK (\"is_early\" IN (0, 1))"
-                        },
-                        "default_dart": "const CustomExpression('0')",
-                        "default_client_dart": null,
-                        "dsl_features": []
-                    },
-                    {
-                        "name": "is_reference",
-                        "getter_name": "isReference",
-                        "moor_type": "bool",
-                        "nullable": false,
-                        "customConstraints": null,
-                        "defaultConstraints": "CHECK (\"is_reference\" IN (0, 1))",
-                        "dialectAwareDefaultConstraints": {
-                            "sqlite": "CHECK (\"is_reference\" IN (0, 1))"
-                        },
-                        "default_dart": "const CustomExpression('0')",
-                        "default_client_dart": null,
-                        "dsl_features": []
-                    },
-                    {
-                        "name": "competence_id",
-                        "getter_name": "competenceId",
+                        "name": "competition_registration_id",
+                        "getter_name": "competitionRegistrationId",
                         "moor_type": "int",
                         "nullable": false,
                         "customConstraints": null,

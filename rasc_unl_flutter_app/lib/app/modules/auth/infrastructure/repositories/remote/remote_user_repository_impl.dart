@@ -90,7 +90,7 @@ class RemoteUserRepositoryImpl implements UserRepository {
     try {
       // Usar el endpoint de admin /users/{id} que permite actualizar rol e is_active
       final body = <String, dynamic>{
-        'first_name': user.name,
+        'first_name': user.firstName,
         'last_name': user.lastName,
       };
 
@@ -100,11 +100,11 @@ class RemoteUserRepositoryImpl implements UserRepository {
       }
       
       // Agregar rol si está presente (para admins)
-      if (user.rol.isNotEmpty) {
-        body['role'] = user.rol;
+      if (user.role.isNotEmpty) {
+        body['role'] = user.role;
       }
       
-      // Agregar is_active
+      // Agregar is_activee
       body['is_active'] = user.isActive;
 
       final response = await http.put(

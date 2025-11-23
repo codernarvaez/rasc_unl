@@ -6,27 +6,20 @@ part 'user_model.g.dart';
 class UserModel {
   final int id;
   final String dni;
-  @JsonKey(name: 'role')
-  final String rol;
-  @JsonKey(name: 'first_name')
-  final String name;
-  @JsonKey(name: 'last_name')
+  final String role;
+  final String firstName;
   final String lastName;
   final String email;
-  @JsonKey(name: 'is_active')
-  final bool isActive;
-  @JsonKey(name: 'date_of_birth')
   final DateTime? birthDate;
-  @JsonKey(name: 'created_at')
+  final bool isActive;
   final DateTime? createdAt;
-  @JsonKey(name: 'updated_at')
   final DateTime? updatedAt;
 
   UserModel({
     required this.id,
     required this.dni,
-    this.rol = 'COMPETITOR',
-    required this.name,
+    this.role = 'MODERATOR',
+    required this.firstName,
     required this.lastName,
     required this.email,
     this.isActive = true,
@@ -40,13 +33,11 @@ class UserModel {
 
   Map<String, dynamic> toJson() => _$UserModelToJson(this);
   
-  bool get isAdministrator => rol == 'ADMINISTRATOR';
-  bool get isCompetitor => rol == 'COMPETITOR';
-  bool get isModerator => rol == 'MODERATOR';
+  bool get isAdministrator => role == 'ADMINISTRATOR';
+  bool get isModerator => role == 'MODERATOR';
 }
 
 enum UserRoleType {
   ADMINISTRATOR,
-  COMPETITOR,
   MODERATOR,
 }

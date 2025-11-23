@@ -16,10 +16,10 @@ class LocalUserRepositoryImpl implements UserRepository {
           (row) => UserModel(
             id: row.id,
             dni: row.dni,
-            name: row.name,
+            firstName: row.firstName,
             lastName: row.lastName,
             email: row.email,
-            rol: row.rol,
+            role: row.role,
             isActive: row.isActive,
             birthDate: row.birthDate,
           ),
@@ -36,10 +36,10 @@ class LocalUserRepositoryImpl implements UserRepository {
       return UserModel(
         id: queryResult.id,
         dni: queryResult.dni,
-        name: queryResult.name,
+        firstName: queryResult.firstName,
         lastName: queryResult.lastName,
         email: queryResult.email,
-        rol: queryResult.rol,
+        role: queryResult.role,
         isActive: queryResult.isActive,
         birthDate: queryResult.birthDate,
       );
@@ -56,10 +56,10 @@ class LocalUserRepositoryImpl implements UserRepository {
       return UserModel(
         id: queryResult.id,
         dni: queryResult.dni,
-        name: queryResult.name,
+        firstName: queryResult.firstName,
         lastName: queryResult.lastName,
         email: queryResult.email,
-        rol: queryResult.rol,
+        role: queryResult.role,
         isActive: queryResult.isActive,
         birthDate: queryResult.birthDate,
       );
@@ -72,10 +72,10 @@ class LocalUserRepositoryImpl implements UserRepository {
     await _localDatabase.into(_localDatabase.userTable).insert(
           UserTableCompanion.insert(
             dni: user.dni,
-            name: user.name,
+            firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
-            rol: Value(user.rol),
+            role: Value(user.role),
             isActive: Value(user.isActive),
             birthDate: Value(user.birthDate),
           ),
@@ -96,10 +96,10 @@ class LocalUserRepositoryImpl implements UserRepository {
         .write(
           UserTableCompanion(
             dni: Value(user.dni),
-            name: Value(user.name),
+            firstName: Value(user.firstName),
             lastName: Value(user.lastName),
             email: Value(user.email),
-            rol: Value(user.rol),
+            role: Value(user.role),
             isActive: Value(user.isActive),
             birthDate: Value(user.birthDate),
           ),
