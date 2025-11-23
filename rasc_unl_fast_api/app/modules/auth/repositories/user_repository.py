@@ -1,7 +1,7 @@
 from typing import Optional, List
 from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.modules.auth.models.user import User, RoleEnum
+from app.modules.auth.models.user_model import UserModel, RoleEnum
 from app.modules.auth.schemas.auth_schemas import UserCreate, UserUpdate, UserCreateByAdmin
 from app.core.jwt.jwt import PasswordHasher
 
@@ -11,11 +11,11 @@ class UserRepository:
         self.session = session
         self.password_hasher = PasswordHasher()
 
-    async def create(self, user_data: UserCreate) -> User:
+    async def create(self, user_data: UserCreate) -> UserModel:
         """Create a new user with hashed password."""
         hashed_password = self.password_hasher.hash(user_data.password)
         
-        user = User(
+        user = UserModel(
             email=user_data.email,
             first_name=user_data.first_name,
             last_name=user_data.last_name,
@@ -23,7 +23,7 @@ class UserRepository:
             date_of_birth=None,
             password=hashed_password,
             role=RoleEnum.COMPETITOR,
-            is_active=True
+            is_active=False
         )
         
         self.session.add(user)
@@ -31,13 +31,13 @@ class UserRepository:
         await self.session.refresh(user)
         return user
 
-    async def create_by_admin(self, user_data: UserCreateByAdmin) -> User:
+    async def create_by_admin(self, user_data: UserCreateByAdmin) -> UserModel:
         """Create a new user by admin. Password defaults to DNI if not provided."""
         # Use DNI as password if not provided
         password = user_data.password if user_data.password else user_data.dni
         hashed_password = self.password_hasher.hash(password)
         
-        user = User(
+        user = UserModel(
             email=user_data.email,
             first_name=user_data.first_name,
             last_name=user_data.last_name,
@@ -53,24 +53,24 @@ class UserRepository:
         await self.session.refresh(user)
         return user
 
-    async def get_by_id(self, user_id: int) -> Optional[User]:
+    async def get_by_id(self, user_id: int) -> Optional[UserModel]:
         """Get user by ID."""
         result = await self.session.execute(
-            select(User).where(User.id == user_id)
+            select(UserModel).where(UserModel.id == user_id)
         )
         return result.scalar_one_or_none()
 
-    async def get_by_email(self, email: str) -> Optional[User]:
+    async def get_by_email(self, email: str) -> Optional[UserModel]:
         """Get user by email."""
         result = await self.session.execute(
-            select(User).where(User.email == email)
+            select(UserModel).where(UserModel.email == email)
         )
         return result.scalar_one_or_none()
 
-    async def get_by_dni(self, dni: str) -> Optional[User]:
+    async def get_by_dni(self, dni: str) -> Optional[UserModel]:
         """Get user by DNI."""
         result = await self.session.execute(
-            select(User).where(User.dni == dni)
+            select(UserModel).where(UserModel.dni == dni)
         )
         return result.scalar_one_or_none()
 
@@ -81,23 +81,23 @@ class UserRepository:
         role: Optional[str] = None,
         is_active: Optional[bool] = None,
         search: Optional[str] = None
-    ) -> List[User]:
+    ) -> List[UserModel]:
         """Get all users with optional filters."""
-        query = select(User)
+        query = select(UserModel)
         
         # Apply filters
         if role:
-            query = query.where(User.role == RoleEnum(role))
+            query = query.where(UserModel.role == RoleEnum(role))
         
         if is_active is not None:
-            query = query.where(User.is_active == is_active)
+            query = query.where(UserModel.is_active == is_active)
         
         if search:
             search_filter = or_(
-                User.first_name.ilike(f"%{search}%"),
-                User.last_name.ilike(f"%{search}%"),
-                User.email.ilike(f"%{search}%"),
-                User.dni.ilike(f"%{search}%")
+                UserModel.first_name.ilike(f"%{search}%"),
+                UserModel.last_name.ilike(f"%{search}%"),
+                UserModel.email.ilike(f"%{search}%"),
+                UserModel.dni.ilike(f"%{search}%")
             )
             query = query.where(search_filter)
         
@@ -106,7 +106,7 @@ class UserRepository:
         result = await self.session.execute(query)
         return list(result.scalars().all())
 
-    async def update(self, user_id: int, user_data: UserUpdate) -> Optional[User]:
+    async def update(self, user_id: int, user_data: UserUpdate) -> Optional[UserModel]:
         """Update user information."""
         user = await self.get_by_id(user_id)
         if not user:
@@ -123,7 +123,7 @@ class UserRepository:
         await self.session.refresh(user)
         return user
 
-    async def update_password(self, user_id: int, new_password: str) -> Optional[User]:
+    async def update_password(self, user_id: int, new_password: str) -> Optional[UserModel]:
         """Update user password."""
         user = await self.get_by_id(user_id)
         if not user:
@@ -146,7 +146,7 @@ class UserRepository:
         await self.session.commit()
         return True
 
-    async def deactivate(self, user_id: int) -> Optional[User]:
+    async def deactivate(self, user_id: int) -> Optional[UserModel]:
         """Deactivate user (soft delete)."""
         user = await self.get_by_id(user_id)
         if not user:
@@ -157,7 +157,7 @@ class UserRepository:
         await self.session.refresh(user)
         return user
 
-    async def activate(self, user_id: int) -> Optional[User]:
+    async def activate(self, user_id: int) -> Optional[UserModel]:
         """Activate user."""
         user = await self.get_by_id(user_id)
         if not user:
@@ -173,7 +173,7 @@ class UserRepository:
         user = await self.get_by_email(email)
         return user is not None
 
-    async def verify_password(self, user: User, password: str) -> bool:
+    async def verify_password(self, user: UserModel, password: str) -> bool:
         """Verify user password."""
         return self.password_hasher.verify(password, user.password)
 
@@ -183,13 +183,13 @@ class UserRepository:
         is_active: Optional[bool] = None
     ) -> int:
         """Count users with optional filters."""
-        query = select(User)
+        query = select(UserModel)
         
         if role:
-            query = query.where(User.role == RoleEnum(role))
+            query = query.where(UserModel.role == RoleEnum(role))
         
         if is_active is not None:
-            query = query.where(User.is_active == is_active)
+            query = query.where(UserModel.is_active == is_active)
         
         result = await self.session.execute(query)
         return len(list(result.scalars().all()))

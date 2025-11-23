@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
-from app.modules.competencias.repositories.competencias_repository import CompetenceRepository
+from app.modules.competencias.repositories.competence_repository import CompetenceRepository
 from app.modules.competencias.domain.schemas.schemas import (
     CompetenceCreate,
     CompetenceUpdate,

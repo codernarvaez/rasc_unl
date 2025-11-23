@@ -17,7 +17,7 @@ from app.core.db.database import Base
 # Importar todos los modelos para que Alembic los detecte
 from app.modules.competencias.domain.models import CompetenceModel, CompetitionRegistrationModel
 
-from app.modules.auth.models.user import User  # noqa: F401
+from app.modules.auth.models.user_model import UserModel  # noqa: F401
 
 
 # this is the Alembic Config object, which provides

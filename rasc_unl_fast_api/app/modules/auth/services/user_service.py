@@ -1,5 +1,5 @@
 """
-User Service
+UserModel Service
 Handles business logic for user management operations
 """
 from typing import List, Optional
@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.auth.repositories.user_repository import UserRepository
 from app.modules.auth.schemas.auth_schemas import UserUpdate
-from app.modules.auth.models.user import User
+from app.modules.auth.models.user_model import UserModel
 
 
 class UserService:
@@ -18,13 +18,13 @@ class UserService:
         self.session = session
         self.repository = UserRepository(session)
     
-    async def get_user_by_id(self, user_id: int) -> User:
+    async def get_user_by_id(self, user_id: int) -> UserModel:
         """Get user by ID."""
         user = await self.repository.get_by_id(user_id)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                detail="UserModel not found"
             )
         return user
     
@@ -35,7 +35,7 @@ class UserService:
         role: Optional[str] = None,
         is_active: Optional[bool] = None,
         search: Optional[str] = None
-    ) -> List[User]:
+    ) -> List[UserModel]:
         """Get all users with filters."""
         return await self.repository.get_all(
             skip=skip,
@@ -45,7 +45,7 @@ class UserService:
             search=search
         )
     
-    async def update_user(self, user_id: int, user_data: UserUpdate) -> User:
+    async def update_user(self, user_id: int, user_data: UserUpdate) -> UserModel:
         """Actualizar la información del usuario con validación."""
         # Obtener solo los campos que fueron enviados en la solicitud
         update_data = user_data.model_dump(exclude_unset=True)
@@ -73,14 +73,14 @@ class UserService:
         if not updated_user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                detail="UserModel not found"
             )
         
         return updated_user
     
     async def update_password(
         self,
-        user: User,
+        user: UserModel,
         current_password: str,
         new_password: str
     ) -> None:
@@ -106,22 +106,22 @@ class UserService:
         if not deleted:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                detail="UserModel not found"
             )
     
-    async def activate_user(self, user_id: int) -> User:
+    async def activate_user(self, user_id: int) -> UserModel:
         """Activar la cuenta del usuario.""" 
         user = await self.repository.activate(user_id)
         
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                detail="UserModel not found"
             )
         
         return user
     
-    async def deactivate_user(self, user_id: int, current_user_id: int) -> User:
+    async def deactivate_user(self, user_id: int, current_user_id: int) -> UserModel:
         """Desactivar la cuenta del usuario con validación.""" 
         if user_id == current_user_id:
             raise HTTPException(
@@ -134,7 +134,7 @@ class UserService:
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                detail="UserModel not found"
             )
         
         return user

@@ -2,7 +2,7 @@ from typing import Annotated, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.modules.auth.models.user import RoleEnum
+from app.modules.auth.models.user_model import RoleEnum
 
 from app.core.db.database import get_session
 from app.modules.auth.dependencies import CurrentUser, AdminUser
@@ -187,7 +187,7 @@ async def delete_user(
     """Delete user by ID (admin only)."""
     service = UserService(session)
     await service.delete_user(user_id, current_user.id)
-    return MessageResponse(message="User deleted successfully")
+    return MessageResponse(message="UserModel deleted successfully")
 
 
 @router.put("/users/{user_id}/deactivate", response_model=UserResponse)

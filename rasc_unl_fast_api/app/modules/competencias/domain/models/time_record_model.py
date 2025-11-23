@@ -4,14 +4,14 @@ from sqlalchemy.sql import func
 from app.core.db.database import Base
 
 
-class CompetitionTimeRecordModel(Base):
+class TimeRecordModel(Base):
     """
-    Modelo de CompetitionTimeRecord
+    Modelo de TimeRecord
     Representa un registro de tiempo cronometrado en una competencia.
     Utilizado por moderadores para registrar tiempos durante las carreras.
-    Relación N:1 con CompetenceModel
+    Relación N:1 con CompetitionRegistrationModel
     """
-    __tablename__ = "competition_time_records"
+    __tablename__ = "time_record"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     registration_number = Column(String(100), nullable=True, index=True)  # Número de registro/dorsal asignado por moderador
@@ -24,8 +24,8 @@ class CompetitionTimeRecordModel(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
-    # Relación N:1 con Competence
-    competence = relationship("CompetenceModel", back_populates="time_records")
+    # Relación N:1 con CompetitionRegistration
+    competition_registration = relationship("CompetitionRegistrationModel", back_populates="time_record")
 
     def __repr__(self):
-        return f"<CompetitionTimeRecord(id={self.id}, registration_number='{self.registration_number}', time={self.time})>"
+        return f"<TimeRecord(id={self.id}, registration_number='{self.registration_number}', time={self.time})>"

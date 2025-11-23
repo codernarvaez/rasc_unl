@@ -2,13 +2,13 @@ from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.modules.competencias.repositories.time_records_repository import CompetitionTimeRecordRepository
-from app.modules.competencias.repositories.competencias_repository import CompetenceRepository
+from app.modules.competencias.repositories.competence_repository import CompetenceRepository
 from app.modules.competencias.domain.schemas.schemas import (
     CompetitionTimeRecordCreate,
     CompetitionTimeRecordUpdate,
     CompetitionTimeRecordResponse,
 )
-from app.modules.competencias.domain.models.time_record_model import CompetitionTimeRecordModel
+from app.modules.competencias.domain.models.time_record_model import TimeRecordModel
 
 
 class CompetitionTimeRecordService:
@@ -141,13 +141,13 @@ class CompetitionTimeRecordService:
                 detail=f"Competence with id {competence_id} not found"
             )
 
-        time_records, total = await self.time_record_repository.get_by_competence_id(
+        time_record, total = await self.time_record_repository.get_by_competence_id(
             competence_id=competence_id,
             registration_number=registration_number,
             skip=skip,
             limit=limit
         )
-        return [CompetitionTimeRecordResponse.model_validate(tr) for tr in time_records], total
+        return [CompetitionTimeRecordResponse.model_validate(tr) for tr in time_record], total
 
     async def get_all_time_records(
         self,
@@ -155,8 +155,8 @@ class CompetitionTimeRecordService:
         limit: int = 100
     ) -> tuple[List[CompetitionTimeRecordResponse], int]:
         """Gets all time records"""
-        time_records, total = await self.time_record_repository.get_all(skip=skip, limit=limit)
-        return [CompetitionTimeRecordResponse.model_validate(tr) for tr in time_records], total
+        time_record, total = await self.time_record_repository.get_all(skip=skip, limit=limit)
+        return [CompetitionTimeRecordResponse.model_validate(tr) for tr in time_record], total
 
     async def update_time_record(
         self,

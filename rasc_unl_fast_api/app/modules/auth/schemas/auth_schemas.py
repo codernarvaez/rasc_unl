@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import Optional
 from datetime import datetime, date
-from app.modules.auth.models.user import RoleEnum
+from app.modules.auth.models.user_model import RoleEnum
 
 # Base schemas (solo campos comunes)
 class UserBase(BaseModel):

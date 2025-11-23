@@ -9,14 +9,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db.database import get_session
 from app.core.jwt.jwt import JWTManager, oauth2_scheme
-from app.modules.auth.models.user import User, RoleEnum
+from app.modules.auth.models.user_model import UserModel, RoleEnum
 from app.modules.auth.repositories.user_repository import UserRepository
 
 
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     session: Annotated[AsyncSession, Depends(get_session)]
-) -> User:
+) -> UserModel:
     """
     Obtiene el usuario actual autenticado desde el token JWT.
     
@@ -96,8 +96,8 @@ async def get_current_user(
 
 
 async def get_current_active_user(
-    current_user: Annotated[User, Depends(get_current_user)]
-) -> User:
+    current_user: Annotated[UserModel, Depends(get_current_user)]
+) -> UserModel:
     """
     Obtiene el usuario actual y verifica que esté activo.
     
@@ -119,15 +119,15 @@ async def get_current_active_user(
 
 
 async def require_admin(
-    current_user: Annotated[User, Depends(get_current_active_user)]
-) -> User:
+    current_user: Annotated[UserModel, Depends(get_current_active_user)]
+) -> UserModel:
     """
     Requiere que el usuario actual sea administrador.
     
     Uso en rutas:
     ```python
     @router.get("/admin-only")
-    async def admin_route(admin: Annotated[User, Depends(require_admin)]):
+    async def admin_route(admin: Annotated[UserModel, Depends(require_admin)]):
         return {"message": "Solo administradores"}
     ```
     
@@ -148,39 +148,9 @@ async def require_admin(
     return current_user
 
 
-async def require_competitor(
-    current_user: Annotated[User, Depends(get_current_active_user)]
-) -> User:
-    """
-    Requiere que el usuario actual sea competidor.
-    
-    Uso en rutas:
-    ```python
-    @router.get("/competitor-only")
-    async def competitor_route(competitor: Annotated[User, Depends(require_competitor)]):
-        return {"message": "Solo competidores"}
-    ```
-    
-    Args:
-        current_user: Usuario autenticado
-        
-    Returns:
-        Usuario con rol competitor
-        
-    Raises:
-        HTTPException 403: Si el usuario no es competidor
-    """
-    if current_user.role != RoleEnum.COMPETITOR:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Se requieren privilegios de competidor"
-        )
-    return current_user
-
-
 async def require_moderator(
-    current_user: Annotated[User, Depends(get_current_active_user)]
-) -> User:
+    current_user: Annotated[UserModel, Depends(get_current_active_user)]
+) -> UserModel:
     """
     Requiere que el usuario actual sea moderador.
     
@@ -202,8 +172,8 @@ async def require_moderator(
 
 
 async def require_admin_or_moderator(
-    current_user: Annotated[User, Depends(get_current_active_user)]
-) -> User:
+    current_user: Annotated[UserModel, Depends(get_current_active_user)]
+) -> UserModel:
     """
     Requiere que el usuario sea administrador O moderador.
     
@@ -224,36 +194,10 @@ async def require_admin_or_moderator(
     return current_user
 
 
-async def require_competitor_or_admin(
-    current_user: Annotated[User, Depends(get_current_active_user)]
-) -> User:
-    """
-    Requiere que el usuario sea competidor O administrador.
-    Permite que administradores participen en competencias.
-    
-    Args:
-        current_user: Usuario autenticado
-        
-    Returns:
-        Usuario con rol competitor o administrator
-        
-    Raises:
-        HTTPException 403: Si el usuario no es competidor ni admin
-    """
-    if current_user.role not in [RoleEnum.COMPETITOR, RoleEnum.ADMINISTRATOR]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Solo competidores y administradores pueden participar en competencias"
-        )
-    return current_user
-
-
 # Type aliases para usar en otras rutas
 # Esto facilita el uso de las dependencias en otros módulos
-CurrentUser = Annotated[User, Depends(get_current_user)]
-CurrentActiveUser = Annotated[User, Depends(get_current_active_user)]
-AdminUser = Annotated[User, Depends(require_admin)]
-CompetitorUser = Annotated[User, Depends(require_competitor)]
-ModeratorUser = Annotated[User, Depends(require_moderator)]
-AdminOrModeratorUser = Annotated[User, Depends(require_admin_or_moderator)]
-CompetitorOrAdminUser = Annotated[User, Depends(require_competitor_or_admin)]
+CurrentUser = Annotated[UserModel, Depends(get_current_user)]
+CurrentActiveUser = Annotated[UserModel, Depends(get_current_active_user)]
+AdminUser = Annotated[UserModel, Depends(require_admin)]
+ModeratorUser = Annotated[UserModel, Depends(require_moderator)]
+AdminOrModeratorUser = Annotated[UserModel, Depends(require_admin_or_moderator)]

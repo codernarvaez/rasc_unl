@@ -7,8 +7,8 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
-from app.modules.competencias.repositories.competencias_repository import CompetenceRepository
-from app.modules.competencias.domain.models.competencia_model import CompetenceModel
+from app.modules.competencias.repositories.competence_repository import CompetenceRepository
+from app.modules.competencias.domain.models.competence_model import CompetenceModel
 from app.core.utils.geolocation import (
     is_near_location,
     are_coordinates_same_location,

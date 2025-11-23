@@ -6,7 +6,7 @@ from app.modules.competencias.services.registros_service import CompetitionRegis
 from app.modules.competencias.services.time_records_service import CompetitionTimeRecordService
 from app.modules.competencias.services.timer_service import TimerService
 from app.modules.competencias.repositories.time_records_repository import CompetitionTimeRecordRepository
-from app.modules.competencias.repositories.competencias_repository import CompetenceRepository
+from app.modules.competencias.repositories.competence_repository import CompetenceRepository
 
 
 async def get_competence_service(

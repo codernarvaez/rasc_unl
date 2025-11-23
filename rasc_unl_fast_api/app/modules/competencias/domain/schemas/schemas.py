@@ -159,7 +159,7 @@ class CompetitionTimeRecordResponse(CompetitionTimeRecordBase):
 
 class CompetitionTimeRecordListResponse(BaseModel):
     """Schema para lista de registros de tiempo"""
-    time_records: List[CompetitionTimeRecordResponse]
+    time_record: List[CompetitionTimeRecordResponse]
     total: int
 
 

@@ -84,26 +84,6 @@ class CompetenceRepository:
         await self.session.flush()
         return True
 
-    async def get_with_registrations_count(self, competence_id: int) -> Optional[CompetenceModel]:
-        """Gets a competence with registration count"""
-        from app.modules.competencias.domain.models import CompetitionRegistrationModel
-        
-        result = await self.session.execute(
-            select(CompetenceModel).where(CompetenceModel.id == competence_id)
-        )
-        competence = result.scalar_one_or_none()
-        
-        if competence:
-            # Count registrations
-            count_result = await self.session.execute(
-                select(func.count(CompetitionRegistrationModel.id)).where(
-                    CompetitionRegistrationModel.competence_id == competence_id
-                )
-            )
-            competence.total_registrations = count_result.scalar_one()
-        
-        return competence
-
     async def check_is_active(self, competence_id: int) -> bool:
         """Checks if a competence is active"""
         from app.modules.competencias.domain.models import CompetitionRegistrationModel

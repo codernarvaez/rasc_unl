@@ -43,7 +43,7 @@ class AuthService:
             )
         
         user = await self.repository.create(user_data)
-        logger.info(f"User registered successfully: {user.email} (ID: {user.id})")
+        logger.info(f"UserModel registered successfully: {user.email} (ID: {user.id})")
         return user
     
     async def create_user_by_admin(self, user_data: UserCreateByAdmin):
@@ -68,7 +68,7 @@ class AuthService:
             )
         
         user = await self.repository.create_by_admin(user_data)
-        logger.info(f"User created by admin: {user.email} (ID: {user.id}, Role: {user.role})")
+        logger.info(f"UserModel created by admin: {user.email} (ID: {user.id}, Role: {user.role})")
         return user
     
     async def login(self, credentials: LoginRequest) -> dict:
@@ -79,7 +79,7 @@ class AuthService:
         user = await self.repository.get_by_email(credentials.email)
         
         if not user:
-            logger.warning(f"User not found: {credentials.email}")
+            logger.warning(f"UserModel not found: {credentials.email}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password"
@@ -100,7 +100,7 @@ class AuthService:
         if not user.is_active:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="User account is inactive"
+                detail="UserModel account is inactive"
             )
         
         # Create tokens
@@ -148,7 +148,7 @@ class AuthService:
             if not user or not user.is_active:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="User not found or inactive"
+                    detail="UserModel not found or inactive"
                 )
             
             # Create new tokens

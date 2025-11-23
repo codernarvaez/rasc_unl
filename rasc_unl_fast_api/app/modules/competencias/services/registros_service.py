@@ -1,11 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from datetime import datetime, timezone
-from app.modules.competencias.repositories.registros_repository import CompetitionRegistrationRepository
-from app.modules.competencias.repositories.competencias_repository import CompetenceRepository
+from app.modules.competencias.repositories.competition_registration_repository import CompetitionRegistrationRepository
+from app.modules.competencias.repositories.competence_repository import CompetenceRepository
 from app.modules.competencias.repositories.time_records_repository import CompetitionTimeRecordRepository
 from app.modules.auth.repositories.user_repository import UserRepository
-from app.modules.auth.models.user import RoleEnum
+from app.modules.auth.models.user_model import RoleEnum
 from app.modules.competencias.services.timer_service import TimerService
 from app.modules.competencias.domain.schemas.schemas import (
     CompetitionRegistrationCreate,
@@ -65,7 +65,7 @@ class CompetitionRegistrationService:
         if not registration:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User is not registered in this competition"
+                detail="UserModel is not registered in this competition"
             )
         
         # Verificar que no haya detenido el tiempo ya
@@ -143,7 +143,7 @@ class CompetitionRegistrationService:
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"User with DNI {registration_data.user_dni} not found"
+                detail=f"UserModel with DNI {registration_data.user_dni} not found"
             )
         
         # CRITICAL: Moderators CANNOT participate in competitions

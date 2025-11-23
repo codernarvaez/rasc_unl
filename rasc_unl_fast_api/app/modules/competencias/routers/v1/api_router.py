@@ -7,7 +7,7 @@ from app.modules.auth.dependencies import (
     AdminOrModeratorUser,
     CompetitorOrAdminUser
 )
-from app.modules.auth.models.user import User
+from app.modules.auth.models.user_model import UserModel
 from app.modules.competencias.dependencies import (
     get_competence_service, 
     get_competition_registration_service,
@@ -121,7 +121,7 @@ async def create_registration(
     - **registration_number**: Unique registration number (optional)
     - **time**: Time in milliseconds (optional)
     - **n_turns**: Number of turns (optional)
-    - **user_dni**: User DNI (required)
+    - **user_dni**: UserModel DNI (required)
     - **competence_id**: ID of the competence (required)
     
     Validations:
@@ -423,10 +423,10 @@ async def stop_competitor_time(
     
     Validations:
     - Timer must be started
-    - User must be registered in the competition
-    - User must not have stopped time already
+    - UserModel must be registered in the competition
+    - UserModel must not have stopped time already
     - Minimum time must have passed (2 minutes if start != finish)
-    - User must be near the finish line (within proximity_radius_meters)
+    - UserModel must be near the finish line (within proximity_radius_meters)
     
     Request Body:
     - **latitude**: Current latitude of the competitor
