@@ -4,12 +4,19 @@ part 'time_record_model.g.dart';
 
 @JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
 class TimeRecordModel {
-  final int id;
+  final String id;
   @DurationConverter()
   final Duration time; // Time in milliseconds
-  final int competitionRegistrationId;
+  final String competitionRegistrationId;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  // Sync fields
+  final String syncStatus;
+  final DateTime? lastSyncAt;
+  final int version;
+  final String? deviceId;
+  final bool isDeleted;
 
   TimeRecordModel({
     required this.id,
@@ -17,22 +24,52 @@ class TimeRecordModel {
     required this.competitionRegistrationId,
     required this.createdAt,
     required this.updatedAt,
+    this.syncStatus = 'pending',
+    this.lastSyncAt,
+    this.version = 1,
+    this.deviceId,
+    this.isDeleted = false,
   });
+
+  TimeRecordModel copyWith({
+    String? id,
+    Duration? time,
+    String? competitionRegistrationId,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    String? syncStatus,
+    DateTime? lastSyncAt,
+    int? version,
+    String? deviceId,
+    bool? isDeleted,
+  }) {
+    return TimeRecordModel(
+      id: id ?? this.id,
+      time: time ?? this.time,
+      competitionRegistrationId:
+          competitionRegistrationId ?? this.competitionRegistrationId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      lastSyncAt: lastSyncAt ?? this.lastSyncAt,
+      version: version ?? this.version,
+      deviceId: deviceId ?? this.deviceId,
+      isDeleted: isDeleted ?? this.isDeleted,
+    );
+  }
 
   factory TimeRecordModel.fromJson(Map<String, dynamic> json) =>
       _$TimeRecordModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$TimeRecordModelToJson(this);
-
 }
-
-
 
 class DurationConverter implements JsonConverter<Duration?, int?> {
   const DurationConverter();
 
   @override
-  Duration? fromJson(int? json) => json != null ? Duration(milliseconds: json) : null;
+  Duration? fromJson(int? json) =>
+      json != null ? Duration(milliseconds: json) : null;
 
   @override
   int? toJson(Duration? object) => object?.inMilliseconds;

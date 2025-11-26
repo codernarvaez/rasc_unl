@@ -9,7 +9,6 @@ import 'package:uuid/uuid.dart';
 class ManageCompetencesPage extends ConsumerStatefulWidget {
   const ManageCompetencesPage({Key? key}) : super(key: key);
 
-
   @override
   ManageCompetencesPageState createState() => ManageCompetencesPageState();
 }
@@ -37,10 +36,11 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
     try {
       final repository = ref.read(rascUNLMainProvider).competenceRepository;
       final allCompetences = await repository.getAllCompetences();
-      
+
       return allCompetences.where((comp) {
         bool matchesActive = comp.isActive == isActive;
-        bool matchesSearch = _searchQuery.isEmpty ||
+        bool matchesSearch =
+            _searchQuery.isEmpty ||
             comp.name.toLowerCase().contains(_searchQuery.toLowerCase());
         return matchesActive && matchesSearch;
       }).toList();
@@ -49,10 +49,14 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
     }
   }
 
-  Future<int> _getTotalRegistrations(int competenceId) async {
+  Future<int> _getTotalRegistrations(String competenceId) async {
     try {
-      final repository = ref.read(rascUNLMainProvider).competitionRegistrationRepository;
-      final registrations = await repository.getRegistrationsByCompetenceId(competenceId);
+      final repository = ref
+          .read(rascUNLMainProvider)
+          .competitionRegistrationRepository;
+      final registrations = await repository.getRegistrationsByCompetenceId(
+        competenceId,
+      );
       return registrations.length;
     } catch (e) {
       return 0;
@@ -67,9 +71,11 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
         competence: competence,
         onSave: (formData) async {
           try {
-            final repository = ref.read(rascUNLMainProvider).competenceRepository;
+            final repository = ref
+                .read(rascUNLMainProvider)
+                .competenceRepository;
             final userRepository = ref.read(rascUNLMainProvider).userRepository;
-            
+
             // Get current user (admin)
             final users = await userRepository.getAllUsers();
             final admin = users.firstWhere(
@@ -80,7 +86,7 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
             if (competence == null) {
               // Crear nueva competencia
               final newCompetence = CompetenceModel(
-                id: DateTime.now().millisecondsSinceEpoch,
+                id: const Uuid().v4(),
                 name: formData.name,
                 competitionDate: formData.competitionDate,
                 isActive: formData.isActive,
@@ -90,7 +96,7 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
                 updatedAt: null,
               );
               await repository.createCompetence(newCompetence);
-              
+
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -112,7 +118,7 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
                 updatedAt: DateTime.now(),
               );
               await repository.updateCompetence(updatedCompetence);
-              
+
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -122,7 +128,7 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
                 );
               }
             }
-            
+
             if (mounted) setState(() {}); // Refrescar la lista
           } catch (e) {
             if (context.mounted) {
@@ -260,10 +266,16 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
           decoration: InputDecoration(
             hintText: 'Buscar competencia...',
             hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-            prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.5)),
+            prefixIcon: Icon(
+              Icons.search,
+              color: Colors.white.withOpacity(0.5),
+            ),
             suffixIcon: _searchQuery.isNotEmpty
                 ? IconButton(
-                    icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.5)),
+                    icon: Icon(
+                      Icons.clear,
+                      color: Colors.white.withOpacity(0.5),
+                    ),
                     onPressed: () {
                       setState(() {
                         _searchController.clear();
@@ -280,70 +292,67 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
     );
   }
 
-Widget _buildTabBar() {
-  return Container(
-    margin: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-    decoration: BoxDecoration(
-      color: Colors.white.withOpacity(0.08),
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(
-        color: Colors.white.withOpacity(0.1),
-        width: 1,
-      ),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.1),
-          blurRadius: 10,
-          offset: Offset(0, 4),
-        ),
-      ],
-    ),
-    child: TabBar(
-      controller: _tabController,
-      indicatorSize: TabBarIndicatorSize.tab,
-      indicator: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFD50000), Color(0xFF8B0000)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(14),
+  Widget _buildTabBar() {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Color(0xFFD50000).withOpacity(0.4),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: Offset(0, 4),
           ),
         ],
       ),
-      labelColor: Colors.white,
-      unselectedLabelColor: Colors.white.withOpacity(0.6),
-      labelStyle: TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 15,
-        letterSpacing: 0.5,
-      ),
-      unselectedLabelStyle: TextStyle(
-        fontWeight: FontWeight.w500,
-        fontSize: 14,
-      ),
-      indicatorPadding: EdgeInsets.all(4),
-      dividerColor: Colors.transparent,
-      tabs: [
-        Tab(
-          icon: Icon(Icons.check_circle_rounded, size: 24),
-          text: 'Activas',
-          height: 60,
+      child: TabBar(
+        controller: _tabController,
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicator: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFD50000), Color(0xFF8B0000)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0xFFD50000).withOpacity(0.4),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
         ),
-        Tab(
-          icon: Icon(Icons.cancel_rounded, size: 24),
-          text: 'Inactivas',
-          height: 60,
+        labelColor: Colors.white,
+        unselectedLabelColor: Colors.white.withOpacity(0.6),
+        labelStyle: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 15,
+          letterSpacing: 0.5,
         ),
-      ],
-    ),
-  );
-}
+        unselectedLabelStyle: TextStyle(
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
+        ),
+        indicatorPadding: EdgeInsets.all(4),
+        dividerColor: Colors.transparent,
+        tabs: [
+          Tab(
+            icon: Icon(Icons.check_circle_rounded, size: 24),
+            text: 'Activas',
+            height: 60,
+          ),
+          Tab(
+            icon: Icon(Icons.cancel_rounded, size: 24),
+            text: 'Inactivas',
+            height: 60,
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildCompetencesList(bool isActive, bool isMobile) {
     return FutureBuilder<List<CompetenceModel>>(
@@ -379,7 +388,9 @@ Widget _buildTabBar() {
                 ),
                 SizedBox(height: 16),
                 Text(
-                  isActive ? 'No hay competencias activas' : 'No hay competencias inactivas',
+                  isActive
+                      ? 'No hay competencias activas'
+                      : 'No hay competencias inactivas',
                   style: TextStyle(color: Colors.white, fontSize: 18),
                 ),
               ],
@@ -440,7 +451,11 @@ Widget _buildTabBar() {
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.emoji_events, color: Colors.white, size: isMobile ? 24 : 28),
+                      child: Icon(
+                        Icons.emoji_events,
+                        color: Colors.white,
+                        size: isMobile ? 24 : 28,
+                      ),
                     ),
                     SizedBox(width: 16),
                     Expanded(
@@ -459,18 +474,26 @@ Widget _buildTabBar() {
                       ),
                     ),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 12, vertical: 6),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 8 : 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: (competence.isActive ? Colors.green : Colors.red).withOpacity(0.2),
+                        color: (competence.isActive ? Colors.green : Colors.red)
+                            .withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: competence.isActive ? Colors.green : Colors.red,
+                          color: competence.isActive
+                              ? Colors.green
+                              : Colors.red,
                         ),
                       ),
                       child: Text(
                         competence.isActive ? 'Activa' : 'Inactiva',
                         style: TextStyle(
-                          color: competence.isActive ? Colors.green : Colors.red,
+                          color: competence.isActive
+                              ? Colors.green
+                              : Colors.red,
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
@@ -483,24 +506,38 @@ Widget _buildTabBar() {
                 SizedBox(height: 16),
                 Row(
                   children: [
-                    Icon(Icons.calendar_today, color: Colors.white.withOpacity(0.5), size: 16),
+                    Icon(
+                      Icons.calendar_today,
+                      color: Colors.white.withOpacity(0.5),
+                      size: 16,
+                    ),
                     SizedBox(width: 8),
                     Text(
                       competence.competitionDate != null
                           ? '${competence.competitionDate!.day.toString().padLeft(2, '0')}/${competence.competitionDate!.month.toString().padLeft(2, '0')}/${competence.competitionDate!.year}'
                           : 'Sin fecha',
-                      style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
                 SizedBox(height: 12),
                 Row(
                   children: [
-                    Icon(Icons.people, color: Colors.white.withOpacity(0.5), size: 16),
+                    Icon(
+                      Icons.people,
+                      color: Colors.white.withOpacity(0.5),
+                      size: 16,
+                    ),
                     SizedBox(width: 8),
                     Text(
                       '$registrations inscritos',
-                      style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
@@ -513,20 +550,30 @@ Widget _buildTabBar() {
                             label: 'Ver Participantes',
                             icon: Icons.groups,
                             color: Color(0xFF2196F3),
-                            onPressed: () => context.push('/admin/competence-details/${competence.id}'),
+                            onPressed: () => context.push(
+                              '/admin/competence-details/${competence.id}',
+                            ),
                           ),
                           SizedBox(height: 8),
                           _buildActionButton(
                             label: 'Editar',
                             icon: Icons.edit,
-                            onPressed: () => _showCreateEditDialog(competence: competence),
+                            onPressed: () =>
+                                _showCreateEditDialog(competence: competence),
                           ),
                           SizedBox(height: 8),
                           _buildActionButton(
-                            label: competence.isActive ? 'Desactivar' : 'Activar',
-                            icon: competence.isActive ? Icons.block : Icons.check_circle,
-                            color: competence.isActive ? Colors.red : Colors.green,
-                            onPressed: () => _toggleCompetenceStatus(competence),
+                            label: competence.isActive
+                                ? 'Desactivar'
+                                : 'Activar',
+                            icon: competence.isActive
+                                ? Icons.block
+                                : Icons.check_circle,
+                            color: competence.isActive
+                                ? Colors.red
+                                : Colors.green,
+                            onPressed: () =>
+                                _toggleCompetenceStatus(competence),
                           ),
                         ],
                       )
@@ -537,7 +584,9 @@ Widget _buildTabBar() {
                               label: 'Participantes',
                               icon: Icons.groups,
                               color: Color(0xFF2196F3),
-                              onPressed: () => context.push('/admin/competence-details/${competence.id}'),
+                              onPressed: () => context.push(
+                                '/admin/competence-details/${competence.id}',
+                              ),
                             ),
                           ),
                           SizedBox(width: 8),
@@ -545,16 +594,24 @@ Widget _buildTabBar() {
                             child: _buildActionButton(
                               label: 'Editar',
                               icon: Icons.edit,
-                              onPressed: () => _showCreateEditDialog(competence: competence),
+                              onPressed: () =>
+                                  _showCreateEditDialog(competence: competence),
                             ),
                           ),
                           SizedBox(width: 8),
                           Expanded(
                             child: _buildActionButton(
-                              label: competence.isActive ? 'Desactivar' : 'Activar',
-                              icon: competence.isActive ? Icons.block : Icons.check_circle,
-                              color: competence.isActive ? Colors.red : Colors.green,
-                              onPressed: () => _toggleCompetenceStatus(competence),
+                              label: competence.isActive
+                                  ? 'Desactivar'
+                                  : 'Activar',
+                              icon: competence.isActive
+                                  ? Icons.block
+                                  : Icons.check_circle,
+                              color: competence.isActive
+                                  ? Colors.red
+                                  : Colors.green,
+                              onPressed: () =>
+                                  _toggleCompetenceStatus(competence),
                             ),
                           ),
                         ],
@@ -581,9 +638,7 @@ Widget _buildTabBar() {
         backgroundColor: color ?? Color(0xFFD50000),
         foregroundColor: Colors.white,
         padding: EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -601,16 +656,23 @@ Widget _buildTabBar() {
         updatedAt: DateTime.now(),
       );
 
-      await ref.read(rascUNLMainProvider).competenceRepository.updateCompetence(updatedCompetence);
+      await ref
+          .read(rascUNLMainProvider)
+          .competenceRepository
+          .updateCompetence(updatedCompetence);
 
       setState(() {});
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            updatedCompetence.isActive ? 'Competencia activada' : 'Competencia desactivada',
+            updatedCompetence.isActive
+                ? 'Competencia activada'
+                : 'Competencia desactivada',
           ),
-          backgroundColor: updatedCompetence.isActive ? Colors.green : Colors.red,
+          backgroundColor: updatedCompetence.isActive
+              ? Colors.green
+              : Colors.red,
         ),
       );
     } catch (e) {

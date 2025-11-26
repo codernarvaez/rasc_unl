@@ -51,6 +51,7 @@ dependencies:
   internet_connection_checker: ^3.0.1
   geolocator: ^14.0.2
   http: ^1.2.2
+  uuid: ^4.5.2
   # provider: ^6.1.5+1
 
 dev_dependencies:

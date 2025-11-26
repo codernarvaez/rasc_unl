@@ -7,20 +7,17 @@ import 'package:rasc_unl_flutter_app/app/modules/local_repository.dart';
 import 'package:rasc_unl_flutter_app/app/modules/main_repository.dart';
 import 'package:rasc_unl_flutter_app/app/modules/remote_repository.dart';
 import 'package:rasc_unl_flutter_app/database/local_database/app_local_database.dart';
+import 'package:rasc_unl_flutter_app/app/modules/sync/application/services/sync_service.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
-
-
-
 
 final logging = Logger(
   level: kReleaseMode ? Level.nothing : Level.debug,
   printer: PrettyPrinter(), // opcional, puedes cambiarlo por SimplePrinter()
 );
 
-
-
-final connectionStatusProvider =
-    StreamProvider<InternetConnectionStatus>((ref) async* {
+final connectionStatusProvider = StreamProvider<InternetConnectionStatus>((
+  ref,
+) async* {
   final checker = InternetConnectionChecker.createInstance();
   yield* checker.onStatusChange;
 });
@@ -63,13 +60,14 @@ class AccessTokenNotifier extends Notifier<String?> {
 
   Future<void> loadTokenForUser(String dni, AppLocalDatabase localDb) async {
     try {
-      final session = await (localDb.select(localDb.sessionTable)
-            ..where((tbl) => tbl.dni.equals(dni))
-            ..where((tbl) => tbl.isActive.equals(true))
-            ..orderBy([(tbl) => OrderingTerm.desc(tbl.lastLoginAt)])
-            ..limit(1))
-          .getSingleOrNull();
-      
+      final session =
+          await (localDb.select(localDb.sessionTable)
+                ..where((tbl) => tbl.dni.equals(dni))
+                ..where((tbl) => tbl.isActive.equals(true))
+                ..orderBy([(tbl) => OrderingTerm.desc(tbl.lastLoginAt)])
+                ..limit(1))
+              .getSingleOrNull();
+
       state = session?.accessToken;
     } catch (e) {
       state = null;
@@ -86,19 +84,20 @@ final accessTokenProvider = NotifierProvider<AccessTokenNotifier, String?>(
 final refreshTokenProvider = FutureProvider<String?>((ref) async {
   final localDbAsync = ref.watch(localDatabaseProvider);
   final currentUser = ref.watch(currentUserProvider);
-  
+
   if (currentUser == null) return null;
-  
+
   return localDbAsync.when(
     data: (localDb) async {
       try {
-        final session = await (localDb.select(localDb.sessionTable)
-              ..where((tbl) => tbl.dni.equals(currentUser.dni))
-              ..where((tbl) => tbl.isActive.equals(true))
-              ..orderBy([(tbl) => OrderingTerm.desc(tbl.lastLoginAt)])
-              ..limit(1))
-            .getSingleOrNull();
-        
+        final session =
+            await (localDb.select(localDb.sessionTable)
+                  ..where((tbl) => tbl.dni.equals(currentUser.dni))
+                  ..where((tbl) => tbl.isActive.equals(true))
+                  ..orderBy([(tbl) => OrderingTerm.desc(tbl.lastLoginAt)])
+                  ..limit(1))
+                .getSingleOrNull();
+
         return session?.refreshToken;
       } catch (e) {
         return null;
@@ -109,27 +108,50 @@ final refreshTokenProvider = FutureProvider<String?>((ref) async {
   );
 });
 
-final rascUNLMainProvider = Provider<MainRepository>((ref) {
-  final isOffline = ref.watch(isOfflineModeProvider);
+final syncServiceProvider = Provider<SyncService>((ref) {
   final localDbAsync = ref.watch(localDatabaseProvider);
   final accessToken = ref.watch(accessTokenProvider);
 
-  logging.i('🏗️ Creating MainRepository - Offline: $isOffline, Token: ${accessToken != null ? "Present (${accessToken.length} chars)" : "NULL"}');
-
-  // Para modo offline, necesitamos esperar a que la base de datos esté lista
-  // Para modo online, podemos usar RemoteRepository inmediatamente
-  if (isOffline) {
-    return localDbAsync.when(
-      data: (localDb) => LocalRepository(localDb),
-      loading: () => throw Exception('Database is loading...'),
-      error: (error, stack) => throw error,
-    );
-  } else {
-    // En modo online, no necesitamos esperar la base de datos
-    return RemoteRepository(accessToken: accessToken);
+  final localDb = localDbAsync.value;
+  if (localDb == null) {
+    throw Exception('Database not ready for SyncService');
   }
+
+  final localRepo = LocalRepository(localDb);
+  final remoteRepo = RemoteRepository(accessToken: accessToken);
+
+  return SyncService(
+    localCompetenceRepository: localRepo.competenceRepository,
+    remoteCompetenceRepository: remoteRepo.competenceRepository,
+    localRegistrationRepository: localRepo.competitionRegistrationRepository,
+    remoteRegistrationRepository: remoteRepo.competitionRegistrationRepository,
+    localTimeRecordRepository: localRepo.competitionTimeRecordRepository,
+    remoteTimeRecordRepository: remoteRepo.competitionTimeRecordRepository,
+  );
 });
 
+final rascUNLMainProvider = Provider<MainRepository>((ref) {
+  final isOffline = ref.watch(isOfflineModeProvider);
+  final localDbAsync = ref.watch(localDatabaseProvider);
+
+  // Trigger sync if online and DB is ready
+  if (!isOffline && localDbAsync.hasValue) {
+    try {
+      final syncService = ref.read(syncServiceProvider);
+      syncService.syncAll();
+    } catch (e) {
+      logging.e('Error triggering sync: $e');
+    }
+  }
+
+  logging.i('🏗️ Creating MainRepository - Offline-First Mode');
+
+  return localDbAsync.when(
+    data: (localDb) => LocalRepository(localDb),
+    loading: () => throw Exception('Database is loading...'),
+    error: (error, stack) => throw error,
+  );
+});
 
 final localDatabaseProvider = FutureProvider<AppLocalDatabase>((ref) async {
   final database = AppLocalDatabase();
@@ -139,5 +161,3 @@ final localDatabaseProvider = FutureProvider<AppLocalDatabase>((ref) async {
   });
   return database;
 });
-
-

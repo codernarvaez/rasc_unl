@@ -1175,16 +1175,12 @@ class $CompetenceTableTable extends CompetenceTable
   $CompetenceTableTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
@@ -1271,6 +1267,67 @@ class $CompetenceTableTable extends CompetenceTable
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _lastSyncAtMeta = const VerificationMeta(
+    'lastSyncAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastSyncAt = GeneratedColumn<DateTime>(
+    'last_sync_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1281,6 +1338,11 @@ class $CompetenceTableTable extends CompetenceTable
     createdBy,
     createdAt,
     updatedAt,
+    syncStatus,
+    lastSyncAt,
+    version,
+    deviceId,
+    isDeleted,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1296,6 +1358,8 @@ class $CompetenceTableTable extends CompetenceTable
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -1346,6 +1410,39 @@ class $CompetenceTableTable extends CompetenceTable
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('last_sync_at')) {
+      context.handle(
+        _lastSyncAtMeta,
+        lastSyncAt.isAcceptableOrUnknown(
+          data['last_sync_at']!,
+          _lastSyncAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
     return context;
   }
 
@@ -1356,7 +1453,7 @@ class $CompetenceTableTable extends CompetenceTable
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return competence_drift_model(
       id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
       name: attachedDatabase.typeMapping.read(
@@ -1387,6 +1484,26 @@ class $CompetenceTableTable extends CompetenceTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       ),
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      lastSyncAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_sync_at'],
+      ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
     );
   }
 
@@ -1398,7 +1515,7 @@ class $CompetenceTableTable extends CompetenceTable
 
 class competence_drift_model extends DataClass
     implements Insertable<competence_drift_model> {
-  final int id;
+  final String id;
   final String name;
   final DateTime? competitionDate;
   final bool isActive;
@@ -1406,6 +1523,11 @@ class competence_drift_model extends DataClass
   final String createdBy;
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final String syncStatus;
+  final DateTime? lastSyncAt;
+  final int version;
+  final String? deviceId;
+  final bool isDeleted;
   const competence_drift_model({
     required this.id,
     required this.name,
@@ -1415,11 +1537,16 @@ class competence_drift_model extends DataClass
     required this.createdBy,
     required this.createdAt,
     this.updatedAt,
+    required this.syncStatus,
+    this.lastSyncAt,
+    required this.version,
+    this.deviceId,
+    required this.isDeleted,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || competitionDate != null) {
       map['competition_date'] = Variable<DateTime>(competitionDate);
@@ -1431,6 +1558,15 @@ class competence_drift_model extends DataClass
     if (!nullToAbsent || updatedAt != null) {
       map['updated_at'] = Variable<DateTime>(updatedAt);
     }
+    map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || lastSyncAt != null) {
+      map['last_sync_at'] = Variable<DateTime>(lastSyncAt);
+    }
+    map['version'] = Variable<int>(version);
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    map['is_deleted'] = Variable<bool>(isDeleted);
     return map;
   }
 
@@ -1448,6 +1584,15 @@ class competence_drift_model extends DataClass
       updatedAt: updatedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(updatedAt),
+      syncStatus: Value(syncStatus),
+      lastSyncAt: lastSyncAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncAt),
+      version: Value(version),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+      isDeleted: Value(isDeleted),
     );
   }
 
@@ -1457,7 +1602,7 @@ class competence_drift_model extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return competence_drift_model(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       competitionDate: serializer.fromJson<DateTime?>(json['competitionDate']),
       isActive: serializer.fromJson<bool>(json['isActive']),
@@ -1465,13 +1610,18 @@ class competence_drift_model extends DataClass
       createdBy: serializer.fromJson<String>(json['createdBy']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      lastSyncAt: serializer.fromJson<DateTime?>(json['lastSyncAt']),
+      version: serializer.fromJson<int>(json['version']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'competitionDate': serializer.toJson<DateTime?>(competitionDate),
       'isActive': serializer.toJson<bool>(isActive),
@@ -1479,11 +1629,16 @@ class competence_drift_model extends DataClass
       'createdBy': serializer.toJson<String>(createdBy),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime?>(updatedAt),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'lastSyncAt': serializer.toJson<DateTime?>(lastSyncAt),
+      'version': serializer.toJson<int>(version),
+      'deviceId': serializer.toJson<String?>(deviceId),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
     };
   }
 
   competence_drift_model copyWith({
-    int? id,
+    String? id,
     String? name,
     Value<DateTime?> competitionDate = const Value.absent(),
     bool? isActive,
@@ -1491,6 +1646,11 @@ class competence_drift_model extends DataClass
     String? createdBy,
     DateTime? createdAt,
     Value<DateTime?> updatedAt = const Value.absent(),
+    String? syncStatus,
+    Value<DateTime?> lastSyncAt = const Value.absent(),
+    int? version,
+    Value<String?> deviceId = const Value.absent(),
+    bool? isDeleted,
   }) => competence_drift_model(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -1502,6 +1662,11 @@ class competence_drift_model extends DataClass
     createdBy: createdBy ?? this.createdBy,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+    syncStatus: syncStatus ?? this.syncStatus,
+    lastSyncAt: lastSyncAt.present ? lastSyncAt.value : this.lastSyncAt,
+    version: version ?? this.version,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+    isDeleted: isDeleted ?? this.isDeleted,
   );
   competence_drift_model copyWithCompanion(CompetenceTableCompanion data) {
     return competence_drift_model(
@@ -1517,6 +1682,15 @@ class competence_drift_model extends DataClass
       createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      lastSyncAt: data.lastSyncAt.present
+          ? data.lastSyncAt.value
+          : this.lastSyncAt,
+      version: data.version.present ? data.version.value : this.version,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
     );
   }
 
@@ -1530,7 +1704,12 @@ class competence_drift_model extends DataClass
           ..write('isFinished: $isFinished, ')
           ..write('createdBy: $createdBy, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncAt: $lastSyncAt, ')
+          ..write('version: $version, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('isDeleted: $isDeleted')
           ..write(')'))
         .toString();
   }
@@ -1545,6 +1724,11 @@ class competence_drift_model extends DataClass
     createdBy,
     createdAt,
     updatedAt,
+    syncStatus,
+    lastSyncAt,
+    version,
+    deviceId,
+    isDeleted,
   );
   @override
   bool operator ==(Object other) =>
@@ -1557,11 +1741,16 @@ class competence_drift_model extends DataClass
           other.isFinished == this.isFinished &&
           other.createdBy == this.createdBy &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.syncStatus == this.syncStatus &&
+          other.lastSyncAt == this.lastSyncAt &&
+          other.version == this.version &&
+          other.deviceId == this.deviceId &&
+          other.isDeleted == this.isDeleted);
 }
 
 class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<String> name;
   final Value<DateTime?> competitionDate;
   final Value<bool> isActive;
@@ -1569,6 +1758,12 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
   final Value<String> createdBy;
   final Value<DateTime> createdAt;
   final Value<DateTime?> updatedAt;
+  final Value<String> syncStatus;
+  final Value<DateTime?> lastSyncAt;
+  final Value<int> version;
+  final Value<String?> deviceId;
+  final Value<bool> isDeleted;
+  final Value<int> rowid;
   const CompetenceTableCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -1578,9 +1773,15 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     this.createdBy = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncAt = const Value.absent(),
+    this.version = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   CompetenceTableCompanion.insert({
-    this.id = const Value.absent(),
+    required String id,
     required String name,
     this.competitionDate = const Value.absent(),
     this.isActive = const Value.absent(),
@@ -1588,10 +1789,17 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     required String createdBy,
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
-  }) : name = Value(name),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncAt = const Value.absent(),
+    this.version = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
        createdBy = Value(createdBy);
   static Insertable<competence_drift_model> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<String>? name,
     Expression<DateTime>? competitionDate,
     Expression<bool>? isActive,
@@ -1599,6 +1807,12 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     Expression<String>? createdBy,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<String>? syncStatus,
+    Expression<DateTime>? lastSyncAt,
+    Expression<int>? version,
+    Expression<String>? deviceId,
+    Expression<bool>? isDeleted,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1609,11 +1823,17 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
       if (createdBy != null) 'created_by': createdBy,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (lastSyncAt != null) 'last_sync_at': lastSyncAt,
+      if (version != null) 'version': version,
+      if (deviceId != null) 'device_id': deviceId,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   CompetenceTableCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<String>? name,
     Value<DateTime?>? competitionDate,
     Value<bool>? isActive,
@@ -1621,6 +1841,12 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     Value<String>? createdBy,
     Value<DateTime>? createdAt,
     Value<DateTime?>? updatedAt,
+    Value<String>? syncStatus,
+    Value<DateTime?>? lastSyncAt,
+    Value<int>? version,
+    Value<String?>? deviceId,
+    Value<bool>? isDeleted,
+    Value<int>? rowid,
   }) {
     return CompetenceTableCompanion(
       id: id ?? this.id,
@@ -1631,6 +1857,12 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      lastSyncAt: lastSyncAt ?? this.lastSyncAt,
+      version: version ?? this.version,
+      deviceId: deviceId ?? this.deviceId,
+      isDeleted: isDeleted ?? this.isDeleted,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -1638,7 +1870,7 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -1661,6 +1893,24 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (lastSyncAt.present) {
+      map['last_sync_at'] = Variable<DateTime>(lastSyncAt.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
@@ -1674,7 +1924,13 @@ class CompetenceTableCompanion extends UpdateCompanion<competence_drift_model> {
           ..write('isFinished: $isFinished, ')
           ..write('createdBy: $createdBy, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncAt: $lastSyncAt, ')
+          ..write('version: $version, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -1692,16 +1948,12 @@ class $CompetitionRegistrationTableTable extends CompetitionRegistrationTable
   $CompetitionRegistrationTableTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _dorsalNumberMeta = const VerificationMeta(
     'dorsalNumber',
@@ -1749,11 +2001,11 @@ class $CompetitionRegistrationTableTable extends CompetitionRegistrationTable
     'competenceId',
   );
   @override
-  late final GeneratedColumn<int> competenceId = GeneratedColumn<int>(
+  late final GeneratedColumn<String> competenceId = GeneratedColumn<String>(
     'competence_id',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
@@ -1778,6 +2030,67 @@ class $CompetitionRegistrationTableTable extends CompetitionRegistrationTable
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _lastSyncAtMeta = const VerificationMeta(
+    'lastSyncAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastSyncAt = GeneratedColumn<DateTime>(
+    'last_sync_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1788,6 +2101,11 @@ class $CompetitionRegistrationTableTable extends CompetitionRegistrationTable
     competenceId,
     createdAt,
     updatedAt,
+    syncStatus,
+    lastSyncAt,
+    version,
+    deviceId,
+    isDeleted,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1803,6 +2121,8 @@ class $CompetitionRegistrationTableTable extends CompetitionRegistrationTable
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
     }
     if (data.containsKey('dorsal_number')) {
       context.handle(
@@ -1867,6 +2187,39 @@ class $CompetitionRegistrationTableTable extends CompetitionRegistrationTable
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('last_sync_at')) {
+      context.handle(
+        _lastSyncAtMeta,
+        lastSyncAt.isAcceptableOrUnknown(
+          data['last_sync_at']!,
+          _lastSyncAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
     return context;
   }
 
@@ -1880,7 +2233,7 @@ class $CompetitionRegistrationTableTable extends CompetitionRegistrationTable
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return competition_registration_drift_model(
       id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
       dorsalNumber: attachedDatabase.typeMapping.read(
@@ -1900,7 +2253,7 @@ class $CompetitionRegistrationTableTable extends CompetitionRegistrationTable
         data['${effectivePrefix}user_dni'],
       )!,
       competenceId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}competence_id'],
       )!,
       createdAt: attachedDatabase.typeMapping.read(
@@ -1911,6 +2264,26 @@ class $CompetitionRegistrationTableTable extends CompetitionRegistrationTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       ),
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      lastSyncAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_sync_at'],
+      ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
     );
   }
 
@@ -1922,14 +2295,19 @@ class $CompetitionRegistrationTableTable extends CompetitionRegistrationTable
 
 class competition_registration_drift_model extends DataClass
     implements Insertable<competition_registration_drift_model> {
-  final int id;
+  final String id;
   final String dorsalNumber;
   final int nParticipants;
   final String name;
   final String userDni;
-  final int competenceId;
+  final String competenceId;
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final String syncStatus;
+  final DateTime? lastSyncAt;
+  final int version;
+  final String? deviceId;
+  final bool isDeleted;
   const competition_registration_drift_model({
     required this.id,
     required this.dorsalNumber,
@@ -1939,20 +2317,34 @@ class competition_registration_drift_model extends DataClass
     required this.competenceId,
     required this.createdAt,
     this.updatedAt,
+    required this.syncStatus,
+    this.lastSyncAt,
+    required this.version,
+    this.deviceId,
+    required this.isDeleted,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['dorsal_number'] = Variable<String>(dorsalNumber);
     map['n_participants'] = Variable<int>(nParticipants);
     map['name'] = Variable<String>(name);
     map['user_dni'] = Variable<String>(userDni);
-    map['competence_id'] = Variable<int>(competenceId);
+    map['competence_id'] = Variable<String>(competenceId);
     map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || updatedAt != null) {
       map['updated_at'] = Variable<DateTime>(updatedAt);
     }
+    map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || lastSyncAt != null) {
+      map['last_sync_at'] = Variable<DateTime>(lastSyncAt);
+    }
+    map['version'] = Variable<int>(version);
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    map['is_deleted'] = Variable<bool>(isDeleted);
     return map;
   }
 
@@ -1968,6 +2360,15 @@ class competition_registration_drift_model extends DataClass
       updatedAt: updatedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(updatedAt),
+      syncStatus: Value(syncStatus),
+      lastSyncAt: lastSyncAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncAt),
+      version: Value(version),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+      isDeleted: Value(isDeleted),
     );
   }
 
@@ -1977,40 +2378,55 @@ class competition_registration_drift_model extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return competition_registration_drift_model(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       dorsalNumber: serializer.fromJson<String>(json['dorsalNumber']),
       nParticipants: serializer.fromJson<int>(json['nParticipants']),
       name: serializer.fromJson<String>(json['name']),
       userDni: serializer.fromJson<String>(json['userDni']),
-      competenceId: serializer.fromJson<int>(json['competenceId']),
+      competenceId: serializer.fromJson<String>(json['competenceId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      lastSyncAt: serializer.fromJson<DateTime?>(json['lastSyncAt']),
+      version: serializer.fromJson<int>(json['version']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'dorsalNumber': serializer.toJson<String>(dorsalNumber),
       'nParticipants': serializer.toJson<int>(nParticipants),
       'name': serializer.toJson<String>(name),
       'userDni': serializer.toJson<String>(userDni),
-      'competenceId': serializer.toJson<int>(competenceId),
+      'competenceId': serializer.toJson<String>(competenceId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime?>(updatedAt),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'lastSyncAt': serializer.toJson<DateTime?>(lastSyncAt),
+      'version': serializer.toJson<int>(version),
+      'deviceId': serializer.toJson<String?>(deviceId),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
     };
   }
 
   competition_registration_drift_model copyWith({
-    int? id,
+    String? id,
     String? dorsalNumber,
     int? nParticipants,
     String? name,
     String? userDni,
-    int? competenceId,
+    String? competenceId,
     DateTime? createdAt,
     Value<DateTime?> updatedAt = const Value.absent(),
+    String? syncStatus,
+    Value<DateTime?> lastSyncAt = const Value.absent(),
+    int? version,
+    Value<String?> deviceId = const Value.absent(),
+    bool? isDeleted,
   }) => competition_registration_drift_model(
     id: id ?? this.id,
     dorsalNumber: dorsalNumber ?? this.dorsalNumber,
@@ -2020,6 +2436,11 @@ class competition_registration_drift_model extends DataClass
     competenceId: competenceId ?? this.competenceId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+    syncStatus: syncStatus ?? this.syncStatus,
+    lastSyncAt: lastSyncAt.present ? lastSyncAt.value : this.lastSyncAt,
+    version: version ?? this.version,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+    isDeleted: isDeleted ?? this.isDeleted,
   );
   competition_registration_drift_model copyWithCompanion(
     CompetitionRegistrationTableCompanion data,
@@ -2039,6 +2460,15 @@ class competition_registration_drift_model extends DataClass
           : this.competenceId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      lastSyncAt: data.lastSyncAt.present
+          ? data.lastSyncAt.value
+          : this.lastSyncAt,
+      version: data.version.present ? data.version.value : this.version,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
     );
   }
 
@@ -2052,7 +2482,12 @@ class competition_registration_drift_model extends DataClass
           ..write('userDni: $userDni, ')
           ..write('competenceId: $competenceId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncAt: $lastSyncAt, ')
+          ..write('version: $version, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('isDeleted: $isDeleted')
           ..write(')'))
         .toString();
   }
@@ -2067,6 +2502,11 @@ class competition_registration_drift_model extends DataClass
     competenceId,
     createdAt,
     updatedAt,
+    syncStatus,
+    lastSyncAt,
+    version,
+    deviceId,
+    isDeleted,
   );
   @override
   bool operator ==(Object other) =>
@@ -2079,19 +2519,30 @@ class competition_registration_drift_model extends DataClass
           other.userDni == this.userDni &&
           other.competenceId == this.competenceId &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.syncStatus == this.syncStatus &&
+          other.lastSyncAt == this.lastSyncAt &&
+          other.version == this.version &&
+          other.deviceId == this.deviceId &&
+          other.isDeleted == this.isDeleted);
 }
 
 class CompetitionRegistrationTableCompanion
     extends UpdateCompanion<competition_registration_drift_model> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<String> dorsalNumber;
   final Value<int> nParticipants;
   final Value<String> name;
   final Value<String> userDni;
-  final Value<int> competenceId;
+  final Value<String> competenceId;
   final Value<DateTime> createdAt;
   final Value<DateTime?> updatedAt;
+  final Value<String> syncStatus;
+  final Value<DateTime?> lastSyncAt;
+  final Value<int> version;
+  final Value<String?> deviceId;
+  final Value<bool> isDeleted;
+  final Value<int> rowid;
   const CompetitionRegistrationTableCompanion({
     this.id = const Value.absent(),
     this.dorsalNumber = const Value.absent(),
@@ -2101,31 +2552,50 @@ class CompetitionRegistrationTableCompanion
     this.competenceId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncAt = const Value.absent(),
+    this.version = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   CompetitionRegistrationTableCompanion.insert({
-    this.id = const Value.absent(),
+    required String id,
     required String dorsalNumber,
     required int nParticipants,
     required String name,
     required String userDni,
-    required int competenceId,
+    required String competenceId,
     required DateTime createdAt,
     this.updatedAt = const Value.absent(),
-  }) : dorsalNumber = Value(dorsalNumber),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncAt = const Value.absent(),
+    this.version = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       dorsalNumber = Value(dorsalNumber),
        nParticipants = Value(nParticipants),
        name = Value(name),
        userDni = Value(userDni),
        competenceId = Value(competenceId),
        createdAt = Value(createdAt);
   static Insertable<competition_registration_drift_model> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<String>? dorsalNumber,
     Expression<int>? nParticipants,
     Expression<String>? name,
     Expression<String>? userDni,
-    Expression<int>? competenceId,
+    Expression<String>? competenceId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<String>? syncStatus,
+    Expression<DateTime>? lastSyncAt,
+    Expression<int>? version,
+    Expression<String>? deviceId,
+    Expression<bool>? isDeleted,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2136,18 +2606,30 @@ class CompetitionRegistrationTableCompanion
       if (competenceId != null) 'competence_id': competenceId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (lastSyncAt != null) 'last_sync_at': lastSyncAt,
+      if (version != null) 'version': version,
+      if (deviceId != null) 'device_id': deviceId,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   CompetitionRegistrationTableCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<String>? dorsalNumber,
     Value<int>? nParticipants,
     Value<String>? name,
     Value<String>? userDni,
-    Value<int>? competenceId,
+    Value<String>? competenceId,
     Value<DateTime>? createdAt,
     Value<DateTime?>? updatedAt,
+    Value<String>? syncStatus,
+    Value<DateTime?>? lastSyncAt,
+    Value<int>? version,
+    Value<String?>? deviceId,
+    Value<bool>? isDeleted,
+    Value<int>? rowid,
   }) {
     return CompetitionRegistrationTableCompanion(
       id: id ?? this.id,
@@ -2158,6 +2640,12 @@ class CompetitionRegistrationTableCompanion
       competenceId: competenceId ?? this.competenceId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      lastSyncAt: lastSyncAt ?? this.lastSyncAt,
+      version: version ?? this.version,
+      deviceId: deviceId ?? this.deviceId,
+      isDeleted: isDeleted ?? this.isDeleted,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -2165,7 +2653,7 @@ class CompetitionRegistrationTableCompanion
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (dorsalNumber.present) {
       map['dorsal_number'] = Variable<String>(dorsalNumber.value);
@@ -2180,13 +2668,31 @@ class CompetitionRegistrationTableCompanion
       map['user_dni'] = Variable<String>(userDni.value);
     }
     if (competenceId.present) {
-      map['competence_id'] = Variable<int>(competenceId.value);
+      map['competence_id'] = Variable<String>(competenceId.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (lastSyncAt.present) {
+      map['last_sync_at'] = Variable<DateTime>(lastSyncAt.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -2201,7 +2707,13 @@ class CompetitionRegistrationTableCompanion
           ..write('userDni: $userDni, ')
           ..write('competenceId: $competenceId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncAt: $lastSyncAt, ')
+          ..write('version: $version, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -2219,16 +2731,12 @@ class $CompetitionTimeRecordTableTable extends CompetitionTimeRecordTable
   $CompetitionTimeRecordTableTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _timeMeta = const VerificationMeta('time');
   @override
@@ -2242,12 +2750,12 @@ class $CompetitionTimeRecordTableTable extends CompetitionTimeRecordTable
   static const VerificationMeta _competitionRegistrationIdMeta =
       const VerificationMeta('competitionRegistrationId');
   @override
-  late final GeneratedColumn<int> competitionRegistrationId =
-      GeneratedColumn<int>(
+  late final GeneratedColumn<String> competitionRegistrationId =
+      GeneratedColumn<String>(
         'competition_registration_id',
         aliasedName,
         false,
-        type: DriftSqlType.int,
+        type: DriftSqlType.string,
         requiredDuringInsert: true,
       );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
@@ -2272,6 +2780,67 @@ class $CompetitionTimeRecordTableTable extends CompetitionTimeRecordTable
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _lastSyncAtMeta = const VerificationMeta(
+    'lastSyncAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastSyncAt = GeneratedColumn<DateTime>(
+    'last_sync_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2279,6 +2848,11 @@ class $CompetitionTimeRecordTableTable extends CompetitionTimeRecordTable
     competitionRegistrationId,
     createdAt,
     updatedAt,
+    syncStatus,
+    lastSyncAt,
+    version,
+    deviceId,
+    isDeleted,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2294,6 +2868,8 @@ class $CompetitionTimeRecordTableTable extends CompetitionTimeRecordTable
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
     }
     if (data.containsKey('time')) {
       context.handle(
@@ -2330,6 +2906,39 @@ class $CompetitionTimeRecordTableTable extends CompetitionTimeRecordTable
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('last_sync_at')) {
+      context.handle(
+        _lastSyncAtMeta,
+        lastSyncAt.isAcceptableOrUnknown(
+          data['last_sync_at']!,
+          _lastSyncAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
     return context;
   }
 
@@ -2343,7 +2952,7 @@ class $CompetitionTimeRecordTableTable extends CompetitionTimeRecordTable
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return competition_time_record_drift_model(
       id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
       time: attachedDatabase.typeMapping.read(
@@ -2351,7 +2960,7 @@ class $CompetitionTimeRecordTableTable extends CompetitionTimeRecordTable
         data['${effectivePrefix}time'],
       )!,
       competitionRegistrationId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}competition_registration_id'],
       )!,
       createdAt: attachedDatabase.typeMapping.read(
@@ -2361,6 +2970,26 @@ class $CompetitionTimeRecordTableTable extends CompetitionTimeRecordTable
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
+      )!,
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      lastSyncAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_sync_at'],
+      ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
       )!,
     );
   }
@@ -2373,28 +3002,47 @@ class $CompetitionTimeRecordTableTable extends CompetitionTimeRecordTable
 
 class competition_time_record_drift_model extends DataClass
     implements Insertable<competition_time_record_drift_model> {
-  final int id;
+  final String id;
   final int time;
-  final int competitionRegistrationId;
+  final String competitionRegistrationId;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String syncStatus;
+  final DateTime? lastSyncAt;
+  final int version;
+  final String? deviceId;
+  final bool isDeleted;
   const competition_time_record_drift_model({
     required this.id,
     required this.time,
     required this.competitionRegistrationId,
     required this.createdAt,
     required this.updatedAt,
+    required this.syncStatus,
+    this.lastSyncAt,
+    required this.version,
+    this.deviceId,
+    required this.isDeleted,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['time'] = Variable<int>(time);
-    map['competition_registration_id'] = Variable<int>(
+    map['competition_registration_id'] = Variable<String>(
       competitionRegistrationId,
     );
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || lastSyncAt != null) {
+      map['last_sync_at'] = Variable<DateTime>(lastSyncAt);
+    }
+    map['version'] = Variable<int>(version);
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    map['is_deleted'] = Variable<bool>(isDeleted);
     return map;
   }
 
@@ -2405,6 +3053,15 @@ class competition_time_record_drift_model extends DataClass
       competitionRegistrationId: Value(competitionRegistrationId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      syncStatus: Value(syncStatus),
+      lastSyncAt: lastSyncAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncAt),
+      version: Value(version),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+      isDeleted: Value(isDeleted),
     );
   }
 
@@ -2414,35 +3071,50 @@ class competition_time_record_drift_model extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return competition_time_record_drift_model(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       time: serializer.fromJson<int>(json['time']),
-      competitionRegistrationId: serializer.fromJson<int>(
+      competitionRegistrationId: serializer.fromJson<String>(
         json['competitionRegistrationId'],
       ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      lastSyncAt: serializer.fromJson<DateTime?>(json['lastSyncAt']),
+      version: serializer.fromJson<int>(json['version']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'time': serializer.toJson<int>(time),
-      'competitionRegistrationId': serializer.toJson<int>(
+      'competitionRegistrationId': serializer.toJson<String>(
         competitionRegistrationId,
       ),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'lastSyncAt': serializer.toJson<DateTime?>(lastSyncAt),
+      'version': serializer.toJson<int>(version),
+      'deviceId': serializer.toJson<String?>(deviceId),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
     };
   }
 
   competition_time_record_drift_model copyWith({
-    int? id,
+    String? id,
     int? time,
-    int? competitionRegistrationId,
+    String? competitionRegistrationId,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? syncStatus,
+    Value<DateTime?> lastSyncAt = const Value.absent(),
+    int? version,
+    Value<String?> deviceId = const Value.absent(),
+    bool? isDeleted,
   }) => competition_time_record_drift_model(
     id: id ?? this.id,
     time: time ?? this.time,
@@ -2450,6 +3122,11 @@ class competition_time_record_drift_model extends DataClass
         competitionRegistrationId ?? this.competitionRegistrationId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    syncStatus: syncStatus ?? this.syncStatus,
+    lastSyncAt: lastSyncAt.present ? lastSyncAt.value : this.lastSyncAt,
+    version: version ?? this.version,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+    isDeleted: isDeleted ?? this.isDeleted,
   );
   competition_time_record_drift_model copyWithCompanion(
     CompetitionTimeRecordTableCompanion data,
@@ -2462,6 +3139,15 @@ class competition_time_record_drift_model extends DataClass
           : this.competitionRegistrationId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      lastSyncAt: data.lastSyncAt.present
+          ? data.lastSyncAt.value
+          : this.lastSyncAt,
+      version: data.version.present ? data.version.value : this.version,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
     );
   }
 
@@ -2472,14 +3158,29 @@ class competition_time_record_drift_model extends DataClass
           ..write('time: $time, ')
           ..write('competitionRegistrationId: $competitionRegistrationId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncAt: $lastSyncAt, ')
+          ..write('version: $version, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('isDeleted: $isDeleted')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, time, competitionRegistrationId, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+    id,
+    time,
+    competitionRegistrationId,
+    createdAt,
+    updatedAt,
+    syncStatus,
+    lastSyncAt,
+    version,
+    deviceId,
+    isDeleted,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2488,39 +3189,69 @@ class competition_time_record_drift_model extends DataClass
           other.time == this.time &&
           other.competitionRegistrationId == this.competitionRegistrationId &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.syncStatus == this.syncStatus &&
+          other.lastSyncAt == this.lastSyncAt &&
+          other.version == this.version &&
+          other.deviceId == this.deviceId &&
+          other.isDeleted == this.isDeleted);
 }
 
 class CompetitionTimeRecordTableCompanion
     extends UpdateCompanion<competition_time_record_drift_model> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<int> time;
-  final Value<int> competitionRegistrationId;
+  final Value<String> competitionRegistrationId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<String> syncStatus;
+  final Value<DateTime?> lastSyncAt;
+  final Value<int> version;
+  final Value<String?> deviceId;
+  final Value<bool> isDeleted;
+  final Value<int> rowid;
   const CompetitionTimeRecordTableCompanion({
     this.id = const Value.absent(),
     this.time = const Value.absent(),
     this.competitionRegistrationId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncAt = const Value.absent(),
+    this.version = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   CompetitionTimeRecordTableCompanion.insert({
-    this.id = const Value.absent(),
+    required String id,
     required int time,
-    required int competitionRegistrationId,
+    required String competitionRegistrationId,
     required DateTime createdAt,
     required DateTime updatedAt,
-  }) : time = Value(time),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncAt = const Value.absent(),
+    this.version = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       time = Value(time),
        competitionRegistrationId = Value(competitionRegistrationId),
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
   static Insertable<competition_time_record_drift_model> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<int>? time,
-    Expression<int>? competitionRegistrationId,
+    Expression<String>? competitionRegistrationId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<String>? syncStatus,
+    Expression<DateTime>? lastSyncAt,
+    Expression<int>? version,
+    Expression<String>? deviceId,
+    Expression<bool>? isDeleted,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2529,15 +3260,27 @@ class CompetitionTimeRecordTableCompanion
         'competition_registration_id': competitionRegistrationId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (lastSyncAt != null) 'last_sync_at': lastSyncAt,
+      if (version != null) 'version': version,
+      if (deviceId != null) 'device_id': deviceId,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   CompetitionTimeRecordTableCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<int>? time,
-    Value<int>? competitionRegistrationId,
+    Value<String>? competitionRegistrationId,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
+    Value<String>? syncStatus,
+    Value<DateTime?>? lastSyncAt,
+    Value<int>? version,
+    Value<String?>? deviceId,
+    Value<bool>? isDeleted,
+    Value<int>? rowid,
   }) {
     return CompetitionTimeRecordTableCompanion(
       id: id ?? this.id,
@@ -2546,6 +3289,12 @@ class CompetitionTimeRecordTableCompanion
           competitionRegistrationId ?? this.competitionRegistrationId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      lastSyncAt: lastSyncAt ?? this.lastSyncAt,
+      version: version ?? this.version,
+      deviceId: deviceId ?? this.deviceId,
+      isDeleted: isDeleted ?? this.isDeleted,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -2553,13 +3302,13 @@ class CompetitionTimeRecordTableCompanion
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (time.present) {
       map['time'] = Variable<int>(time.value);
     }
     if (competitionRegistrationId.present) {
-      map['competition_registration_id'] = Variable<int>(
+      map['competition_registration_id'] = Variable<String>(
         competitionRegistrationId.value,
       );
     }
@@ -2568,6 +3317,24 @@ class CompetitionTimeRecordTableCompanion
     }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (lastSyncAt.present) {
+      map['last_sync_at'] = Variable<DateTime>(lastSyncAt.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -2579,7 +3346,13 @@ class CompetitionTimeRecordTableCompanion
           ..write('time: $time, ')
           ..write('competitionRegistrationId: $competitionRegistrationId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncAt: $lastSyncAt, ')
+          ..write('version: $version, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -3421,7 +4194,7 @@ typedef $$SessionTableTableProcessedTableManager =
     >;
 typedef $$CompetenceTableTableCreateCompanionBuilder =
     CompetenceTableCompanion Function({
-      Value<int> id,
+      required String id,
       required String name,
       Value<DateTime?> competitionDate,
       Value<bool> isActive,
@@ -3429,10 +4202,16 @@ typedef $$CompetenceTableTableCreateCompanionBuilder =
       required String createdBy,
       Value<DateTime> createdAt,
       Value<DateTime?> updatedAt,
+      Value<String> syncStatus,
+      Value<DateTime?> lastSyncAt,
+      Value<int> version,
+      Value<String?> deviceId,
+      Value<bool> isDeleted,
+      Value<int> rowid,
     });
 typedef $$CompetenceTableTableUpdateCompanionBuilder =
     CompetenceTableCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<String> name,
       Value<DateTime?> competitionDate,
       Value<bool> isActive,
@@ -3440,6 +4219,12 @@ typedef $$CompetenceTableTableUpdateCompanionBuilder =
       Value<String> createdBy,
       Value<DateTime> createdAt,
       Value<DateTime?> updatedAt,
+      Value<String> syncStatus,
+      Value<DateTime?> lastSyncAt,
+      Value<int> version,
+      Value<String?> deviceId,
+      Value<bool> isDeleted,
+      Value<int> rowid,
     });
 
 class $$CompetenceTableTableFilterComposer
@@ -3451,7 +4236,7 @@ class $$CompetenceTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
@@ -3490,6 +4275,31 @@ class $$CompetenceTableTableFilterComposer
     column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastSyncAt => $composableBuilder(
+    column: $table.lastSyncAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$CompetenceTableTableOrderingComposer
@@ -3501,7 +4311,7 @@ class $$CompetenceTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
@@ -3540,6 +4350,31 @@ class $$CompetenceTableTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastSyncAt => $composableBuilder(
+    column: $table.lastSyncAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CompetenceTableTableAnnotationComposer
@@ -3551,7 +4386,7 @@ class $$CompetenceTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<String> get name =>
@@ -3578,6 +4413,25 @@ class $$CompetenceTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastSyncAt => $composableBuilder(
+    column: $table.lastSyncAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
 }
 
 class $$CompetenceTableTableTableManager
@@ -3617,7 +4471,7 @@ class $$CompetenceTableTableTableManager
               $$CompetenceTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<DateTime?> competitionDate = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
@@ -3625,6 +4479,12 @@ class $$CompetenceTableTableTableManager
                 Value<String> createdBy = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<DateTime?> lastSyncAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => CompetenceTableCompanion(
                 id: id,
                 name: name,
@@ -3634,10 +4494,16 @@ class $$CompetenceTableTableTableManager
                 createdBy: createdBy,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                lastSyncAt: lastSyncAt,
+                version: version,
+                deviceId: deviceId,
+                isDeleted: isDeleted,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                required String id,
                 required String name,
                 Value<DateTime?> competitionDate = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
@@ -3645,6 +4511,12 @@ class $$CompetenceTableTableTableManager
                 required String createdBy,
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<DateTime?> lastSyncAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => CompetenceTableCompanion.insert(
                 id: id,
                 name: name,
@@ -3654,6 +4526,12 @@ class $$CompetenceTableTableTableManager
                 createdBy: createdBy,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                lastSyncAt: lastSyncAt,
+                version: version,
+                deviceId: deviceId,
+                isDeleted: isDeleted,
+                rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -3686,25 +4564,37 @@ typedef $$CompetenceTableTableProcessedTableManager =
     >;
 typedef $$CompetitionRegistrationTableTableCreateCompanionBuilder =
     CompetitionRegistrationTableCompanion Function({
-      Value<int> id,
+      required String id,
       required String dorsalNumber,
       required int nParticipants,
       required String name,
       required String userDni,
-      required int competenceId,
+      required String competenceId,
       required DateTime createdAt,
       Value<DateTime?> updatedAt,
+      Value<String> syncStatus,
+      Value<DateTime?> lastSyncAt,
+      Value<int> version,
+      Value<String?> deviceId,
+      Value<bool> isDeleted,
+      Value<int> rowid,
     });
 typedef $$CompetitionRegistrationTableTableUpdateCompanionBuilder =
     CompetitionRegistrationTableCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<String> dorsalNumber,
       Value<int> nParticipants,
       Value<String> name,
       Value<String> userDni,
-      Value<int> competenceId,
+      Value<String> competenceId,
       Value<DateTime> createdAt,
       Value<DateTime?> updatedAt,
+      Value<String> syncStatus,
+      Value<DateTime?> lastSyncAt,
+      Value<int> version,
+      Value<String?> deviceId,
+      Value<bool> isDeleted,
+      Value<int> rowid,
     });
 
 class $$CompetitionRegistrationTableTableFilterComposer
@@ -3716,7 +4606,7 @@ class $$CompetitionRegistrationTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
@@ -3741,7 +4631,7 @@ class $$CompetitionRegistrationTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get competenceId => $composableBuilder(
+  ColumnFilters<String> get competenceId => $composableBuilder(
     column: $table.competenceId,
     builder: (column) => ColumnFilters(column),
   );
@@ -3755,6 +4645,31 @@ class $$CompetitionRegistrationTableTableFilterComposer
     column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastSyncAt => $composableBuilder(
+    column: $table.lastSyncAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$CompetitionRegistrationTableTableOrderingComposer
@@ -3766,7 +4681,7 @@ class $$CompetitionRegistrationTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
@@ -3791,7 +4706,7 @@ class $$CompetitionRegistrationTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get competenceId => $composableBuilder(
+  ColumnOrderings<String> get competenceId => $composableBuilder(
     column: $table.competenceId,
     builder: (column) => ColumnOrderings(column),
   );
@@ -3805,6 +4720,31 @@ class $$CompetitionRegistrationTableTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastSyncAt => $composableBuilder(
+    column: $table.lastSyncAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CompetitionRegistrationTableTableAnnotationComposer
@@ -3816,7 +4756,7 @@ class $$CompetitionRegistrationTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<String> get dorsalNumber => $composableBuilder(
@@ -3835,7 +4775,7 @@ class $$CompetitionRegistrationTableTableAnnotationComposer
   GeneratedColumn<String> get userDni =>
       $composableBuilder(column: $table.userDni, builder: (column) => column);
 
-  GeneratedColumn<int> get competenceId => $composableBuilder(
+  GeneratedColumn<String> get competenceId => $composableBuilder(
     column: $table.competenceId,
     builder: (column) => column,
   );
@@ -3845,6 +4785,25 @@ class $$CompetitionRegistrationTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastSyncAt => $composableBuilder(
+    column: $table.lastSyncAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
 }
 
 class $$CompetitionRegistrationTableTableTableManager
@@ -3893,14 +4852,20 @@ class $$CompetitionRegistrationTableTableTableManager
               ),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<String> dorsalNumber = const Value.absent(),
                 Value<int> nParticipants = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> userDni = const Value.absent(),
-                Value<int> competenceId = const Value.absent(),
+                Value<String> competenceId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<DateTime?> lastSyncAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => CompetitionRegistrationTableCompanion(
                 id: id,
                 dorsalNumber: dorsalNumber,
@@ -3910,17 +4875,29 @@ class $$CompetitionRegistrationTableTableTableManager
                 competenceId: competenceId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                lastSyncAt: lastSyncAt,
+                version: version,
+                deviceId: deviceId,
+                isDeleted: isDeleted,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                required String id,
                 required String dorsalNumber,
                 required int nParticipants,
                 required String name,
                 required String userDni,
-                required int competenceId,
+                required String competenceId,
                 required DateTime createdAt,
                 Value<DateTime?> updatedAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<DateTime?> lastSyncAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => CompetitionRegistrationTableCompanion.insert(
                 id: id,
                 dorsalNumber: dorsalNumber,
@@ -3930,6 +4907,12 @@ class $$CompetitionRegistrationTableTableTableManager
                 competenceId: competenceId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                lastSyncAt: lastSyncAt,
+                version: version,
+                deviceId: deviceId,
+                isDeleted: isDeleted,
+                rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -3962,19 +4945,31 @@ typedef $$CompetitionRegistrationTableTableProcessedTableManager =
     >;
 typedef $$CompetitionTimeRecordTableTableCreateCompanionBuilder =
     CompetitionTimeRecordTableCompanion Function({
-      Value<int> id,
+      required String id,
       required int time,
-      required int competitionRegistrationId,
+      required String competitionRegistrationId,
       required DateTime createdAt,
       required DateTime updatedAt,
+      Value<String> syncStatus,
+      Value<DateTime?> lastSyncAt,
+      Value<int> version,
+      Value<String?> deviceId,
+      Value<bool> isDeleted,
+      Value<int> rowid,
     });
 typedef $$CompetitionTimeRecordTableTableUpdateCompanionBuilder =
     CompetitionTimeRecordTableCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<int> time,
-      Value<int> competitionRegistrationId,
+      Value<String> competitionRegistrationId,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
+      Value<String> syncStatus,
+      Value<DateTime?> lastSyncAt,
+      Value<int> version,
+      Value<String?> deviceId,
+      Value<bool> isDeleted,
+      Value<int> rowid,
     });
 
 class $$CompetitionTimeRecordTableTableFilterComposer
@@ -3986,7 +4981,7 @@ class $$CompetitionTimeRecordTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
@@ -3996,7 +4991,7 @@ class $$CompetitionTimeRecordTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get competitionRegistrationId => $composableBuilder(
+  ColumnFilters<String> get competitionRegistrationId => $composableBuilder(
     column: $table.competitionRegistrationId,
     builder: (column) => ColumnFilters(column),
   );
@@ -4010,6 +5005,31 @@ class $$CompetitionTimeRecordTableTableFilterComposer
     column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastSyncAt => $composableBuilder(
+    column: $table.lastSyncAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$CompetitionTimeRecordTableTableOrderingComposer
@@ -4021,7 +5041,7 @@ class $$CompetitionTimeRecordTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
@@ -4031,7 +5051,7 @@ class $$CompetitionTimeRecordTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get competitionRegistrationId => $composableBuilder(
+  ColumnOrderings<String> get competitionRegistrationId => $composableBuilder(
     column: $table.competitionRegistrationId,
     builder: (column) => ColumnOrderings(column),
   );
@@ -4045,6 +5065,31 @@ class $$CompetitionTimeRecordTableTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastSyncAt => $composableBuilder(
+    column: $table.lastSyncAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CompetitionTimeRecordTableTableAnnotationComposer
@@ -4056,13 +5101,13 @@ class $$CompetitionTimeRecordTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<int> get time =>
       $composableBuilder(column: $table.time, builder: (column) => column);
 
-  GeneratedColumn<int> get competitionRegistrationId => $composableBuilder(
+  GeneratedColumn<String> get competitionRegistrationId => $composableBuilder(
     column: $table.competitionRegistrationId,
     builder: (column) => column,
   );
@@ -4072,6 +5117,25 @@ class $$CompetitionTimeRecordTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastSyncAt => $composableBuilder(
+    column: $table.lastSyncAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
 }
 
 class $$CompetitionTimeRecordTableTableTableManager
@@ -4120,31 +5184,55 @@ class $$CompetitionTimeRecordTableTableTableManager
               ),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<int> time = const Value.absent(),
-                Value<int> competitionRegistrationId = const Value.absent(),
+                Value<String> competitionRegistrationId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<DateTime?> lastSyncAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => CompetitionTimeRecordTableCompanion(
                 id: id,
                 time: time,
                 competitionRegistrationId: competitionRegistrationId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                lastSyncAt: lastSyncAt,
+                version: version,
+                deviceId: deviceId,
+                isDeleted: isDeleted,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                required String id,
                 required int time,
-                required int competitionRegistrationId,
+                required String competitionRegistrationId,
                 required DateTime createdAt,
                 required DateTime updatedAt,
+                Value<String> syncStatus = const Value.absent(),
+                Value<DateTime?> lastSyncAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => CompetitionTimeRecordTableCompanion.insert(
                 id: id,
                 time: time,
                 competitionRegistrationId: competitionRegistrationId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                lastSyncAt: lastSyncAt,
+                version: version,
+                deviceId: deviceId,
+                isDeleted: isDeleted,
+                rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

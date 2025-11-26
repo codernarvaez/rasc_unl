@@ -4,21 +4,24 @@ import 'package:go_router/go_router.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competence_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competition_registration_model.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
+import 'package:uuid/uuid.dart';
 
 class AvailableCompetencesPage extends ConsumerStatefulWidget {
   const AvailableCompetencesPage({super.key});
 
   @override
-  ConsumerState<AvailableCompetencesPage> createState() => _AvailableCompetencesPageState();
+  ConsumerState<AvailableCompetencesPage> createState() =>
+      _AvailableCompetencesPageState();
 }
 
-class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesPage> 
+class _AvailableCompetencesPageState
+    extends ConsumerState<AvailableCompetencesPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<CompetenceModel>? _activeCompetences;
   List<CompetenceModel>? _pastCompetences;
-  Map<int, bool> _userRegistrations = {};
-  Map<int, int> _registrationCounts = {};
+  Map<String, bool> _userRegistrations = {};
+  Map<String, int> _registrationCounts = {};
   bool _isLoading = true;
 
   @override
@@ -35,7 +38,7 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
     try {
       final repository = ref.read(rascUNLMainProvider);
       final currentUser = ref.read(currentUserProvider);
-      
+
       if (currentUser == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -48,11 +51,12 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
         }
         return;
       }
-      
+
       // Obtener todas las competencias
-      final allCompetences = await repository.competenceRepository.getAllCompetences();
+      final allCompetences = await repository.competenceRepository
+          .getAllCompetences();
       final now = DateTime.now();
-      
+
       // Filtrar competencias activas (futuras hasta la fecha, incluyendo hoy)
       final active = allCompetences.where((comp) {
         if (comp.competitionDate == null) return false;
@@ -62,12 +66,13 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
           comp.competitionDate!.day,
         );
         final today = DateTime(now.year, now.month, now.day);
-        return comp.isActive && (compDate.isAfter(today) || compDate.isAtSameMomentAs(today));
+        return comp.isActive &&
+            (compDate.isAfter(today) || compDate.isAtSameMomentAs(today));
       }).toList();
-      
+
       // Ordenar por fecha más cercana primero
       active.sort((a, b) => a.competitionDate!.compareTo(b.competitionDate!));
-      
+
       // Competencias pasadas (pueden estar activas o no)
       final past = allCompetences.where((comp) {
         if (comp.competitionDate == null) return false;
@@ -79,23 +84,30 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
         final today = DateTime(now.year, now.month, now.day);
         return compDate.isBefore(today);
       }).toList();
-      
+
       // Ordenar por fecha más reciente primero
       past.sort((a, b) => b.competitionDate!.compareTo(a.competitionDate!));
-      
+
       // Obtener registros del usuario
-      final userRegistrations = await repository.competitionRegistrationRepository
+      final userRegistrations = await repository
+          .competitionRegistrationRepository
           .getRegistrationsByUserDni(currentUser.dni);
-      
+
       // Contar registros por competencia
-      final allRegistrations = await repository.competitionRegistrationRepository.getAllRegistrations();
-      
+      final allRegistrations = await repository
+          .competitionRegistrationRepository
+          .getAllRegistrations();
+
       for (var comp in allCompetences) {
-        final compRegistrations = allRegistrations.where((r) => r.competenceId == comp.id).toList();
+        final compRegistrations = allRegistrations
+            .where((r) => r.competenceId == comp.id)
+            .toList();
         _registrationCounts[comp.id] = compRegistrations.length;
-        _userRegistrations[comp.id] = userRegistrations.any((r) => r.competenceId == comp.id);
+        _userRegistrations[comp.id] = userRegistrations.any(
+          (r) => r.competenceId == comp.id,
+        );
       }
-      
+
       if (mounted) {
         setState(() {
           _activeCompetences = active;
@@ -152,8 +164,14 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
                     : TabBarView(
                         controller: _tabController,
                         children: [
-                          _buildCompetencesList(_activeCompetences ?? [], isActive: true),
-                          _buildCompetencesList(_pastCompetences ?? [], isActive: false),
+                          _buildCompetencesList(
+                            _activeCompetences ?? [],
+                            isActive: true,
+                          ),
+                          _buildCompetencesList(
+                            _pastCompetences ?? [],
+                            isActive: false,
+                          ),
                         ],
                       ),
               ),
@@ -171,9 +189,7 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
         children: [
           IconButton(
             icon: Icon(Icons.arrow_back_ios, color: Colors.white),
-            onPressed: () => {
-              context.go('/home'),
-            },
+            onPressed: () => {context.go('/home')},
           ),
           SizedBox(width: 12),
           Expanded(
@@ -226,7 +242,10 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
     );
   }
 
-  Widget _buildCompetencesList(List<CompetenceModel> competences, {required bool isActive}) {
+  Widget _buildCompetencesList(
+    List<CompetenceModel> competences, {
+    required bool isActive,
+  }) {
     if (competences.isEmpty) {
       return Center(
         child: Column(
@@ -239,7 +258,9 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
             ),
             SizedBox(height: 16),
             Text(
-              isActive ? 'No hay competencias próximas' : 'No hay competencias pasadas',
+              isActive
+                  ? 'No hay competencias próximas'
+                  : 'No hay competencias pasadas',
               style: TextStyle(
                 color: Colors.white.withOpacity(0.7),
                 fontSize: 16,
@@ -329,7 +350,11 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
                           SizedBox(height: 4),
                           Row(
                             children: [
-                              Icon(Icons.calendar_today, size: 14, color: Colors.white.withOpacity(0.6)),
+                              Icon(
+                                Icons.calendar_today,
+                                size: 14,
+                                color: Colors.white.withOpacity(0.6),
+                              ),
                               SizedBox(width: 4),
                               Text(
                                 _formatDateTime(competence.competitionDate),
@@ -345,14 +370,21 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
                     ),
                     if (isRegistered)
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Color(0xFFD50000),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.check_circle, size: 16, color: Colors.white),
+                            Icon(
+                              Icons.check_circle,
+                              size: 16,
+                              color: Colors.white,
+                            ),
                             SizedBox(width: 4),
                             Text(
                               'Registrado',
@@ -431,13 +463,13 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
 
   String _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return 'Fecha no definida';
-    
+
     final day = dateTime.day.toString().padLeft(2, '0');
     final month = dateTime.month.toString().padLeft(2, '0');
     final year = dateTime.year;
     final hour = dateTime.hour.toString().padLeft(2, '0');
     final minute = dateTime.minute.toString().padLeft(2, '0');
-    
+
     return '$day/$month/$year $hour:$minute';
   }
 
@@ -458,7 +490,10 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
             Expanded(
               child: Text(
                 'Confirmar Registro',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -493,7 +528,11 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
                   SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.calendar_today, size: 14, color: Colors.white.withOpacity(0.6)),
+                      Icon(
+                        Icons.calendar_today,
+                        size: 14,
+                        color: Colors.white.withOpacity(0.6),
+                      ),
                       SizedBox(width: 4),
                       Text(
                         _formatDateTime(competence.competitionDate),
@@ -543,7 +582,7 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
     try {
       final repository = ref.read(rascUNLMainProvider);
       final currentUser = ref.read(currentUserProvider);
-      
+
       if (currentUser == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -555,11 +594,11 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
         }
         return;
       }
-      
+
       // Verificar si ya está registrado
       final existing = await repository.competitionRegistrationRepository
           .getRegistrationByUserAndCompetence(currentUser.dni, competence.id);
-      
+
       if (existing != null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -571,11 +610,10 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
         }
         return;
       }
-      
-      
+
       // Crear nuevo registro
       final registration = CompetitionRegistrationModel(
-        id: 0, // Se generará automáticamente
+        id: const Uuid().v4(), // Se generará automáticamente
         dorsalNumber: '0', // Se asignará automáticamente por el backend
         nParticipants: 1,
         name: '${currentUser.firstName} ${currentUser.lastName}',
@@ -583,13 +621,17 @@ class _AvailableCompetencesPageState extends ConsumerState<AvailableCompetencesP
         competenceId: competence.id,
         createdAt: DateTime.now(),
       );
-      
-      await repository.competitionRegistrationRepository.createRegistration(registration);
-      
+
+      await repository.competitionRegistrationRepository.createRegistration(
+        registration,
+      );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('¡Registro exitoso! Te has registrado en "${competence.name}".'),
+            content: Text(
+              '¡Registro exitoso! Te has registrado en "${competence.name}".',
+            ),
             backgroundColor: Colors.green,
           ),
         );

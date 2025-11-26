@@ -6,18 +6,17 @@ import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/compe
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 
 class AdminCompetenceDetailsPage extends ConsumerStatefulWidget {
-  final int competenceId;
+  final String competenceId;
 
-  const AdminCompetenceDetailsPage({
-    super.key,
-    required this.competenceId,
-  });
+  const AdminCompetenceDetailsPage({super.key, required this.competenceId});
 
   @override
-  ConsumerState<AdminCompetenceDetailsPage> createState() => _AdminCompetenceDetailsPageState();
+  ConsumerState<AdminCompetenceDetailsPage> createState() =>
+      _AdminCompetenceDetailsPageState();
 }
 
-class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDetailsPage> {
+class _AdminCompetenceDetailsPageState
+    extends ConsumerState<AdminCompetenceDetailsPage> {
   CompetenceModel? _competence;
   List<ParticipantGroup> _participantGroups = [];
   bool _isLoading = true;
@@ -33,14 +32,14 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
 
   Future<void> _loadCompetenceDetails() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final repository = ref.read(rascUNLMainProvider);
-      
+
       // Obtener la competencia
       final competence = await repository.competenceRepository
           .getCompetenceById(widget.competenceId);
-      
+
       if (competence == null) {
         if (mounted) {
           setState(() => _isLoading = false);
@@ -53,33 +52,37 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
         }
         return;
       }
-      
+
       // Obtener todos los registros de esta competencia
       final registrations = await repository.competitionRegistrationRepository
           .getRegistrationsByCompetenceId(widget.competenceId);
-      
+
       // Agrupar participantes por número de dorsal
       final groupsMap = <String, List<ParticipantData>>{};
-      
+
       for (var registration in registrations) {
-        final user = await repository.userRepository.getUserByDni(registration.userDni);
+        final user = await repository.userRepository.getUserByDni(
+          registration.userDni,
+        );
         if (user != null) {
           final dorsalNum = registration.dorsalNumber;
-          
+
           if (!groupsMap.containsKey(dorsalNum)) {
             groupsMap[dorsalNum] = [];
           }
-          
-          groupsMap[dorsalNum]!.add(ParticipantData(
-            registrationId: registration.id,
-            dorsalNumber: registration.dorsalNumber,
-            name: registration.name,
-            dni: user.dni,
-            nParticipants: registration.nParticipants,
-          ));
+
+          groupsMap[dorsalNum]!.add(
+            ParticipantData(
+              registrationId: registration.id,
+              dorsalNumber: registration.dorsalNumber,
+              name: registration.name,
+              dni: user.dni,
+              nParticipants: registration.nParticipants,
+            ),
+          );
         }
       }
-      
+
       // Convertir a lista de grupos
       final groups = groupsMap.entries.map((entry) {
         return ParticipantGroup(
@@ -87,12 +90,12 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
           participants: entry.value,
         );
       }).toList();
-      
+
       // Ordenar grupos por número de dorsal
       groups.sort((a, b) {
         return a.dorsalNumber.compareTo(b.dorsalNumber);
       });
-      
+
       if (mounted) {
         setState(() {
           _competence = competence;
@@ -117,7 +120,7 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
     }
   }
 
-  Future<void> _deleteParticipant(int registrationId) async {
+  Future<void> _deleteParticipant(String registrationId) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -127,7 +130,10 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
           children: [
             Icon(Icons.warning, color: Colors.orange),
             SizedBox(width: 12),
-            Text('Confirmar eliminación', style: TextStyle(color: Colors.white)),
+            Text(
+              'Confirmar eliminación',
+              style: TextStyle(color: Colors.white),
+            ),
           ],
         ),
         content: const Text(
@@ -137,7 +143,10 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar', style: TextStyle(color: Colors.white70)),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: Colors.white70),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -147,13 +156,15 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
         ],
       ),
     );
-    
+
     if (confirm != true) return;
-    
+
     try {
       final repository = ref.read(rascUNLMainProvider);
-      await repository.competitionRegistrationRepository.deleteRegistration(registrationId);
-      
+      await repository.competitionRegistrationRepository.deleteRegistration(
+        registrationId,
+      );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -177,7 +188,7 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
 
   Future<void> _showEditRegistrationNumberDialog(ParticipantGroup group) async {
     final controller = TextEditingController(text: group.dorsalNumber);
-    
+
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
@@ -187,7 +198,10 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
           children: [
             Icon(Icons.edit, color: Color(0xFFD50000)),
             SizedBox(width: 12),
-            Text('Editar número de registro', style: TextStyle(color: Colors.white)),
+            Text(
+              'Editar número de registro',
+              style: TextStyle(color: Colors.white),
+            ),
           ],
         ),
         content: Column(
@@ -219,7 +233,10 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFD50000), width: 2),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFD50000),
+                    width: 2,
+                  ),
                 ),
               ),
             ),
@@ -228,7 +245,10 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar', style: TextStyle(color: Colors.white70)),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: Colors.white70),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -252,12 +272,12 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
         ],
       ),
     );
-    
+
     if (result == null || result.isEmpty) return;
-    
+
     try {
       final repository = ref.read(rascUNLMainProvider);
-      
+
       // Actualizar todos los participantes del grupo
       for (var participant in group.participants) {
         final registration = CompetitionRegistrationModel(
@@ -270,11 +290,12 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
-        
-        await repository.competitionRegistrationRepository
-            .updateRegistration(registration);
+
+        await repository.competitionRegistrationRepository.updateRegistration(
+          registration,
+        );
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -302,17 +323,21 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
 
   List<ParticipantGroup> get _filteredGroups {
     if (_searchQuery.isEmpty) return _participantGroups;
-    
+
     return _participantGroups.where((group) {
       // Buscar en número de registro
-      if (group.dorsalNumber.toLowerCase().contains(_searchQuery.toLowerCase())) {
+      if (group.dorsalNumber.toLowerCase().contains(
+        _searchQuery.toLowerCase(),
+      )) {
         return true;
       }
-      
+
       // Buscar en nombres y DNIs de participantes
-      return group.participants.any((p) =>
-          p.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          p.dni.contains(_searchQuery));
+      return group.participants.any(
+        (p) =>
+            p.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            p.dni.contains(_searchQuery),
+      );
     }).toList();
   }
 
@@ -333,15 +358,15 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
                   child: CircularProgressIndicator(color: Color(0xFFD50000)),
                 )
               : _competence == null
-                  ? _buildErrorView()
-                  : Column(
-                      children: [
-                        _buildHeader(),
-                        _buildCompetenceInfo(),
-                        _buildSearchBar(),
-                        Expanded(child: _buildParticipantsList()),
-                      ],
-                    ),
+              ? _buildErrorView()
+              : Column(
+                  children: [
+                    _buildHeader(),
+                    _buildCompetenceInfo(),
+                    _buildSearchBar(),
+                    Expanded(child: _buildParticipantsList()),
+                  ],
+                ),
         ),
       ),
     );
@@ -354,11 +379,19 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 80, color: Colors.red.withOpacity(0.5)),
+            Icon(
+              Icons.error_outline,
+              size: 80,
+              color: Colors.red.withOpacity(0.5),
+            ),
             const SizedBox(height: 24),
             const Text(
               'Competencia no encontrada',
-              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 32),
             ElevatedButton.icon(
@@ -391,7 +424,11 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
           const Expanded(
             child: Text(
               'Gestionar Participantes',
-              style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           IconButton(
@@ -434,15 +471,25 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.calendar_today, color: Colors.white.withOpacity(0.6), size: 16),
+                Icon(
+                  Icons.calendar_today,
+                  color: Colors.white.withOpacity(0.6),
+                  size: 16,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   _formatDateTime(_competence!.competitionDate),
-                  style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: 14,
+                  ),
                 ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: _competence!.isActive
                         ? Colors.green.withOpacity(0.2)
@@ -535,23 +582,32 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
 
   Widget _buildParticipantsList() {
     final filteredGroups = _filteredGroups;
-    
+
     if (filteredGroups.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off, size: 64, color: Colors.white.withOpacity(0.3)),
+            Icon(
+              Icons.search_off,
+              size: 64,
+              color: Colors.white.withOpacity(0.3),
+            ),
             const SizedBox(height: 16),
             Text(
-              _searchQuery.isEmpty ? 'No hay participantes' : 'No se encontraron resultados',
-              style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 16),
+              _searchQuery.isEmpty
+                  ? 'No hay participantes'
+                  : 'No se encontraron resultados',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.6),
+                fontSize: 16,
+              ),
             ),
           ],
         ),
       );
     }
-    
+
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       itemCount: filteredGroups.length,
@@ -563,7 +619,7 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
 
   Widget _buildGroupCard(ParticipantGroup group) {
     final isTeam = group.participants.length > 1;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -615,7 +671,10 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
                           ),
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFD50000).withOpacity(0.2),
                               borderRadius: BorderRadius.circular(8),
@@ -653,7 +712,7 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
               ],
             ),
           ),
-          
+
           // Lista de participantes
           Container(
             decoration: BoxDecoration(
@@ -665,7 +724,9 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
             ),
             child: Column(
               children: group.participants
-                  .map((participant) => _buildParticipantRow(participant, isTeam))
+                  .map(
+                    (participant) => _buildParticipantRow(participant, isTeam),
+                  )
                   .toList(),
             ),
           ),
@@ -726,13 +787,13 @@ class _AdminCompetenceDetailsPageState extends ConsumerState<AdminCompetenceDeta
 
   String _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return 'Sin fecha';
-    
+
     final day = dateTime.day.toString().padLeft(2, '0');
     final month = dateTime.month.toString().padLeft(2, '0');
     final year = dateTime.year;
     final hour = dateTime.hour.toString().padLeft(2, '0');
     final minute = dateTime.minute.toString().padLeft(2, '0');
-    
+
     return '$day/$month/$year $hour:$minute';
   }
 
@@ -746,14 +807,11 @@ class ParticipantGroup {
   final String dorsalNumber;
   final List<ParticipantData> participants;
 
-  ParticipantGroup({
-    required this.dorsalNumber,
-    required this.participants,
-  });
+  ParticipantGroup({required this.dorsalNumber, required this.participants});
 }
 
 class ParticipantData {
-  final int registrationId;
+  final String registrationId;
   final String dorsalNumber;
   final String name;
   final String dni;

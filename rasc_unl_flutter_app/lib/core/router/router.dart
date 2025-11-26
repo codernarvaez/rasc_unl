@@ -69,12 +69,14 @@ class RouterNotifier extends ChangeNotifier {
     ];
 
     // Si el usuario no está autenticado y está intentando acceder a una ruta protegida
-    if (!isAuthenticated && protectedRoutes.any((route) => currentPath.startsWith(route))) {
+    if (!isAuthenticated &&
+        protectedRoutes.any((route) => currentPath.startsWith(route))) {
       return '/login';
     }
 
     // Si el usuario está autenticado y está en login o signup, redirigir a home
-    if (isAuthenticated && (currentPath == '/login' || currentPath == '/signup')) {
+    if (isAuthenticated &&
+        (currentPath == '/login' || currentPath == '/signup')) {
       return '/home';
     }
 
@@ -117,7 +119,7 @@ class RouterNotifier extends ChangeNotifier {
       path: '/user/competence-details',
       name: AppRouterNames.competenceDetails.name,
       builder: (context, state) {
-        final competenceId = state.extra as int?;
+        final competenceId = state.extra as String?;
         if (competenceId == null) {
           return Scaffold(
             body: Center(
@@ -160,14 +162,14 @@ class RouterNotifier extends ChangeNotifier {
       path: '/admin/competence-details/:id',
       name: 'adminCompetenceDetails',
       builder: (context, state) {
-        final id = int.parse(state.pathParameters['id']!);
+        final id = state.pathParameters['id']!;
         return AdminCompetenceDetailsPage(competenceId: id);
       },
     ),
     GoRoute(
       path: '/generate-reports',
       name: AppRouterNames.generateReports.name,
-      builder: (context, state) => GenerateReportsPage()
+      builder: (context, state) => GenerateReportsPage(),
     ),
   ];
 }

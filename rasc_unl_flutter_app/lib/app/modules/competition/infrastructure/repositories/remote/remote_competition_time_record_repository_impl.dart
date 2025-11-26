@@ -4,47 +4,52 @@ import 'package:http/http.dart' as http;
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/time_record_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/repositories/competition_time_record_repository.dart';
 
-class RemoteCompetitionTimeRecordRepositoryImpl implements CompetitionTimeRecordRepository {
+class RemoteCompetitionTimeRecordRepositoryImpl
+    implements CompetitionTimeRecordRepository {
   final String? accessToken;
   final String _baseUrl = dotenv.env['API_URL'] ?? '';
 
   RemoteCompetitionTimeRecordRepositoryImpl({this.accessToken});
 
   Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        if (accessToken != null) 'Authorization': 'Bearer $accessToken',
-      };
+    'Content-Type': 'application/json',
+    if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+  };
 
   @override
-  Future<TimeRecordModel> createTimeRecord({
-    required int registrationId,
-    required int timeInMilliseconds,
-  }) async {
-    final url = Uri.parse('$_baseUrl/api/v1/competencias/registrations/$registrationId/time-records');
-    
+  Future<TimeRecordModel> createTimeRecord(TimeRecordModel timeRecord) async {
+    final url = Uri.parse(
+      '$_baseUrl/api/v1/competencias/registrations/${timeRecord.competitionRegistrationId}/time-records',
+    );
+
     final body = jsonEncode({
-      'time': timeInMilliseconds,
+      'id': timeRecord.id,
+      'time_in_milliseconds': timeRecord.time.inMilliseconds,
+      'competition_registration_id': timeRecord.competitionRegistrationId,
+      'sync_status': timeRecord.syncStatus,
+      'last_sync_at': timeRecord.lastSyncAt?.toIso8601String(),
+      'version': timeRecord.version,
+      'device_id': timeRecord.deviceId,
+      'is_deleted': timeRecord.isDeleted,
     });
 
-    final response = await http.post(
-      url,
-      headers: _headers,
-      body: body,
-    );
+    final response = await http.post(url, headers: _headers, body: body);
 
     if (response.statusCode == 201) {
       final jsonData = jsonDecode(response.body);
       return TimeRecordModel.fromJson(jsonData);
     } else {
       final error = jsonDecode(response.body);
-      throw Exception(error['detail'] ?? 'Error al crear el registro de tiempo');
+      throw Exception(
+        error['detail'] ?? 'Error al crear el registro de tiempo',
+      );
     }
   }
 
   @override
-  Future<TimeRecordModel?> getTimeRecordById(int id) async {
+  Future<TimeRecordModel?> getTimeRecordById(String id) async {
     final url = Uri.parse('$_baseUrl/api/v1/competencias/time-records/$id');
-    
+
     final response = await http.get(url, headers: _headers);
 
     if (response.statusCode == 200) {
@@ -53,14 +58,20 @@ class RemoteCompetitionTimeRecordRepositoryImpl implements CompetitionTimeRecord
     } else if (response.statusCode == 404) {
       return null;
     } else {
-      throw Exception('Error al obtener registro de tiempo: ${response.statusCode}');
+      throw Exception(
+        'Error al obtener registro de tiempo: ${response.statusCode}',
+      );
     }
   }
 
   @override
-  Future<List<TimeRecordModel>> getTimeRecordsByRegistrationId(int registrationId) async {
-    final url = Uri.parse('$_baseUrl/api/v1/competencias/registrations/$registrationId/time-records');
-    
+  Future<List<TimeRecordModel>> getTimeRecordsByRegistrationId(
+    String registrationId,
+  ) async {
+    final url = Uri.parse(
+      '$_baseUrl/api/v1/competencias/registrations/$registrationId/time-records',
+    );
+
     final response = await http.get(url, headers: _headers);
 
     if (response.statusCode == 200) {
@@ -70,44 +81,50 @@ class RemoteCompetitionTimeRecordRepositoryImpl implements CompetitionTimeRecord
           .toList();
       return timeRecords;
     } else {
-      throw Exception('Error al obtener registros de tiempo: ${response.statusCode}');
+      throw Exception(
+        'Error al obtener registros de tiempo: ${response.statusCode}',
+      );
     }
   }
 
   @override
-  Future<TimeRecordModel> updateTimeRecord({
-    required int id,
-    required int timeInMilliseconds,
-  }) async {
-    final url = Uri.parse('$_baseUrl/api/v1/competencias/time-records/$id');
-    
+  Future<TimeRecordModel> updateTimeRecord(TimeRecordModel timeRecord) async {
+    final url = Uri.parse(
+      '$_baseUrl/api/v1/competencias/time-records/${timeRecord.id}',
+    );
+
     final body = jsonEncode({
-      'time': timeInMilliseconds,
+      'time_in_milliseconds': timeRecord.time.inMilliseconds,
+      'sync_status': timeRecord.syncStatus,
+      'last_sync_at': timeRecord.lastSyncAt?.toIso8601String(),
+      'version': timeRecord.version,
+      'device_id': timeRecord.deviceId,
+      'is_deleted': timeRecord.isDeleted,
     });
 
-    final response = await http.patch(
-      url,
-      headers: _headers,
-      body: body,
-    );
+    final response = await http.patch(url, headers: _headers, body: body);
 
     if (response.statusCode == 200) {
       final jsonData = jsonDecode(response.body);
       return TimeRecordModel.fromJson(jsonData);
     } else {
       final error = jsonDecode(response.body);
-      throw Exception(error['detail'] ?? 'Error al actualizar registro de tiempo');
+      throw Exception(
+        error['detail'] ?? 'Error al actualizar registro de tiempo',
+      );
     }
   }
 
   @override
-  Future<void> deleteTimeRecord(int id) async {
+  Future<void> deleteTimeRecord(String id) async {
     final url = Uri.parse('$_baseUrl/api/v1/competencias/time-records/$id');
-    
+
     final response = await http.delete(url, headers: _headers);
 
     if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Error al eliminar registro de tiempo: ${response.statusCode}');
+      throw Exception(
+        'Error al eliminar registro de tiempo: ${response.statusCode}',
+      );
     }
   }
 }

@@ -4,14 +4,16 @@ import 'package:go_router/go_router.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competence_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competition_registration_model.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
+import 'package:uuid/uuid.dart';
 
 class CompetenceDetailsPage extends ConsumerStatefulWidget {
-  final int competenceId;
+  final String competenceId;
 
   const CompetenceDetailsPage({super.key, required this.competenceId});
 
   @override
-  ConsumerState<CompetenceDetailsPage> createState() => _CompetenceDetailsPageState();
+  ConsumerState<CompetenceDetailsPage> createState() =>
+      _CompetenceDetailsPageState();
 }
 
 class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
@@ -33,10 +35,11 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
     try {
       final repository = ref.read(rascUNLMainProvider);
       final currentUser = ref.read(currentUserProvider);
-      
+
       // Obtener la competencia por ID
-      final competence = await repository.competenceRepository.getCompetenceById(widget.competenceId);
-      
+      final competence = await repository.competenceRepository
+          .getCompetenceById(widget.competenceId);
+
       if (competence == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -49,38 +52,42 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
         }
         return;
       }
-      
+
       // Obtener todos los registros de esta competencia
       final registrations = await repository.competitionRegistrationRepository
           .getRegistrationsByCompetenceId(widget.competenceId);
-      
+
       // Obtener información de usuarios
       final participants = <ParticipantData>[];
-      
+
       for (var registration in registrations) {
-        final user = await repository.userRepository.getUserByDni(registration.userDni);
+        final user = await repository.userRepository.getUserByDni(
+          registration.userDni,
+        );
         if (user != null) {
-          participants.add(ParticipantData(
-            dorsalNumber: registration.dorsalNumber,
-            name: registration.name,
-            dni: user.dni,
-          ));
+          participants.add(
+            ParticipantData(
+              dorsalNumber: registration.dorsalNumber,
+              name: registration.name,
+              dni: user.dni,
+            ),
+          );
         }
       }
-      
+
       // Ordenar por número de dorsal
       participants.sort((a, b) => a.dorsalNumber.compareTo(b.dorsalNumber));
-      
+
       // Asignar posiciones
       for (int i = 0; i < participants.length; i++) {
         participants[i] = participants[i].copyWith(position: i + 1);
       }
-      
+
       // Verificar si el usuario actual está registrado
       if (currentUser != null) {
         _isRegistered = registrations.any((r) => r.userDni == currentUser.dni);
       }
-      
+
       if (mounted) {
         setState(() {
           _competence = competence;
@@ -119,28 +126,26 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
         child: SafeArea(
           child: _isLoading
               ? const Center(
-                  child: CircularProgressIndicator(
-                    color: Color(0xFFD50000),
-                  ),
+                  child: CircularProgressIndicator(color: Color(0xFFD50000)),
                 )
               : _competence == null
-                  ? _buildErrorView()
-                  : Column(
-                      children: [
-                        _buildHeader(context),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                _buildCompetenceInfo(),
-                                _buildRegistrationSection(),
-                                _buildLeaderboard(),
-                              ],
-                            ),
-                          ),
+              ? _buildErrorView()
+              : Column(
+                  children: [
+                    _buildHeader(context),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            _buildCompetenceInfo(),
+                            _buildRegistrationSection(),
+                            _buildLeaderboard(),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
+                  ],
+                ),
         ),
       ),
     );
@@ -185,7 +190,7 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
 
   Widget _buildHeader(BuildContext context) {
     if (_competence == null) return const SizedBox.shrink();
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       child: Row(
@@ -232,7 +237,7 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
 
   Widget _buildCompetenceInfo() {
     if (_competence == null) return const SizedBox.shrink();
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
@@ -282,7 +287,7 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
 
   Widget _buildRegistrationSection() {
     if (_competence == null) return const SizedBox.shrink();
-    
+
     final currentUser = ref.watch(currentUserProvider);
     final canRegister = _competence!.isActive;
 
@@ -315,10 +320,7 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
                     SizedBox(height: 4),
                     Text(
                       'Podrás ver tu posición una vez finalice la competencia',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
                     ),
                   ],
                 ),
@@ -355,10 +357,7 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
         const SizedBox(height: 8),
         Text(
           label,
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.6),
-            fontSize: 12,
-          ),
+          style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
         ),
         const SizedBox(height: 4),
         Text(
@@ -406,7 +405,7 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
 
   List<Widget> _buildParticipantsList() {
     final widgets = <Widget>[];
-    
+
     for (var participant in _participants) {
       widgets.add(_buildParticipantCard(participant));
     }
@@ -420,10 +419,7 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -455,7 +451,10 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFD50000).withOpacity(0.2),
                           borderRadius: BorderRadius.circular(8),
@@ -526,7 +525,20 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
 
   String _formatDate(DateTime? date) {
     if (date == null) return 'Sin fecha';
-    List<String> months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    List<String> months = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
@@ -538,19 +550,19 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
 
   String _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return 'Sin fecha';
-    
+
     final day = dateTime.day.toString().padLeft(2, '0');
     final month = dateTime.month.toString().padLeft(2, '0');
     final year = dateTime.year;
     final hour = dateTime.hour.toString().padLeft(2, '0');
     final minute = dateTime.minute.toString().padLeft(2, '0');
-    
+
     return '$day/$month/$year $hour:$minute';
   }
 
   void _showRegistrationDialog() {
     if (_competence == null) return;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -563,7 +575,10 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
             Expanded(
               child: Text(
                 'Confirmar Registro',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -582,7 +597,9 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFD50000).withOpacity(0.3)),
+                border: Border.all(
+                  color: const Color(0xFFD50000).withOpacity(0.3),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -598,7 +615,11 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.calendar_today, size: 14, color: Colors.white.withOpacity(0.6)),
+                      Icon(
+                        Icons.calendar_today,
+                        size: 14,
+                        color: Colors.white.withOpacity(0.6),
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         _formatDateTime(_competence!.competitionDate),
@@ -646,17 +667,20 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
 
   Future<void> _registerToCompetence() async {
     if (_competence == null) return;
-    
+
     try {
       final repository = ref.read(rascUNLMainProvider);
       final currentUser = ref.read(currentUserProvider);
-      
+
       if (currentUser == null) return;
-      
+
       // Verificar si ya está registrado
       final existing = await repository.competitionRegistrationRepository
-          .getRegistrationByUserAndCompetence(currentUser.dni, widget.competenceId);
-      
+          .getRegistrationByUserAndCompetence(
+            currentUser.dni,
+            widget.competenceId,
+          );
+
       if (existing != null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -668,22 +692,24 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
         }
         return;
       }
-      
+
       // Generar número de dorsal
-      final allRegistrations = await repository.competitionRegistrationRepository.getAllRegistrations();
+      final allRegistrations = await repository
+          .competitionRegistrationRepository
+          .getAllRegistrations();
       final existingNumbers = allRegistrations
           .where((r) => r.competenceId == widget.competenceId)
           .map((r) => int.tryParse(r.dorsalNumber) ?? 0)
           .toList();
-      
+
       int newDorsalNumber = 1;
       while (existingNumbers.contains(newDorsalNumber)) {
         newDorsalNumber++;
       }
-      
+
       // Crear registro
       final registration = CompetitionRegistrationModel(
-        id: 0,
+        id: const Uuid().v4(),
         dorsalNumber: newDorsalNumber.toString(),
         nParticipants: 1,
         name: '${currentUser.firstName} ${currentUser.lastName}',
@@ -691,13 +717,17 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
         competenceId: widget.competenceId,
         createdAt: DateTime.now(),
       );
-      
-      await repository.competitionRegistrationRepository.createRegistration(registration);
-      
+
+      await repository.competitionRegistrationRepository.createRegistration(
+        registration,
+      );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('¡Registro exitoso! Número de dorsal: $newDorsalNumber'),
+            content: Text(
+              '¡Registro exitoso! Número de dorsal: $newDorsalNumber',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -706,10 +736,7 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }

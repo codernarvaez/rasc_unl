@@ -10,22 +10,22 @@ class RemoteCompetenceRepositoryImpl implements CompetenceRepository {
   final String? _accessToken;
 
   RemoteCompetenceRepositoryImpl({String? accessToken})
-      : _accessToken = accessToken;
+    : _accessToken = accessToken;
 
   Map<String, String> get _headers {
-    final headers = {
-      'Content-Type': 'application/json',
-    };
-    
-    logging.i('🔑 RemoteCompetenceRepository - Token status: ${_accessToken != null ? "Present (${_accessToken.length} chars)" : "NULL"}');
-    
+    final headers = {'Content-Type': 'application/json'};
+
+    logging.i(
+      '🔑 RemoteCompetenceRepository - Token status: ${_accessToken != null ? "Present (${_accessToken.length} chars)" : "NULL"}',
+    );
+
     if (_accessToken != null && _accessToken.isNotEmpty) {
       headers['Authorization'] = 'Bearer $_accessToken';
       logging.i('✅ Authorization header added');
     } else {
       logging.i('❌ No token available - requests will be unauthenticated');
     }
-    
+
     return headers;
   }
 
@@ -52,7 +52,7 @@ class RemoteCompetenceRepositoryImpl implements CompetenceRepository {
   }
 
   @override
-  Future<CompetenceModel?> getCompetenceById(int id) async {
+  Future<CompetenceModel?> getCompetenceById(String id) async {
     try {
       final response = await http.get(
         Uri.parse('$_baseUrl/api/v1/competencias/$id'),
@@ -69,7 +69,8 @@ class RemoteCompetenceRepositoryImpl implements CompetenceRepository {
       }
 
       throw Exception(
-          'Error al obtener competencia por ID: ${response.statusCode}');
+        'Error al obtener competencia por ID: ${response.statusCode}',
+      );
     } catch (e) {
       throw Exception('Error de conexión al obtener competencia: $e');
     }
@@ -78,15 +79,23 @@ class RemoteCompetenceRepositoryImpl implements CompetenceRepository {
   @override
   Future<void> createCompetence(CompetenceModel competence) async {
     try {
-      print('Creating competence with access token: ${_accessToken != null ? "Token present (${_accessToken.length} chars)" : "No token"}');
-      
+      print(
+        'Creating competence with access token: ${_accessToken != null ? "Token present (${_accessToken.length} chars)" : "No token"}',
+      );
+
       final response = await http.post(
         Uri.parse('$_baseUrl/api/v1/competencias/'),
         headers: _headers,
         body: jsonEncode({
+          'id': competence.id,
           'name': competence.name,
           'competition_date': competence.competitionDate?.toIso8601String(),
           'is_active': competence.isActive,
+          'sync_status': competence.syncStatus.toString().split('.').last,
+          'last_sync_at': competence.lastSyncAt?.toIso8601String(),
+          'version': competence.version,
+          'device_id': competence.deviceId,
+          'is_deleted': competence.isDeleted,
         }),
       );
 
@@ -94,13 +103,16 @@ class RemoteCompetenceRepositoryImpl implements CompetenceRepository {
       print('Create competence response body: ${response.body}');
 
       if (response.statusCode == 401) {
-        throw Exception('No autorizado: El token de acceso es inválido o ha expirado');
+        throw Exception(
+          'No autorizado: El token de acceso es inválido o ha expirado',
+        );
       }
 
       if (response.statusCode != 201) {
         final errorData = jsonDecode(response.body);
         throw Exception(
-            'Error al crear competencia: ${errorData['detail'] ?? response.statusCode}');
+          'Error al crear competencia: ${errorData['detail'] ?? response.statusCode}',
+        );
       }
     } catch (e) {
       print('Exception creating competence: $e');
@@ -119,13 +131,19 @@ class RemoteCompetenceRepositoryImpl implements CompetenceRepository {
           'competition_date': competence.competitionDate?.toIso8601String(),
           'is_active': competence.isActive,
           'is_finished': competence.isFinished,
+          'sync_status': competence.syncStatus.toString().split('.').last,
+          'last_sync_at': competence.lastSyncAt?.toIso8601String(),
+          'version': competence.version,
+          'device_id': competence.deviceId,
+          'is_deleted': competence.isDeleted,
         }),
       );
 
       if (response.statusCode != 200) {
         final errorData = jsonDecode(response.body);
         throw Exception(
-            'Error al actualizar competencia: ${errorData['detail'] ?? response.statusCode}');
+          'Error al actualizar competencia: ${errorData['detail'] ?? response.statusCode}',
+        );
       }
     } catch (e) {
       throw Exception('Error de conexión al actualizar competencia: $e');
@@ -133,7 +151,7 @@ class RemoteCompetenceRepositoryImpl implements CompetenceRepository {
   }
 
   @override
-  Future<void> deleteCompetence(int id) async {
+  Future<void> deleteCompetence(String id) async {
     try {
       final response = await http.delete(
         Uri.parse('$_baseUrl/api/v1/competencias/$id'),
@@ -143,7 +161,8 @@ class RemoteCompetenceRepositoryImpl implements CompetenceRepository {
       if (response.statusCode != 200 && response.statusCode != 204) {
         final errorData = jsonDecode(response.body);
         throw Exception(
-            'Error al eliminar competencia: ${errorData['detail'] ?? response.statusCode}');
+          'Error al eliminar competencia: ${errorData['detail'] ?? response.statusCode}',
+        );
       }
     } catch (e) {
       throw Exception('Error de conexión al eliminar competencia: $e');

@@ -2,8 +2,8 @@ import "package:rasc_unl_flutter_app/app/modules/competition/domain/models/compe
 
 abstract class CompetenceRepository {
   Future<List<CompetenceModel>> getAllCompetences();
-  Future<CompetenceModel?> getCompetenceById(int id);
+  Future<CompetenceModel?> getCompetenceById(String id);
   Future<void> createCompetence(CompetenceModel competence);
   Future<void> updateCompetence(CompetenceModel competence);
-  Future<void> deleteCompetence(int id);
+  Future<void> deleteCompetence(String id);
 }

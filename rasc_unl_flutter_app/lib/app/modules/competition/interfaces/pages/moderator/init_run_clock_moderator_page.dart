@@ -6,15 +6,19 @@ import 'dart:math' as math;
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competence_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competition_registration_model.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
+import 'package:uuid/uuid.dart';
 
 class InitRunClockModeratorPage extends ConsumerStatefulWidget {
   const InitRunClockModeratorPage({super.key});
 
   @override
-  ConsumerState<InitRunClockModeratorPage> createState() => _InitRunClockModeratorState();
+  ConsumerState<InitRunClockModeratorPage> createState() =>
+      _InitRunClockModeratorState();
 }
 
-class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPage> with TickerProviderStateMixin {
+class _InitRunClockModeratorState
+    extends ConsumerState<InitRunClockModeratorPage>
+    with TickerProviderStateMixin {
   Timer? _timer;
   Timer? _refreshTimer;
   int _elapsedMilliseconds = 0;
@@ -24,10 +28,10 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
   int _countdownMilliseconds = 0;
   bool _isRegistered = false;
   bool _isLoading = true;
-  
+
   CompetenceModel? _nextCompetence;
   CompetenceModel? _upcomingCompetence;
-  
+
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   late AnimationController _rotationController;
@@ -35,7 +39,7 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
   @override
   void initState() {
     super.initState();
-    
+
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -43,7 +47,7 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
-    
+
     _rotationController = AnimationController(
       duration: const Duration(seconds: 3),
       vsync: this,
@@ -69,12 +73,12 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
 
   Future<void> _loadNextCompetence() async {
     if (!mounted) return;
-    
+
     setState(() => _isLoading = true);
     try {
       final repository = ref.read(rascUNLMainProvider);
       final currentUser = ref.read(currentUserProvider);
-      
+
       if (currentUser == null) {
         if (mounted) {
           setState(() {
@@ -86,11 +90,12 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
         }
         return;
       }
-      
+
       // Obtener todas las competencias activas
-      final allCompetences = await repository.competenceRepository.getAllCompetences();
+      final allCompetences = await repository.competenceRepository
+          .getAllCompetences();
       final now = DateTime.now();
-      
+
       // Filtrar competencias activas futuras (incluyendo hoy)
       final futureCompetences = allCompetences.where((comp) {
         if (comp.competitionDate == null || !comp.isActive) return false;
@@ -102,10 +107,12 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
         final today = DateTime(now.year, now.month, now.day);
         return compDate.isAfter(today) || compDate.isAtSameMomentAs(today);
       }).toList();
-      
+
       // Ordenar por fecha más cercana
-      futureCompetences.sort((a, b) => a.competitionDate!.compareTo(b.competitionDate!));
-      
+      futureCompetences.sort(
+        (a, b) => a.competitionDate!.compareTo(b.competitionDate!),
+      );
+
       if (futureCompetences.isEmpty) {
         setState(() {
           _nextCompetence = null;
@@ -114,14 +121,16 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
         });
         return;
       }
-      
+
       final nextComp = futureCompetences.first;
-      final upcomingComp = futureCompetences.length > 1 ? futureCompetences[1] : null;
-      
+      final upcomingComp = futureCompetences.length > 1
+          ? futureCompetences[1]
+          : null;
+
       // Verificar si está registrado en la próxima competencia
       final registration = await repository.competitionRegistrationRepository
           .getRegistrationByUserAndCompetence(currentUser.dni, nextComp.id);
-      
+
       setState(() {
         _nextCompetence = nextComp;
         _upcomingCompetence = upcomingComp;
@@ -129,7 +138,7 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
         _competitionDateTime = nextComp.competitionDate;
         _isLoading = false;
       });
-      
+
       _checkTimeAndStart();
     } catch (e) {
       setState(() {
@@ -153,7 +162,7 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
 
     final now = DateTime.now();
     final difference = _competitionDateTime!.difference(now);
-    
+
     if (difference.inMilliseconds > 0) {
       // Iniciar cuenta regresiva
       _startCountdown(difference.inMilliseconds);
@@ -165,19 +174,19 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
 
   void _startCountdown(int milliseconds) {
     _timer?.cancel();
-    
+
     setState(() {
       _isCountdown = true;
       _countdownMilliseconds = milliseconds;
       _isRunning = false;
     });
-    
+
     _pulseController.repeat(reverse: true);
-    
+
     _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       setState(() {
         _countdownMilliseconds -= 100;
-        
+
         if (_countdownMilliseconds <= 0) {
           _timer?.cancel();
           _isCountdown = false;
@@ -189,15 +198,15 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
 
   void _startTimer({int initialMilliseconds = 0}) {
     _timer?.cancel();
-    
+
     _pulseController.repeat(reverse: true);
-    
+
     setState(() {
       _isRunning = true;
       _isCountdown = false;
       _elapsedMilliseconds = initialMilliseconds;
     });
-    
+
     _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       setState(() {
         _elapsedMilliseconds += 100;
@@ -232,7 +241,7 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isSmallScreen = size.width < 360;
-    
+
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -240,18 +249,17 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2A2A2A),
-              Color(0xFF1A1A1A),
-            ],
+            colors: [Color(0xFF2A2A2A), Color(0xFF1A1A1A)],
           ),
         ),
         child: SafeArea(
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator(color: Color(0xFFD50000)))
+              ? const Center(
+                  child: CircularProgressIndicator(color: Color(0xFFD50000)),
+                )
               : _nextCompetence == null
-                  ? _buildNoCompetencesView()
-                  : _buildCompetenceView(isSmallScreen),
+              ? _buildNoCompetencesView()
+              : _buildCompetenceView(isSmallScreen),
         ),
       ),
     );
@@ -296,7 +304,10 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFD50000),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
               ),
             ),
           ],
@@ -310,37 +321,35 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
       builder: (context, constraints) {
         return SingleChildScrollView(
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: constraints.maxHeight,
-            ),
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(height: isSmallScreen ? 20 : 40),
-                
+
                 // Información de la competencia
                 _buildCompetenceInfo(isSmallScreen),
-                
+
                 SizedBox(height: isSmallScreen ? 20 : 30),
-                
+
                 // Cronómetro
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _buildTimer(isSmallScreen),
                 ),
-                
+
                 SizedBox(height: isSmallScreen ? 20 : 30),
-                
+
                 // Información adicional
                 if (_isRunning)
                   _buildRunningInfo(isSmallScreen)
                 else if (_isCountdown)
                   _buildCountdownInfo(isSmallScreen),
-                
+
                 // Competencia siguiente
                 if (_upcomingCompetence != null)
                   _buildUpcomingCompetence(isSmallScreen),
-                
+
                 SizedBox(height: isSmallScreen ? 20 : 40),
               ],
             ),
@@ -413,7 +422,11 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildInfoChip(Icons.access_time, _formatStartTime(), Colors.orange),
+                _buildInfoChip(
+                  Icons.access_time,
+                  _formatStartTime(),
+                  Colors.orange,
+                ),
               ],
             ),
           ],
@@ -421,8 +434,6 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
       ),
     );
   }
-
-  
 
   Widget _buildInfoChip(IconData icon, String label, Color color) {
     return Container(
@@ -453,7 +464,7 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
   Widget _buildTimer(bool isSmallScreen) {
     final timerSize = isSmallScreen ? 200.0 : 260.0;
     final fontSize = isSmallScreen ? 28.0 : 38.0;
-    
+
     return ScaleTransition(
       scale: _pulseAnimation,
       child: Stack(
@@ -479,7 +490,7 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
               ),
             ),
           ),
-          
+
           // Círculo principal
           Container(
             width: timerSize,
@@ -494,7 +505,9 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
               ),
               boxShadow: [
                 BoxShadow(
-                  color: _getStatusColor().withOpacity(_isRunning || _isCountdown ? 0.4 : 0.2),
+                  color: _getStatusColor().withOpacity(
+                    _isRunning || _isCountdown ? 0.4 : 0.2,
+                  ),
                   blurRadius: 40,
                   spreadRadius: 10,
                 ),
@@ -512,7 +525,9 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
               ),
               child: Center(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 8 : 16),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSmallScreen ? 8 : 16,
+                  ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -527,12 +542,14 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
                         ),
                         const SizedBox(height: 4),
                       ],
-                      
+
                       // Tiempo
                       FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
-                          _isCountdown ? _formatCountdown() : _formatElapsedTime(),
+                          _isCountdown
+                              ? _formatCountdown()
+                              : _formatElapsedTime(),
                           style: TextStyle(
                             fontSize: fontSize,
                             fontWeight: FontWeight.bold,
@@ -542,9 +559,9 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
                           ),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 4),
-                      
+
                       // Labels
                       FittedBox(
                         fit: BoxFit.scaleDown,
@@ -630,7 +647,7 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
 
   Widget _buildUpcomingCompetence(bool isSmall) {
     if (_upcomingCompetence == null) return const SizedBox.shrink();
-    
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Container(
@@ -690,13 +707,13 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
 
   String _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return 'Sin fecha';
-    
+
     final day = dateTime.day.toString().padLeft(2, '0');
     final month = dateTime.month.toString().padLeft(2, '0');
     final year = dateTime.year;
     final hour = dateTime.hour.toString().padLeft(2, '0');
     final minute = dateTime.minute.toString().padLeft(2, '0');
-    
+
     return '$day/$month/$year $hour:$minute';
   }
 
@@ -713,7 +730,10 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
             Expanded(
               child: Text(
                 'Confirmar Registro',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -732,7 +752,9 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFD50000).withOpacity(0.3)),
+                border: Border.all(
+                  color: const Color(0xFFD50000).withOpacity(0.3),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -748,7 +770,11 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.calendar_today, size: 14, color: Colors.white.withOpacity(0.6)),
+                      Icon(
+                        Icons.calendar_today,
+                        size: 14,
+                        color: Colors.white.withOpacity(0.6),
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         _formatDateTime(_nextCompetence!.competitionDate),
@@ -798,13 +824,16 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
     try {
       final repository = ref.read(rascUNLMainProvider);
       final currentUser = ref.read(currentUserProvider);
-      
+
       if (currentUser == null || _nextCompetence == null) return;
-      
+
       // Verificar si ya está registrado
       final existing = await repository.competitionRegistrationRepository
-          .getRegistrationByUserAndCompetence(currentUser.dni, _nextCompetence!.id);
-      
+          .getRegistrationByUserAndCompetence(
+            currentUser.dni,
+            _nextCompetence!.id,
+          );
+
       if (existing != null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -816,10 +845,10 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
         }
         return;
       }
-      
+
       // Crear registro
       final registration = CompetitionRegistrationModel(
-        id: 0,
+        id: const Uuid().v4(),
         dorsalNumber: '0', // Asignado automáticamente por el backend
         nParticipants: 1,
         name: '${currentUser.firstName} ${currentUser.lastName}',
@@ -827,13 +856,17 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
         competenceId: _nextCompetence!.id,
         createdAt: DateTime.now(),
       );
-      
-      await repository.competitionRegistrationRepository.createRegistration(registration);
-      
+
+      await repository.competitionRegistrationRepository.createRegistration(
+        registration,
+      );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('¡Registro exitoso! Te has registrado en ${_nextCompetence!.name}'),
+            content: Text(
+              '¡Registro exitoso! Te has registrado en ${_nextCompetence!.name}',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -842,10 +875,7 @@ class _InitRunClockModeratorState extends ConsumerState<InitRunClockModeratorPag
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -865,7 +895,7 @@ class DottedCirclePainter extends CustomPainter {
 
     final radius = size.width / 2;
     final center = Offset(size.width / 2, size.height / 2);
-    
+
     const dotCount = 60;
     const dotRadius = 3.0;
 
@@ -873,7 +903,7 @@ class DottedCirclePainter extends CustomPainter {
       final angle = (i * 360 / dotCount) * (math.pi / 180);
       final x = center.dx + radius * 0.95 * math.cos(angle);
       final y = center.dy + radius * 0.95 * math.sin(angle);
-      
+
       canvas.drawCircle(Offset(x, y), dotRadius, paint);
     }
   }
