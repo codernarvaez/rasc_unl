@@ -134,23 +134,30 @@ final rascUNLMainProvider = Provider<MainRepository>((ref) {
   final isOffline = ref.watch(isOfflineModeProvider);
   final localDbAsync = ref.watch(localDatabaseProvider);
 
-  // Trigger sync if online and DB is ready
-  if (!isOffline && localDbAsync.hasValue) {
-    try {
-      final syncService = ref.read(syncServiceProvider);
-      syncService.syncAll();
-    } catch (e) {
-      logging.e('Error triggering sync: $e');
-    }
-  }
+  final accessToken = ref.watch(accessTokenProvider);
 
-  logging.i('🏗️ Creating MainRepository - Offline-First Mode');
-
-  return localDbAsync.when(
-    data: (localDb) => LocalRepository(localDb),
-    loading: () => throw Exception('Database is loading...'),
-    error: (error, stack) => throw error,
+  logging.i(
+    '🏗️ Creating MainRepository - Mode: ${isOffline ? "Offline" : "Online"}',
   );
+  if (isOffline) {
+    // Trigger sync if online and DB is ready AND we have a token
+    if (!isOffline && localDbAsync.hasValue && accessToken != null) {
+      try {
+        final syncService = ref.read(syncServiceProvider);
+        syncService.syncAll();
+      } catch (e) {
+        logging.e('Error triggering sync: $e');
+      }
+    }
+    return localDbAsync.when(
+      data: (localDb) => LocalRepository(localDb),
+      loading: () => throw Exception('Database is loading...'),
+      error: (error, stack) => throw error,
+    );
+  }
+  else {
+    return RemoteRepository(accessToken: accessToken);
+  }
 });
 
 final localDatabaseProvider = FutureProvider<AppLocalDatabase>((ref) async {
