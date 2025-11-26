@@ -18,6 +18,7 @@ class TimeRecordModel(Base):
     time = Column(BigInteger, nullable=False)  # Tiempo en milisegundos
     competition_registration_id = Column(String(36), ForeignKey("competition_registration.id", ondelete="CASCADE"), nullable=False, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Campos de sincronización
     sync_status = Column(Enum(SyncStatus), default=SyncStatus.PENDING, nullable=False)
