@@ -8,7 +8,6 @@ import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/ad
 import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/admin/manage_competences_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/admin/manage_users_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/admin/admin_competence_details_page.dart';
-import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/moderator/moderator_timer_page_improved.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/rasc_unl_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/home_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/actions_page.dart';
@@ -67,7 +66,6 @@ class RouterNotifier extends ChangeNotifier {
       '/manage-users',
       '/manage-competences',
       '/generate-reports',
-      '/moderator/timer',
     ];
 
     // Si el usuario no está autenticado y está intentando acceder a una ruta protegida
@@ -170,11 +168,6 @@ class RouterNotifier extends ChangeNotifier {
       path: '/generate-reports',
       name: AppRouterNames.generateReports.name,
       builder: (context, state) => GenerateReportsPage()
-    ),
-    GoRoute(
-      path: '/moderator/timer',
-      name: AppRouterNames.moderatorTimer.name,
-      builder: (context, state) => ModeratorTimerPageImproved(),
     ),
   ];
 }

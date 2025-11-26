@@ -119,15 +119,7 @@ class _ActionsPageState extends ConsumerState<ActionsPage> with SingleTickerProv
                   _buildSectionHeader('Panel de Moderador', Icons.timer_outlined),
                   SizedBox(height: 12),
                   
-                  _buildActionCard(
-                    icon: Icons.timer,
-                    title: 'Cronómetro de Competencias',
-                    subtitle: 'Registrar tiempos de las competencias activas',
-                    gradient: [Color(0xFF2196F3), Color(0xFF1976D2)],
-                    onTap: () {
-                      context.go('/moderator/timer');
-                    },
-                  ),
+                
                   
                   SizedBox(height: 12),
                   

@@ -27,24 +27,32 @@ class RemoteCompetitionRegistrationRepositoryImpl
   @override
   Future<CompetitionRegistrationModel?> getRegistrationByUserDni(
       String userDni) async {
+    // The backend does not provide a direct endpoint to fetch a registration
+    // by user DNI. We fetch registrations across all competences and filter.
     try {
-      final response = await http.get(
-        Uri.parse(
-            '$_baseUrl/api/v1/competencias/registro?user_dni=$userDni&limit=1'),
+      final competencesResponse = await http.get(
+        Uri.parse('$_baseUrl/api/v1/competencias/'),
         headers: _headers,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final registrations = data['competition_registrations'] as List;
-        if (registrations.isNotEmpty) {
-          return CompetitionRegistrationModel.fromJson(registrations.first);
-        }
-        return null;
+      if (competencesResponse.statusCode != 200) {
+        throw Exception('Error al obtener competencias: ${competencesResponse.statusCode} - ${competencesResponse.body}');
       }
 
-      throw Exception(
-          'Error al obtener registro por DNI: ${response.statusCode}');
+      final competencesData = jsonDecode(competencesResponse.body);
+      final competences = (competencesData['competences'] as List?) ?? [];
+
+      for (final compJson in competences) {
+        final compId = compJson['id'];
+        if (compId == null) continue;
+
+        final regs = await getRegistrationsByCompetenceId(compId as int);
+        for (final r in regs) {
+          if (r.userDni == userDni) return r;
+        }
+      }
+
+      return null;
     } catch (e) {
       throw Exception('Error de conexión al obtener registro por DNI: $e');
     }
@@ -54,15 +62,12 @@ class RemoteCompetitionRegistrationRepositoryImpl
   Future<CompetitionRegistrationModel?> getRegistrationByCompetitionId(
       int competitionId) async {
     try {
-      final response = await http.get(
-        Uri.parse(
-            '$_baseUrl/api/v1/competencias/registro?competence_id=$competitionId&limit=1'),
-        headers: _headers,
-      );
+      final uri = Uri.parse('$_baseUrl/api/v1/competencias/$competitionId/registrations');
+      final response = await http.get(uri, headers: _headers);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final registrations = data['competition_registrations'] as List;
+        final registrations = (data['items'] as List?) ?? [];
         if (registrations.isNotEmpty) {
           return CompetitionRegistrationModel.fromJson(registrations.first);
         }
@@ -70,7 +75,7 @@ class RemoteCompetitionRegistrationRepositoryImpl
       }
 
       throw Exception(
-          'Error al obtener registro por competencia: ${response.statusCode}');
+          'Error al obtener registro por competencia: ${response.statusCode} - ${response.body}');
     } catch (e) {
       throw Exception(
           'Error de conexión al obtener registro por competencia: $e');
@@ -130,14 +135,14 @@ class RemoteCompetitionRegistrationRepositoryImpl
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final registrations = data['items'] as List;
+        final registrations = (data['items'] as List?) ?? [];
         return registrations
-            .map((json) => CompetitionRegistrationModel.fromJson(json))
-            .toList();
+        .map((json) => CompetitionRegistrationModel.fromJson(json))
+        .toList();
       }
 
-      throw Exception(
-          'Error al obtener registros de competencia: ${response.statusCode}');
+        throw Exception(
+          'Error al obtener registros de competencia: ${response.statusCode} - ${response.body}');
     } catch (e) {
       throw Exception(
           'Error de conexión al obtener registros de competencia: $e');
@@ -148,23 +153,11 @@ class RemoteCompetitionRegistrationRepositoryImpl
   Future<CompetitionRegistrationModel?> getRegistrationByUserAndCompetence(
       String userDni, int competenceId) async {
     try {
-      final response = await http.get(
-        Uri.parse(
-            '$_baseUrl/api/v1/competencias/registro?user_dni=$userDni&competence_id=$competenceId&limit=1'),
-        headers: _headers,
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final registrations = data['competition_registrations'] as List;
-        if (registrations.isNotEmpty) {
-          return CompetitionRegistrationModel.fromJson(registrations.first);
-        }
-        return null;
+      final regs = await getRegistrationsByCompetenceId(competenceId);
+      for (final r in regs) {
+        if (r.userDni == userDni) return r;
       }
-
-      throw Exception(
-          'Error al obtener registro por usuario y competencia: ${response.statusCode}');
+      return null;
     } catch (e) {
       throw Exception(
           'Error de conexión al obtener registro por usuario y competencia: $e');
@@ -174,22 +167,31 @@ class RemoteCompetitionRegistrationRepositoryImpl
   @override
   Future<List<CompetitionRegistrationModel>> getRegistrationsByUserDni(
       String userDni) async {
+    // No direct endpoint to get registrations by user; iterate competences and collect matches
     try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl/api/v1/competencias/registro?user_dni=$userDni'),
+      final competencesResponse = await http.get(
+        Uri.parse('$_baseUrl/api/v1/competencias/'),
         headers: _headers,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final registrations = data['competition_registrations'] as List;
-        return registrations
-            .map((json) => CompetitionRegistrationModel.fromJson(json))
-            .toList();
+      if (competencesResponse.statusCode != 200) {
+        throw Exception('Error al obtener competencias: ${competencesResponse.statusCode} - ${competencesResponse.body}');
       }
 
-      throw Exception(
-          'Error al obtener registros por DNI: ${response.statusCode}');
+      final competencesData = jsonDecode(competencesResponse.body);
+      final competences = (competencesData['competences'] as List?) ?? [];
+
+      final results = <CompetitionRegistrationModel>[];
+
+      for (final compJson in competences) {
+        final compId = compJson['id'];
+        if (compId == null) continue;
+
+        final regs = await getRegistrationsByCompetenceId(compId as int);
+        results.addAll(regs.where((r) => r.userDni == userDni));
+      }
+
+      return results;
     } catch (e) {
       throw Exception('Error de conexión al obtener registros por DNI: $e');
     }
