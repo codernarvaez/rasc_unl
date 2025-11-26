@@ -28,7 +28,7 @@ class CompetitionRegistrationRepository:
         await self.session.refresh(registration)
         return registration
 
-    async def get_by_id(self, registration_id: int) -> Optional[CompetitionRegistrationModel]:
+    async def get_by_id(self, registration_id: str) -> Optional[CompetitionRegistrationModel]:
         """Gets a registration by its ID"""
         result = await self.session.execute(
             select(CompetitionRegistrationModel).where(CompetitionRegistrationModel.id == registration_id)
@@ -39,7 +39,7 @@ class CompetitionRegistrationRepository:
         self,
         skip: int = 0,
         limit: int = 100,
-        competence_id: Optional[int] = None
+        competence_id: Optional[str] = None
     ) -> List[CompetitionRegistrationModel]:
         """Gets all registrations with pagination and optional filters"""
         query = select(CompetitionRegistrationModel)
@@ -54,14 +54,14 @@ class CompetitionRegistrationRepository:
 
     async def get_by_competence(
         self,
-        competence_id: int,
+        competence_id: str,
         skip: int = 0,
         limit: int = 100
     ) -> List[CompetitionRegistrationModel]:
         """Gets all registrations for a specific competence"""
         return await self.get_all(skip=skip, limit=limit, competence_id=competence_id)
 
-    async def count(self, competence_id: Optional[int] = None) -> int:
+    async def count(self, competence_id: Optional[str] = None) -> int:
         """Counts total registrations"""
         query = select(func.count(CompetitionRegistrationModel.id))
         
@@ -73,7 +73,7 @@ class CompetitionRegistrationRepository:
 
     async def update(
         self,
-        registration_id: int,
+        registration_id: str,
         registration_data: CompetitionRegistrationUpdate
     ) -> Optional[CompetitionRegistrationModel]:
         """Updates an existing registration"""
@@ -90,7 +90,7 @@ class CompetitionRegistrationRepository:
         await self.session.refresh(registration)
         return registration
 
-    async def delete(self, registration_id: int) -> bool:
+    async def delete(self, registration_id: str) -> bool:
         """Deletes a registration"""
         registration = await self.get_by_id(registration_id)
         if not registration:
@@ -103,15 +103,25 @@ class CompetitionRegistrationRepository:
     async def get_by_dorsal_and_competence(
         self,
         dorsal_number: str,
-        competence_id: int
+        competence_id: str,
+        exclude_id: Optional[str] = None
     ) -> Optional[CompetitionRegistrationModel]:
-        """Verifica si un número de dorsal ya está registrado en una competencia"""
+        """Verifica si un número de dorsal ya está registrado en una competencia
+        
+        Args:
+            dorsal_number: Número de dorsal a verificar
+            competence_id: ID de la competencia
+            exclude_id: ID del registro a excluir (útil al editar)
+        """
+        conditions = [
+            CompetitionRegistrationModel.competence_id == competence_id,
+            CompetitionRegistrationModel.dorsal_number == dorsal_number
+        ]
+        
+        if exclude_id:
+            conditions.append(CompetitionRegistrationModel.id != exclude_id)
+        
         result = await self.session.execute(
-            select(CompetitionRegistrationModel).where(
-                and_(
-                    CompetitionRegistrationModel.competence_id == competence_id,
-                    CompetitionRegistrationModel.dorsal_number == dorsal_number
-                )
-            )
+            select(CompetitionRegistrationModel).where(and_(*conditions))
         )
         return result.scalar_one_or_none()

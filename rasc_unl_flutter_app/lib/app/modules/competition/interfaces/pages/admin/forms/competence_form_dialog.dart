@@ -71,7 +71,9 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
       backgroundColor: Colors.transparent,
       child: Container(
         width: dialogWidth,
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
+        ),
         decoration: BoxDecoration(
           color: Color(0xFF1E1E1E),
           borderRadius: BorderRadius.circular(16),
@@ -166,7 +168,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
 
                       // Fecha de la competencia
                       Text(
-                        'Fecha de la Competencia',
+                        'Fecha y Hora de la Competencia',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 14,
@@ -193,12 +195,44 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
                               );
                             },
                           );
-                          if (date != null) {
-                            setState(() => _selectedDate = date);
+
+                          if (date != null && context.mounted) {
+                            final time = await showTimePicker(
+                              context: context,
+                              initialTime: TimeOfDay.fromDateTime(
+                                _selectedDate,
+                              ),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: ThemeData.dark().copyWith(
+                                    colorScheme: ColorScheme.dark(
+                                      primary: Color(0xFFD50000),
+                                      surface: Color(0xFF2D2D2D),
+                                    ),
+                                  ),
+                                  child: child!,
+                                );
+                              },
+                            );
+
+                            if (time != null) {
+                              setState(() {
+                                _selectedDate = DateTime(
+                                  date.year,
+                                  date.month,
+                                  date.day,
+                                  time.hour,
+                                  time.minute,
+                                );
+                              });
+                            }
                           }
                         },
                         child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.05),
                             borderRadius: BorderRadius.circular(8),
@@ -206,12 +240,19 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.calendar_today, color: Color(0xFFD50000), size: 20),
+                              Icon(
+                                Icons.calendar_today,
+                                color: Color(0xFFD50000),
+                                size: 20,
+                              ),
                               SizedBox(width: 12),
                               Expanded(
                                 child: Text(
-                                  '${_selectedDate.day.toString().padLeft(2, '0')}/${_selectedDate.month.toString().padLeft(2, '0')}/${_selectedDate.year}',
-                                  style: TextStyle(color: Colors.white, fontSize: 15),
+                                  '${_selectedDate.day.toString().padLeft(2, '0')}/${_selectedDate.month.toString().padLeft(2, '0')}/${_selectedDate.year} ${_selectedDate.hour.toString().padLeft(2, '0')}:${_selectedDate.minute.toString().padLeft(2, '0')}',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                  ),
                                 ),
                               ),
                             ],
@@ -254,7 +295,10 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
                                     _isActive
                                         ? 'Los usuarios pueden visualizar esta competencia'
                                         : 'Esta competencia estará oculta',
-                                    style: TextStyle(color: Colors.white60, fontSize: 12),
+                                    style: TextStyle(
+                                      color: Colors.white60,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -279,9 +323,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
             Container(
               padding: EdgeInsets.all(24),
               decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: Colors.white12),
-                ),
+                border: Border(top: BorderSide(color: Colors.white12)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -298,7 +340,10 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
                     onPressed: _handleSave,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFFD50000),
-                      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),

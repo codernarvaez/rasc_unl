@@ -22,7 +22,7 @@ class TimeRecordRepository:
         await self.session.flush()
         return time_record
 
-    async def get_by_id(self, time_record_id: int) -> Optional[TimeRecordModel]:
+    async def get_by_id(self, time_record_id: str) -> Optional[TimeRecordModel]:
         """Obtiene un registro de tiempo por ID"""
         result = await self.session.execute(
             select(TimeRecordModel).where(TimeRecordModel.id == time_record_id)
@@ -31,7 +31,7 @@ class TimeRecordRepository:
 
     async def get_by_competition_registration(
         self, 
-        competition_registration_id: int,
+        competition_registration_id: str,
         skip: int = 0, 
         limit: int = 100
     ) -> List[TimeRecordModel]:
@@ -43,7 +43,7 @@ class TimeRecordRepository:
         result = await self.session.execute(query)
         return list(result.scalars().all())
 
-    async def count_by_competition_registration(self, competition_registration_id: int) -> int:
+    async def count_by_competition_registration(self, competition_registration_id: str) -> int:
         """Cuenta registros de tiempo de un registration"""
         result = await self.session.execute(
             select(func.count()).select_from(TimeRecordModel).where(
@@ -71,7 +71,7 @@ class TimeRecordRepository:
 
     async def update(
         self, 
-        time_record_id: int, 
+        time_record_id: str, 
         time_record_data: TimeRecordUpdate
     ) -> Optional[TimeRecordModel]:
         """Actualiza un registro de tiempo existente"""

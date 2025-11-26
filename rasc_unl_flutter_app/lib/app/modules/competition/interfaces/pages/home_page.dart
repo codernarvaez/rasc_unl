@@ -27,7 +27,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     final List<Widget> _pages = [
       if (isModerator) const InitRunClockModeratorPage(),
-      const ActionsPage(),
+      if (!isModerator) const ActionsPage(),
       const SettingsPage(),
     ];
 
@@ -41,7 +41,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       bottomNavigationBar: ButtonNavigatorBar(
         iconsList: [
           Icons.home,
-          Icons.list,
+          // Icons.list,
           Icons.settings,
         ],
 

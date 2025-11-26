@@ -31,7 +31,7 @@ class CompetenceService:
         
         return CompetenceResponse.model_validate(competence)
 
-    async def get_competence(self, competence_id: int) -> CompetenceResponse:
+    async def get_competence(self, competence_id: str) -> CompetenceResponse:
         """Gets a competence by ID"""
         competence = await self.repository.get_by_id(competence_id)
         if not competence:
@@ -58,7 +58,7 @@ class CompetenceService:
 
     async def update_competence(
         self,
-        competence_id: int,
+        competence_id: str,
         competence_data: CompetenceUpdate
     ) -> CompetenceResponse:
         """Updates a competence"""
@@ -72,7 +72,7 @@ class CompetenceService:
         await self.session.commit()
         return CompetenceResponse.model_validate(competence)
 
-    async def delete_competence(self, competence_id: int) -> dict:
+    async def delete_competence(self, competence_id: str) -> dict:
         """Deletes a competence"""
         success = await self.repository.delete(competence_id)
         if not success:

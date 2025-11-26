@@ -103,7 +103,7 @@ class RemoteCompetitionRegistrationRepositoryImpl
         ),
         headers: _headers,
         body: jsonEncode({
-          'id': registration.id,
+          'competence_id': registration.competenceId,
           'dorsal_number': registration.dorsalNumber,
           'n_participants': registration.nParticipants,
           'name': registration.name,
@@ -157,7 +157,7 @@ class RemoteCompetitionRegistrationRepositoryImpl
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final registrations = (data['items'] as List?) ?? [];
+        final registrations = (data['competition_registrations'] as List?) ?? [];
         return registrations
             .map((json) => CompetitionRegistrationModel.fromJson(json))
             .toList();

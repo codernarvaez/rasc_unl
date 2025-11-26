@@ -24,7 +24,7 @@ class CompetenceRepository:
         await self.session.refresh(competence)
         return competence
 
-    async def get_by_id(self, competence_id: int) -> Optional[CompetenceModel]:
+    async def get_by_id(self, competence_id: str) -> Optional[CompetenceModel]:
         """Gets a competence by its ID"""
         result = await self.session.execute(
             select(CompetenceModel).where(CompetenceModel.id == competence_id)
@@ -60,7 +60,7 @@ class CompetenceRepository:
 
     async def update(
         self,
-        competence_id: int,
+        competence_id: str,
         competence_data: CompetenceUpdate
     ) -> Optional[CompetenceModel]:
         """Updates an existing competence"""
@@ -77,7 +77,7 @@ class CompetenceRepository:
         await self.session.refresh(competence)
         return competence
 
-    async def delete(self, competence_id: int) -> bool:
+    async def delete(self, competence_id: str) -> bool:
         """Deletes a competence"""
         competence = await self.get_by_id(competence_id)
         if not competence:
@@ -87,7 +87,7 @@ class CompetenceRepository:
         await self.session.flush()
         return True
 
-    async def check_is_active(self, competence_id: int) -> bool:
+    async def check_is_active(self, competence_id: str) -> bool:
         """Checks if a competence is active"""
         from app.modules.competencias.domain.models import CompetitionRegistrationModel
         

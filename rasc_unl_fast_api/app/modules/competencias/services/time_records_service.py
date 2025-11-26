@@ -70,7 +70,7 @@ class TimeRecordService:
         
         return TimeRecordResponse.model_validate(time_record)
 
-    async def get_time_record(self, time_record_id: int) -> TimeRecordResponse:
+    async def get_time_record(self, time_record_id: str) -> TimeRecordResponse:
         """Obtiene un registro de tiempo por ID"""
         time_record = await self.repository.get_by_id(time_record_id)
         if not time_record:
@@ -82,7 +82,7 @@ class TimeRecordService:
 
     async def get_time_records_by_registration(
         self,
-        competition_registration_id: int,
+        competition_registration_id: str,
         skip: int = 0,
         limit: int = 100
     ) -> TimeRecordListResponse:
@@ -122,7 +122,7 @@ class TimeRecordService:
 
     async def update_time_record(
         self,
-        time_record_id: int,
+        time_record_id: str,
         time_record_data: TimeRecordUpdate
     ) -> TimeRecordResponse:
         """Actualiza un registro de tiempo"""
@@ -138,7 +138,7 @@ class TimeRecordService:
         
         return TimeRecordResponse.model_validate(time_record)
 
-    async def delete_time_record(self, time_record_id: int) -> dict:
+    async def delete_time_record(self, time_record_id: str) -> dict:
         """Elimina un registro de tiempo"""
         time_record = await self.repository.get_by_id(time_record_id)
         if not time_record:

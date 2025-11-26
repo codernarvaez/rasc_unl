@@ -78,7 +78,7 @@ async def get_competences(
     summary="Obtener una competencia por ID"
 )
 async def get_competence(
-    competence_id: int,
+    competence_id: str,
     current_user: CurrentUser,
     service: CompetenceService = Depends(get_competence_service)
 ):
@@ -93,7 +93,7 @@ async def get_competence(
     description="Actualiza una competencia existente (Solo administradores)"
 )
 async def update_competence(
-    competence_id: int,
+    competence_id: str,
     competence_data: CompetenceUpdate,
     current_user: AdminUser,
     service: CompetenceService = Depends(get_competence_service)
@@ -108,7 +108,7 @@ async def update_competence(
     description="Elimina una competencia (Solo administradores)"
 )
 async def delete_competence(
-    competence_id: int,
+    competence_id: str,
     current_user: AdminUser,
     service: CompetenceService = Depends(get_competence_service)
 ):
@@ -128,7 +128,7 @@ async def delete_competence(
     description="Los moderadores registran equipos con dorsal, nombre y n_participantes"
 )
 async def create_registration(
-    competence_id: int,
+    competence_id: str,
     registration_data: CompetitionRegistrationCreate,
     current_user: AdminOrModeratorUser,
     service: CompetitionRegistrationService = Depends(get_competition_registration_service)
@@ -148,7 +148,7 @@ async def create_registration(
     summary="Obtener registros de una competencia"
 )
 async def get_registrations_by_competence(
-    competence_id: int,
+    competence_id: str,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     service: CompetitionRegistrationService = Depends(get_competition_registration_service),
@@ -164,7 +164,7 @@ async def get_registrations_by_competence(
     summary="Obtener un registro por ID"
 )
 async def get_registration(
-    registration_id: int,
+    registration_id: str,
     current_user: CurrentUser,
     service: CompetitionRegistrationService = Depends(get_competition_registration_service)
 ):
@@ -178,7 +178,7 @@ async def get_registration(
     summary="Actualizar un registro"
 )
 async def update_registration(
-    registration_id: int,
+    registration_id: str,
     registration_data: CompetitionRegistrationUpdate,
     current_user: AdminOrModeratorUser,
     service: CompetitionRegistrationService = Depends(get_competition_registration_service)
@@ -192,7 +192,7 @@ async def update_registration(
     summary="Eliminar un registro"
 )
 async def delete_registration(
-    registration_id: int,
+    registration_id: str,
     current_user: AdminOrModeratorUser,
     service: CompetitionRegistrationService = Depends(get_competition_registration_service)
 ):
@@ -212,7 +212,7 @@ async def delete_registration(
     description="Los moderadores registran tiempos de participantes"
 )
 async def create_time_record(
-    registration_id: int,
+    registration_id: str,
     time_record_data: TimeRecordCreate,
     current_user: AdminOrModeratorUser,
     service: TimeRecordService = Depends(get_time_record_service)
@@ -230,7 +230,7 @@ async def create_time_record(
     summary="Obtener registros de tiempo de un registration"
 )
 async def get_time_records_by_registration(
-    registration_id: int,
+    registration_id: str,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     service: TimeRecordService = Depends(get_time_record_service),
@@ -246,7 +246,7 @@ async def get_time_records_by_registration(
     summary="Obtener un registro de tiempo por ID"
 )
 async def get_time_record(
-    time_record_id: int,
+    time_record_id: str,
     current_user: CurrentUser,
     service: TimeRecordService = Depends(get_time_record_service)
 ):
@@ -260,7 +260,7 @@ async def get_time_record(
     summary="Actualizar un registro de tiempo"
 )
 async def update_time_record(
-    time_record_id: int,
+    time_record_id: str,
     time_record_data: TimeRecordUpdate,
     current_user: AdminOrModeratorUser,
     service: TimeRecordService = Depends(get_time_record_service)
@@ -274,7 +274,7 @@ async def update_time_record(
     summary="Eliminar un registro de tiempo"
 )
 async def delete_time_record(
-    time_record_id: int,
+    time_record_id: str,
     current_user: AdminOrModeratorUser,
     service: TimeRecordService = Depends(get_time_record_service)
 ):

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competence_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competition_registration_model.dart';
+import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/admin/forms/participant_form_dialog.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 
 class AdminCompetenceDetailsPage extends ConsumerStatefulWidget {
@@ -18,7 +19,7 @@ class AdminCompetenceDetailsPage extends ConsumerStatefulWidget {
 class _AdminCompetenceDetailsPageState
     extends ConsumerState<AdminCompetenceDetailsPage> {
   CompetenceModel? _competence;
-  List<ParticipantGroup> _participantGroups = [];
+  List<ParticipantRegistration> _participants = [];
   bool _isLoading = true;
   String _searchQuery = '';
 
@@ -57,49 +58,34 @@ class _AdminCompetenceDetailsPageState
       final registrations = await repository.competitionRegistrationRepository
           .getRegistrationsByCompetenceId(widget.competenceId);
 
-      // Agrupar participantes por número de dorsal
-      final groupsMap = <String, List<ParticipantData>>{};
+      // Crear lista de participantes con sus moderadores
+      final participants = <ParticipantRegistration>[];
 
       for (var registration in registrations) {
-        final user = await repository.userRepository.getUserByDni(
+        final moderator = await repository.userRepository.getUserByDni(
           registration.userDni,
         );
-        if (user != null) {
-          final dorsalNum = registration.dorsalNumber;
-
-          if (!groupsMap.containsKey(dorsalNum)) {
-            groupsMap[dorsalNum] = [];
-          }
-
-          groupsMap[dorsalNum]!.add(
-            ParticipantData(
+        if (moderator != null) {
+          participants.add(
+            ParticipantRegistration(
               registrationId: registration.id,
               dorsalNumber: registration.dorsalNumber,
-              name: registration.name,
-              dni: user.dni,
+              teamName: registration.name,
+              moderatorName: '${moderator.firstName} ${moderator.lastName}',
+              moderatorDni: moderator.dni,
               nParticipants: registration.nParticipants,
             ),
           );
         }
       }
 
-      // Convertir a lista de grupos
-      final groups = groupsMap.entries.map((entry) {
-        return ParticipantGroup(
-          dorsalNumber: entry.key,
-          participants: entry.value,
-        );
-      }).toList();
-
-      // Ordenar grupos por número de dorsal
-      groups.sort((a, b) {
-        return a.dorsalNumber.compareTo(b.dorsalNumber);
-      });
+      // Ordenar por número de dorsal
+      participants.sort((a, b) => a.dorsalNumber.compareTo(b.dorsalNumber));
 
       if (mounted) {
         setState(() {
           _competence = competence;
-          _participantGroups = groups;
+          _participants = participants;
           _isLoading = false;
         });
       }
@@ -107,12 +93,95 @@ class _AdminCompetenceDetailsPageState
       if (mounted) {
         setState(() {
           _competence = null;
-          _participantGroups = [];
+          _participants = [];
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error al cargar detalles: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showAddParticipantDialog() async {
+    if (!mounted) return;
+
+    final result = await showDialog<CompetitionRegistrationModel>(
+      context: context,
+      builder: (context) => ParticipantFormDialog(
+        competenceId: widget.competenceId,
+      ),
+    );
+
+    if (result == null) return;
+
+    try {
+      final repository = ref.read(rascUNLMainProvider);
+      await repository.competitionRegistrationRepository.createRegistration(result);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Participante registrado exitosamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _loadCompetenceDetails(); // Recargar
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al registrar: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showEditParticipantDialog(ParticipantRegistration participant) async {
+    // Obtener el registro completo
+    final repository = ref.read(rascUNLMainProvider);
+    final registrations = await repository.competitionRegistrationRepository
+        .getRegistrationsByCompetenceId(widget.competenceId);
+    
+    final currentRegistration = registrations.firstWhere(
+      (r) => r.id == participant.registrationId,
+    );
+
+    if (!mounted) return;
+
+    final result = await showDialog<CompetitionRegistrationModel>(
+      context: context,
+      builder: (context) => ParticipantFormDialog(
+        competenceId: widget.competenceId,
+        participantToEdit: currentRegistration,
+      ),
+    );
+
+    if (result == null) return;
+
+    try {
+      await repository.competitionRegistrationRepository.updateRegistration(result);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Participante actualizado exitosamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _loadCompetenceDetails(); // Recargar
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al actualizar: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -137,7 +206,7 @@ class _AdminCompetenceDetailsPageState
           ],
         ),
         content: const Text(
-          '¿Estás seguro de que deseas eliminar este participante?',
+          '¿Estás seguro de que deseas eliminar este equipo/participante?',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
@@ -186,158 +255,15 @@ class _AdminCompetenceDetailsPageState
     }
   }
 
-  Future<void> _showEditRegistrationNumberDialog(ParticipantGroup group) async {
-    final controller = TextEditingController(text: group.dorsalNumber);
+  List<ParticipantRegistration> get _filteredParticipants {
+    if (_searchQuery.isEmpty) return _participants;
 
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF2A2A2A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.edit, color: Color(0xFFD50000)),
-            SizedBox(width: 12),
-            Text(
-              'Editar número de registro',
-              style: TextStyle(color: Colors.white),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              group.participants.length > 1
-                  ? 'Este número se aplicará a todos los miembros del equipo (${group.participants.length} participantes)'
-                  : 'Número de registro del participante',
-              style: const TextStyle(color: Colors.white70, fontSize: 14),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Número de registro',
-                labelStyle: const TextStyle(color: Colors.white70),
-                hintText: 'Ej: 101',
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFD50000)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                    color: Color(0xFFD50000),
-                    width: 2,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: Colors.white70),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final newNumber = controller.text.trim();
-              if (newNumber.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('El número de registro no puede estar vacío'),
-                    backgroundColor: Colors.orange,
-                  ),
-                );
-                return;
-              }
-              Navigator.of(context).pop(newNumber);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFD50000),
-            ),
-            child: const Text('Guardar'),
-          ),
-        ],
-      ),
-    );
-
-    if (result == null || result.isEmpty) return;
-
-    try {
-      final repository = ref.read(rascUNLMainProvider);
-
-      // Actualizar todos los participantes del grupo
-      for (var participant in group.participants) {
-        final registration = CompetitionRegistrationModel(
-          id: participant.registrationId,
-          dorsalNumber: result,
-          nParticipants: participant.nParticipants,
-          name: participant.name,
-          userDni: participant.dni,
-          competenceId: widget.competenceId,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-
-        await repository.competitionRegistrationRepository.updateRegistration(
-          registration,
-        );
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              group.participants.length > 1
-                  ? 'Número actualizado para ${group.participants.length} participantes'
-                  : 'Número de registro actualizado',
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
-        _loadCompetenceDetails(); // Recargar
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al actualizar: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  List<ParticipantGroup> get _filteredGroups {
-    if (_searchQuery.isEmpty) return _participantGroups;
-
-    return _participantGroups.where((group) {
-      // Buscar en número de registro
-      if (group.dorsalNumber.toLowerCase().contains(
-        _searchQuery.toLowerCase(),
-      )) {
-        return true;
-      }
-
-      // Buscar en nombres y DNIs de participantes
-      return group.participants.any(
-        (p) =>
-            p.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            p.dni.contains(_searchQuery),
-      );
+    return _participants.where((participant) {
+      final searchLower = _searchQuery.toLowerCase();
+      return participant.dorsalNumber.toLowerCase().contains(searchLower) ||
+          participant.teamName.toLowerCase().contains(searchLower) ||
+          participant.moderatorName.toLowerCase().contains(searchLower) ||
+          participant.moderatorDni.contains(_searchQuery);
     }).toList();
   }
 
@@ -369,6 +295,20 @@ class _AdminCompetenceDetailsPageState
                 ),
         ),
       ),
+      floatingActionButton: _competence != null && !_isLoading
+          ? FloatingActionButton.extended(
+              onPressed: _showAddParticipantDialog,
+              backgroundColor: const Color(0xFFD50000),
+              icon: const Icon(Icons.person_add, color: Colors.white),
+              label: const Text(
+                'Registrar',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            )
+          : null,
     );
   }
 
@@ -515,12 +455,12 @@ class _AdminCompetenceDetailsPageState
               children: [
                 _buildStatChip(
                   Icons.groups,
-                  '${_participantGroups.fold<int>(0, (sum, g) => sum + g.participants.length)} participantes',
+                  '${_participants.length} ${_participants.length == 1 ? "equipo" : "equipos"}',
                 ),
                 const SizedBox(width: 12),
                 _buildStatChip(
-                  Icons.tag,
-                  '${_participantGroups.length} ${_participantGroups.length == 1 ? "grupo" : "grupos"}',
+                  Icons.people,
+                  '${_participants.fold<int>(0, (sum, p) => sum + p.nParticipants)} participantes',
                 ),
               ],
             ),
@@ -581,9 +521,9 @@ class _AdminCompetenceDetailsPageState
   }
 
   Widget _buildParticipantsList() {
-    final filteredGroups = _filteredGroups;
+    final filteredParticipants = _filteredParticipants;
 
-    if (filteredGroups.isEmpty) {
+    if (filteredParticipants.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -596,7 +536,7 @@ class _AdminCompetenceDetailsPageState
             const SizedBox(height: 16),
             Text(
               _searchQuery.isEmpty
-                  ? 'No hay participantes'
+                  ? 'No hay participantes registrados'
                   : 'No se encontraron resultados',
               style: TextStyle(
                 color: Colors.white.withOpacity(0.6),
@@ -610,16 +550,14 @@ class _AdminCompetenceDetailsPageState
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      itemCount: filteredGroups.length,
+      itemCount: filteredParticipants.length,
       itemBuilder: (context, index) {
-        return _buildGroupCard(filteredGroups[index]);
+        return _buildParticipantCard(filteredParticipants[index]);
       },
     );
   }
 
-  Widget _buildGroupCard(ParticipantGroup group) {
-    final isTeam = group.participants.length > 1;
-
+  Widget _buildParticipantCard(ParticipantRegistration participant) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -634,153 +572,116 @@ class _AdminCompetenceDetailsPageState
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
-      child: Column(
-        children: [
-          // Header del grupo
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFD50000), Color(0xFF8B0000)],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    isTeam ? Icons.groups : Icons.person,
-                    color: Colors.white,
-                    size: 24,
-                  ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            // Icono e info del dorsal
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFD50000), Color(0xFF8B0000)],
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  const Icon(Icons.tag, color: Colors.white, size: 20),
+                  const SizedBox(height: 4),
+                  Text(
+                    participant.dorsalNumber,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            
+            // Información del equipo y moderador
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            isTeam ? 'Equipo' : 'Individual',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.6),
-                              fontSize: 12,
-                            ),
+                      const Icon(Icons.groups, color: Color(0xFFD50000), size: 16),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          participant.teamName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFD50000).withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '#${group.dorsalNumber}',
-                              style: const TextStyle(
-                                color: Color(0xFFD50000),
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        isTeam
-                            ? '${group.participants.length} miembros'
-                            : group.participants.first.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.edit, color: Color(0xFFD50000)),
-                  onPressed: () => _showEditRegistrationNumberDialog(group),
-                  tooltip: 'Editar número',
-                ),
-              ],
-            ),
-          ),
-
-          // Lista de participantes
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.2),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(20),
-                bottomRight: Radius.circular(20),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.person_pin,
+                        color: Colors.white.withOpacity(0.5),
+                        size: 14,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          participant.moderatorName,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.people,
+                        color: Colors.white.withOpacity(0.5),
+                        size: 14,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${participant.nParticipants} ${participant.nParticipants == 1 ? "participante" : "participantes"}',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.5),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            child: Column(
-              children: group.participants
-                  .map(
-                    (participant) => _buildParticipantRow(participant, isTeam),
-                  )
-                  .toList(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildParticipantRow(ParticipantData participant, bool isInTeam) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.white.withOpacity(0.05)),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            isInTeam ? Icons.person : Icons.account_circle,
-            color: Colors.white54,
-            size: 20,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            
+            // Botones de acción
+            Column(
               children: [
-                Text(
-                  participant.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Color(0xFFD50000), size: 22),
+                  onPressed: () => _showEditParticipantDialog(participant),
+                  tooltip: 'Editar',
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  'DNI: ${participant.dni}',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.5),
-                    fontSize: 12,
-                  ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red, size: 22),
+                  onPressed: () => _deleteParticipant(participant.registrationId),
+                  tooltip: 'Eliminar',
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-            onPressed: () => _deleteParticipant(participant.registrationId),
-            tooltip: 'Eliminar',
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -796,32 +697,22 @@ class _AdminCompetenceDetailsPageState
 
     return '$day/$month/$year $hour:$minute';
   }
-
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    return '${twoDigits(duration.inMinutes)}:${twoDigits(duration.inSeconds.remainder(60))}';
-  }
 }
 
-class ParticipantGroup {
-  final String dorsalNumber;
-  final List<ParticipantData> participants;
-
-  ParticipantGroup({required this.dorsalNumber, required this.participants});
-}
-
-class ParticipantData {
+class ParticipantRegistration {
   final String registrationId;
   final String dorsalNumber;
-  final String name;
-  final String dni;
+  final String teamName;
+  final String moderatorName;
+  final String moderatorDni;
   final int nParticipants;
 
-  ParticipantData({
+  ParticipantRegistration({
     required this.registrationId,
     required this.dorsalNumber,
-    required this.name,
-    required this.dni,
+    required this.teamName,
+    required this.moderatorName,
+    required this.moderatorDni,
     required this.nParticipants,
   });
 }

@@ -30,19 +30,19 @@ class CompetitionRegistrationService:
         registration_data: CompetitionRegistrationCreate,
         user_dni: str
     ) -> CompetitionRegistrationResponse:
-        """Crea un nuevo registro de equipo en una competencia - Solo moderadores"""
+        """Crea un nuevo registro de equipo en una competencia - Moderadores y Administradores"""
         # Validar que el usuario es moderador o admin
         user = await self.user_repository.get_by_dni(user_dni)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"User with DNI {user_dni} not found"
+                detail=f"Usuario con DNI {user_dni} no encontrado"
             )
         
         if user.role not in [RoleEnum.MODERATOR, RoleEnum.ADMINISTRATOR]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only moderators and administrators can register teams"
+                detail="Solo moderadores y administradores pueden registrar equipos"
             )
 
         # Validar que la competencia existe y está activa
@@ -50,13 +50,13 @@ class CompetitionRegistrationService:
         if not competence:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Competence with ID {registration_data.competence_id} not found"
+                detail=f"Competencia con ID {registration_data.competence_id} no encontrada"
             )
 
         if not competence.is_active:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="The competence is not active"
+                detail="La competencia no está activa"
             )
 
         # Verificar que el número de dorsal no esté duplicado en esta competencia
@@ -67,7 +67,7 @@ class CompetitionRegistrationService:
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Dorsal number {registration_data.dorsal_number} already registered in this competition"
+                detail=f"El número de dorsal {registration_data.dorsal_number} ya está registrado en esta competencia"
             )
 
         # Crear el registro con el DNI del moderador
@@ -76,13 +76,13 @@ class CompetitionRegistrationService:
         
         return CompetitionRegistrationResponse.model_validate(registration)
 
-    async def get_registration(self, registration_id: int) -> CompetitionRegistrationResponse:
+    async def get_registration(self, registration_id: str) -> CompetitionRegistrationResponse:
         """Obtiene un registro por ID"""
         registration = await self.repository.get_by_id(registration_id)
         if not registration:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Registration with ID {registration_id} not found"
+                detail=f"Registro con ID {registration_id} no encontrado"
             )
         return CompetitionRegistrationResponse.model_validate(registration)
 
@@ -90,7 +90,7 @@ class CompetitionRegistrationService:
         self,
         skip: int = 0,
         limit: int = 100,
-        competence_id: Optional[int] = None
+        competence_id: Optional[str] = None
     ) -> CompetitionRegistrationListResponse:
         """Obtiene todos los registros con paginación y filtros"""
         registrations = await self.repository.get_all(
@@ -107,7 +107,7 @@ class CompetitionRegistrationService:
 
     async def get_registrations_by_competence(
         self,
-        competence_id: int,
+        competence_id: str,
         skip: int = 0,
         limit: int = 100
     ) -> CompetitionRegistrationListResponse:
@@ -116,7 +116,7 @@ class CompetitionRegistrationService:
         if not competence:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Competence with ID {competence_id} not found"
+                detail=f"Competencia con ID {competence_id} no encontrada"
             )
 
         registrations = await self.repository.get_by_competence(
@@ -133,30 +133,42 @@ class CompetitionRegistrationService:
 
     async def update_registration(
         self,
-        registration_id: int,
+        registration_id: str,
         registration_data: CompetitionRegistrationUpdate
     ) -> CompetitionRegistrationResponse:
-        """Actualiza un registro"""
+        """Actualiza un registro - Solo administradores y moderadores"""
         current_registration = await self.repository.get_by_id(registration_id)
         if not current_registration:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Registration with ID {registration_id} not found"
+                detail=f"Registro con ID {registration_id} no encontrado"
             )
+
+        # Si se está actualizando el dorsal, verificar que no esté duplicado
+        if registration_data.dorsal_number and registration_data.dorsal_number != current_registration.dorsal_number:
+            existing = await self.repository.get_by_dorsal_and_competence(
+                registration_data.dorsal_number,
+                current_registration.competence_id
+            )
+            if existing:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"El número de dorsal {registration_data.dorsal_number} ya está registrado en esta competencia"
+                )
 
         registration = await self.repository.update(registration_id, registration_data)
         await self.session.commit()
         
         return CompetitionRegistrationResponse.model_validate(registration)
 
-    async def delete_registration(self, registration_id: int) -> dict:
-        """Elimina un registro"""
+    async def delete_registration(self, registration_id: str) -> dict:
+        """Elimina un registro - Solo administradores y moderadores"""
         success = await self.repository.delete(registration_id)
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Registration with ID {registration_id} not found"
+                detail=f"Registro con ID {registration_id} no encontrado"
             )
 
         await self.session.commit()
-        return {"message": "Registration deleted successfully"}
+        return {"message": "Registro eliminado exitosamente"}

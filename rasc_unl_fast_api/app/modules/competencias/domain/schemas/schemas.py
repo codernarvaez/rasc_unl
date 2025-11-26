@@ -33,7 +33,7 @@ class CompetenceResponse(BaseModel):
     """Schema de respuesta para una competencia"""
     model_config = ConfigDict(from_attributes=True)
     
-    id: int
+    id: str
     name: str
     competition_date: datetime
     is_active: bool
@@ -45,7 +45,7 @@ class CompetenceResponse(BaseModel):
 
 class CompetenceWithRegistrations(CompetenceResponse):
     """Schema de competencia con sus registros"""
-    competition_registration: List["CompetitionRegistrationResponse"] = Field(default_factory=list)
+    competition_registrations: List["CompetitionRegistrationResponse"] = Field(default_factory=list)
 
 
 # ============================================
@@ -61,7 +61,7 @@ class CompetitionRegistrationBase(BaseModel):
 
 class CompetitionRegistrationCreate(CompetitionRegistrationBase):
     """Schema para crear un registro de equipo en competencia - Moderadores"""
-    competence_id: int = Field(..., gt=0, description="ID de la competencia")
+    competence_id: str = Field(..., min_length=1, description="ID de la competencia")
 
 
 class CompetitionRegistrationUpdate(BaseModel):
@@ -75,12 +75,12 @@ class CompetitionRegistrationResponse(BaseModel):
     """Schema de respuesta para un registro"""
     model_config = ConfigDict(from_attributes=True)
     
-    id: int
+    id: str
     dorsal_number: str
     name: str
     n_participants: int
     user_dni: str
-    competence_id: int
+    competence_id: str
     created_at: datetime
     updated_at: datetime
 
@@ -118,7 +118,7 @@ class TimeRecordBase(BaseModel):
 class TimeRecordCreate(BaseModel):
     """Schema para crear un registro de tiempo - Moderadores"""
     time: int = Field(..., ge=0, description="Tiempo en milisegundos")
-    competition_registration_id: int = Field(..., gt=0, description="ID del registro de competencia")
+    competition_registration_id: str = Field(..., min_length=1, description="ID del registro de competencia")
 
 
 class TimeRecordUpdate(BaseModel):
@@ -130,9 +130,9 @@ class TimeRecordResponse(BaseModel):
     """Schema de respuesta para un registro de tiempo"""
     model_config = ConfigDict(from_attributes=True)
     
-    id: int
+    id: str
     time: int
-    competition_registration_id: int
+    competition_registration_id: str
     created_at: datetime
 
 
@@ -140,10 +140,4 @@ class TimeRecordListResponse(BaseModel):
     """Schema para lista de registros de tiempo"""
     time_records: List[TimeRecordResponse]
     total: int
-    updated_at: datetime
-
-
-class TimeRecordListResponse(BaseModel):
-    """Schema para lista de registros de tiempo"""
-    time_records: List[TimeRecordResponse]
-    total: int
+    updated_at: Optional[datetime] = None
