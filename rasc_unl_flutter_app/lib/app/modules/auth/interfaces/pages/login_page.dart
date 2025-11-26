@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
+import 'package:rasc_unl_flutter_app/app/modules/sync/application/services/user_session_service.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -86,22 +87,43 @@ class _LoginPageState extends ConsumerState<LoginPage>
       });
 
       if (result.success && result.user != null) {
+        // Handle user session isolation (clear DB if different user)
+        final localDbAsync = ref.read(localDatabaseProvider);
+        final syncService = isOffline
+            ? null
+            : (localDbAsync.hasValue ? ref.read(syncServiceProvider) : null);
+
+        if (localDbAsync.hasValue) {
+          final sessionService = UserSessionService(
+            localDbAsync.value!,
+            syncService,
+          );
+          await sessionService.handleUserLogin(
+            dni: result.user!.dni,
+            isOnline: !isOffline,
+          );
+        }
+
         // Actualizar el usuario actual
         ref.read(currentUserProvider.notifier).setUser(result.user!);
-        
+
         // Establecer el token directamente desde el resultado del login
         if (!isOffline && result.accessToken != null) {
-          logging.i('📝 Login successful - Access token received: ${result.accessToken}');
+          logging.i(
+            '📝 Login successful - Access token received: ${result.accessToken}',
+          );
           logging.i('📝 Token length: ${result.accessToken!.length} chars');
-          
+
           // Establecer el token directamente en el provider (sin leer de DB)
           ref.read(accessTokenProvider.notifier).setToken(result.accessToken);
-          
+
           // Verify token was set
           final loadedToken = ref.read(accessTokenProvider);
-          logging.i('✅ Token set in provider: ${loadedToken != null ? "YES (${loadedToken.length} chars)" : "NO"}');
+          logging.i(
+            '✅ Token set in provider: ${loadedToken != null ? "YES (${loadedToken.length} chars)" : "NO"}',
+          );
         }
-        
+
         if (mounted) {
           context.go('/home');
         }
@@ -233,7 +255,9 @@ class _LoginPageState extends ConsumerState<LoginPage>
                       decoration: BoxDecoration(
                         color: Colors.orange.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                        border: Border.all(
+                          color: Colors.orange.withOpacity(0.5),
+                        ),
                       ),
                       child: Row(
                         children: [
