@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rasc_unl_flutter_app/app/modules/auth/domain/models/user_model.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
+import 'package:rasc_unl_flutter_app/core/utils/timezone_utils.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -466,7 +467,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         context: context,
                         initialDate: selectedDate ?? DateTime(2000, 1, 1),
                         firstDate: DateTime(1900),
-                        lastDate: DateTime.now(),
+                        lastDate: utcNow(),
                         builder: (context, child) {
                           return Theme(
                             data: Theme.of(context).copyWith(
@@ -558,7 +559,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       isActive: currentUser.isActive,
                       birthDate: selectedDate,
                       createdAt: currentUser.createdAt,
-                      updatedAt: DateTime.now(),
+                      updatedAt: utcNow(),
                     );
 
                     // Actualizar en el repositorio

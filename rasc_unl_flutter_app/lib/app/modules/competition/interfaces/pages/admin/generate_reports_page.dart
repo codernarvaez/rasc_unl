@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
+import 'package:rasc_unl_flutter_app/core/utils/timezone_utils.dart';
 
 class GenerateReportsPage extends ConsumerStatefulWidget {
   const GenerateReportsPage({Key? key}) : super(key: key);
@@ -63,7 +64,7 @@ class _GenerateReportsPageState extends ConsumerState<GenerateReportsPage> {
           : 0;
 
       // Próximas competencias
-      final now = DateTime.now();
+      final now = utcNow();
       final upcomingCompetences = competences.where((c) {
         return c.isActive && 
                c.competitionDate != null && 
@@ -71,7 +72,7 @@ class _GenerateReportsPageState extends ConsumerState<GenerateReportsPage> {
       }).toList()..sort((a, b) => a.competitionDate!.compareTo(b.competitionDate!));
 
       return {
-        'generated_at': DateTime.now(),
+        'generated_at': utcNow(),
         'users': {
           'total': totalUsers,
           'active': activeUsers,

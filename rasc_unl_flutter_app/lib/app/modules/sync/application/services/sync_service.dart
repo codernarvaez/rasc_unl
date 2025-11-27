@@ -4,6 +4,7 @@ import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/compe
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/repositories/competence_repository.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/repositories/competition_registration_repository.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/repositories/competition_time_record_repository.dart';
+import 'package:rasc_unl_flutter_app/core/utils/timezone_utils.dart';
 
 class SyncService {
   final CompetenceRepository _localCompetenceRepository;
@@ -66,7 +67,7 @@ class SyncService {
 
         final syncedCompetence = competence.copyWith(
           syncStatus: 'synced',
-          lastSyncAt: DateTime.now(),
+          lastSyncAt: utcNow(),
         );
         await _localCompetenceRepository.updateCompetence(syncedCompetence);
       } catch (e) {
@@ -112,7 +113,7 @@ class SyncService {
 
         final syncedReg = reg.copyWith(
           syncStatus: 'synced',
-          lastSyncAt: DateTime.now(),
+          lastSyncAt: utcNow(),
         );
         await _localRegistrationRepository.updateRegistration(syncedReg);
       } catch (e) {
@@ -171,7 +172,7 @@ class SyncService {
 
               final syncedRecord = record.copyWith(
                 syncStatus: 'synced',
-                lastSyncAt: DateTime.now(),
+                lastSyncAt: utcNow(),
               );
               await _localTimeRecordRepository.updateTimeRecord(syncedRecord);
             } catch (e) {

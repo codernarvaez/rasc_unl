@@ -1,11 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.encoders import jsonable_encoder
 from contextlib import asynccontextmanager
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from app.core.config.enviroment import _SETTINGS
 import asyncio
+from datetime import datetime, timezone
+import json
 
 
 @asynccontextmanager
@@ -82,6 +85,22 @@ async def lifespan(app: FastAPI):
 # Inicializar rate limiter
 limiter = Limiter(key_func=get_remote_address)
 
+
+# Custom JSON encoder para garantizar que todas las fechas se envíen en UTC ISO 8601
+class UTCJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            # Asegurar que todas las fechas se serialicen en UTC con formato ISO 8601
+            if obj.tzinfo is None:
+                # Si es naive, asumir UTC
+                obj = obj.replace(tzinfo=timezone.utc)
+            else:
+                # Convertir a UTC si tiene otra timezone
+                obj = obj.astimezone(timezone.utc)
+            return obj.isoformat()
+        return super().default(obj)
+
+
 _APP = FastAPI(
     title='API Dalios',
     description=(
@@ -95,7 +114,9 @@ _APP = FastAPI(
         'email': 'dalios.solutions@gmail.com',
         'url': 'https://dalios.solutions',
     },
-    lifespan=lifespan
+    lifespan=lifespan,
+    # Configurar JSON response para usar nuestro encoder UTC
+    json_encoder=UTCJSONEncoder
 )
 
 # Agregar el state del limiter a la app

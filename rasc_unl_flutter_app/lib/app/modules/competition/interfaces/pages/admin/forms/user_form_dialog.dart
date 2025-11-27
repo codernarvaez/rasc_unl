@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rasc_unl_flutter_app/app/shared/utils/utils.dart';
+import 'package:rasc_unl_flutter_app/core/utils/timezone_utils.dart';
 
 class UserFormDialog extends StatefulWidget {
   final Function(UserFormData) onSave;
@@ -48,7 +49,7 @@ class _UserFormDialogState extends State<UserFormDialog> {
     _nameController = TextEditingController();
     _lastNameController = TextEditingController();
     _emailController = TextEditingController();
-    _selectedBirthDate = DateTime.now().subtract(Duration(days: 365 * 18)); // 18 años atrás
+    _selectedBirthDate = utcNow().subtract(Duration(days: 365 * 18)); // 18 años atrás
   }
 
   @override
@@ -80,7 +81,7 @@ class _UserFormDialogState extends State<UserFormDialog> {
     }
 
     // Validar edad mínima de 6 años
-    final now = DateTime.now();
+    final now = utcNow();
     final age = now.year - _selectedBirthDate.year;
     final hasHadBirthdayThisYear = now.month > _selectedBirthDate.month ||
         (now.month == _selectedBirthDate.month && now.day >= _selectedBirthDate.day);
@@ -457,7 +458,7 @@ class _UserFormDialogState extends State<UserFormDialog> {
           context: context,
           initialDate: _selectedBirthDate,
           firstDate: DateTime(1900),
-          lastDate: DateTime.now(),
+          lastDate: utcNow(),
           builder: (context, child) {
             return Theme(
               data: ThemeData.dark().copyWith(

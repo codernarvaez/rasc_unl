@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field, ConfigDict
-from datetime import datetime, date
+from pydantic import BaseModel, Field, ConfigDict, field_serializer
+from datetime import datetime, date, timezone
 from typing import Optional, List
 
 
@@ -8,17 +8,35 @@ from typing import Optional, List
 # ============================================
 
 class CompetenceBase(BaseModel):
-    """Schema base para Competence"""
+    """Schema base para Competence - Todas las fechas en UTC"""
     name: str = Field(..., min_length=1, max_length=255, description="Nombre de la competencia")
-    competition_date: datetime = Field(..., description="Fecha y hora de inicio de la competencia")
+    competition_date: datetime = Field(..., description="Fecha y hora de inicio de la competencia en UTC")
     is_active: bool = Field(default=True, description="Estado activo/inactivo")
     is_finished: bool = Field(default=False, description="Indica si la competencia finalizó")
+    
+    @field_serializer('competition_date')
+    def serialize_competition_date(self, dt: datetime) -> str:
+        """Serializar fecha en UTC ISO 8601"""
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
+        return dt.isoformat()
 
 
 class CompetenceCreate(BaseModel):
     """Schema para crear una competencia - Solo admins"""
     name: str = Field(..., min_length=1, max_length=255, description="Nombre de la competencia")
-    competition_date: datetime = Field(..., description="Fecha y hora de inicio de la competencia")
+    competition_date: datetime = Field(..., description="Fecha y hora de inicio de la competencia en UTC")
+    
+    @field_serializer('competition_date')
+    def serialize_competition_date(self, dt: datetime) -> str:
+        """Serializar fecha en UTC ISO 8601"""
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
+        return dt.isoformat()
 
 
 class CompetenceUpdate(BaseModel):
@@ -30,7 +48,7 @@ class CompetenceUpdate(BaseModel):
 
 
 class CompetenceResponse(BaseModel):
-    """Schema de respuesta para una competencia"""
+    """Schema de respuesta para una competencia - Fechas en UTC"""
     model_config = ConfigDict(from_attributes=True)
     
     id: str
@@ -41,6 +59,15 @@ class CompetenceResponse(BaseModel):
     created_by: str
     created_at: datetime
     updated_at: datetime
+    
+    @field_serializer('competition_date', 'created_at', 'updated_at')
+    def serialize_datetime(self, dt: datetime) -> str:
+        """Serializar todas las fechas en UTC ISO 8601"""
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
+        return dt.isoformat()
 
 
 class CompetenceWithRegistrations(CompetenceResponse):
@@ -72,7 +99,7 @@ class CompetitionRegistrationUpdate(BaseModel):
 
 
 class CompetitionRegistrationResponse(BaseModel):
-    """Schema de respuesta para un registro"""
+    """Schema de respuesta para un registro - Fechas en UTC"""
     model_config = ConfigDict(from_attributes=True)
     
     id: str
@@ -83,6 +110,15 @@ class CompetitionRegistrationResponse(BaseModel):
     competence_id: str
     created_at: datetime
     updated_at: datetime
+    
+    @field_serializer('created_at', 'updated_at')
+    def serialize_datetime(self, dt: datetime) -> str:
+        """Serializar todas las fechas en UTC ISO 8601"""
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
+        return dt.isoformat()
 
 
 class CompetitionRegistrationWithCompetence(CompetitionRegistrationResponse):
@@ -127,13 +163,22 @@ class TimeRecordUpdate(BaseModel):
 
 
 class TimeRecordResponse(BaseModel):
-    """Schema de respuesta para un registro de tiempo"""
+    """Schema de respuesta para un registro de tiempo - Fechas en UTC"""
     model_config = ConfigDict(from_attributes=True)
     
     id: str
     time: int
     competition_registration_id: str
     created_at: datetime
+    
+    @field_serializer('created_at')
+    def serialize_datetime(self, dt: datetime) -> str:
+        """Serializar fechas en UTC ISO 8601"""
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
+        return dt.isoformat()
 
 
 class TimeRecordListResponse(BaseModel):
@@ -141,3 +186,14 @@ class TimeRecordListResponse(BaseModel):
     time_records: List[TimeRecordResponse]
     total: int
     updated_at: Optional[datetime] = None
+    
+    @field_serializer('updated_at')
+    def serialize_datetime(self, dt: Optional[datetime]) -> Optional[str]:
+        """Serializar fechas en UTC ISO 8601"""
+        if dt is None:
+            return None
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
+        return dt.isoformat()

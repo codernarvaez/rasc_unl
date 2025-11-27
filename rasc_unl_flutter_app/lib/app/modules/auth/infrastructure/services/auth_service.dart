@@ -4,6 +4,7 @@ import 'package:rasc_unl_flutter_app/app/modules/auth/domain/repositories/auth_r
 import 'package:rasc_unl_flutter_app/app/modules/auth/domain/repositories/user_repository.dart';
 import 'package:rasc_unl_flutter_app/app/modules/auth/infrastructure/repositories/local/session_local_repository.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
+import 'package:rasc_unl_flutter_app/core/utils/timezone_utils.dart';
 
 /// Resultado de operaciones de autenticación
 class AuthResult {
@@ -145,7 +146,7 @@ class AuthService {
       }
 
       // Calcular expiración del token (típicamente 30 minutos)
-      final tokenExpiresAt = DateTime.now().add(const Duration(minutes: 30));
+      final tokenExpiresAt = utcNow().add(const Duration(minutes: 30));
 
       // Desactivar sesiones anteriores
       await _sessionRepo.deactivateAllSessions();
@@ -316,7 +317,7 @@ class AuthService {
       final session = await _sessionRepo.getActiveSession();
 
       if (session != null) {
-        final tokenExpiresAt = DateTime.now().add(const Duration(minutes: 30));
+        final tokenExpiresAt = utcNow().add(const Duration(minutes: 30));
         await _sessionRepo.updateSessionTokens(
           sessionId: session.id,
           accessToken: loginResponse.accessToken,

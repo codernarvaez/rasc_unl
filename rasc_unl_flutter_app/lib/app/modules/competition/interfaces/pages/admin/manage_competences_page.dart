@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competence_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/admin/forms/competence_form_dialog.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
+import 'package:rasc_unl_flutter_app/core/utils/timezone_utils.dart';
 import 'package:uuid/uuid.dart';
 
 class ManageCompetencesPage extends ConsumerStatefulWidget {
@@ -92,7 +93,7 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
                 isActive: formData.isActive,
                 isFinished: false,
                 createdBy: admin.dni,
-                createdAt: DateTime.now(),
+                createdAt: utcNow(),
                 updatedAt: null,
               );
               await repository.createCompetence(newCompetence);
@@ -115,7 +116,7 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
                 isFinished: competence.isFinished,
                 createdBy: competence.createdBy,
                 createdAt: competence.createdAt,
-                updatedAt: DateTime.now(),
+                updatedAt: utcNow(),
               );
               await repository.updateCompetence(updatedCompetence);
 
@@ -514,7 +515,10 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
                     SizedBox(width: 8),
                     Text(
                       competence.competitionDate != null
-                          ? '${competence.competitionDate!.day.toString().padLeft(2, '0')}/${competence.competitionDate!.month.toString().padLeft(2, '0')}/${competence.competitionDate!.year}'
+                          ? () {
+                              final ecuadorDate = toEcuadorTime(competence.competitionDate!);
+                              return '${ecuadorDate.day.toString().padLeft(2, '0')}/${ecuadorDate.month.toString().padLeft(2, '0')}/${ecuadorDate.year} ${ecuadorDate.hour.toString().padLeft(2, '0')}:${ecuadorDate.minute.toString().padLeft(2, '0')}';
+                            }()
                           : 'Sin fecha',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.7),
@@ -653,7 +657,7 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
         createdBy: competence.createdBy,
         createdAt: competence.createdAt,
         isFinished: competence.isFinished,
-        updatedAt: DateTime.now(),
+        updatedAt: utcNow(),
       );
 
       await ref

@@ -1,6 +1,6 @@
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, field_serializer
 from typing import Optional
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from app.modules.auth.models.user_model import RoleEnum
 
 # Base schemas (solo campos comunes)
@@ -50,6 +50,7 @@ class LoginRequest(BaseModel):
 
 # Response schemas
 class UserResponse(BaseModel):
+    """Schema de respuesta para usuarios - Fechas en UTC"""
     id: int
     email: EmailStr
     first_name: str
@@ -62,6 +63,15 @@ class UserResponse(BaseModel):
     updated_at: datetime
     
     model_config = ConfigDict(from_attributes=True)
+    
+    @field_serializer('created_at', 'updated_at')
+    def serialize_datetime(self, dt: datetime) -> str:
+        """Serializar todas las fechas en UTC ISO 8601"""
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
+        return dt.isoformat()
 
 
 class TokenResponse(BaseModel):

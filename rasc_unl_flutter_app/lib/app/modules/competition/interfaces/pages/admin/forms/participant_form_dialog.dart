@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rasc_unl_flutter_app/app/modules/auth/domain/models/user_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competition_registration_model.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
+import 'package:rasc_unl_flutter_app/core/utils/timezone_utils.dart';
 import 'package:uuid/uuid.dart';
 
 class ParticipantFormDialog extends ConsumerStatefulWidget {
@@ -120,8 +121,8 @@ class _ParticipantFormDialogState extends ConsumerState<ParticipantFormDialog> {
       competenceId: widget.competenceId,
       createdAt: isEditing
           ? widget.participantToEdit!.createdAt
-          : DateTime.now(),
-      updatedAt: DateTime.now(),
+          : utcNow(),
+      updatedAt: utcNow(),
       syncStatus: 'pending',
       version: isEditing ? widget.participantToEdit!.version + 1 : 1,
       isDeleted: false,

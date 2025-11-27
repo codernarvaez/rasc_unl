@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Optional
 
 from app.core.db.database import get_session
+from app.core.utils.timezone import utc_now
 from app.modules.sync.schemas import (
     SyncPullResponse,
     SyncPushRequest,
@@ -54,7 +55,7 @@ async def pull_sync_data(
         competences=[CompetenceSyncData.from_orm(c) for c in competences],
         registrations=[RegistrationSyncData.from_orm(r) for r in registrations],
         time_records=[TimeRecordSyncData.from_orm(t) for t in time_records],
-        sync_timestamp=datetime.now()
+        sync_timestamp=utc_now()
     )
 
 @router.post("/push", response_model=SyncPushResponse)
@@ -78,12 +79,12 @@ async def push_sync_data(
                 for key, value in comp_data.dict(exclude={'id'}).items():
                     setattr(existing, key, value)
                 existing.sync_status = SyncStatus.SYNCED
-                existing.last_sync_at = datetime.now()
+                existing.last_sync_at = utc_now()
             else:
                 # Create new
                 new_comp = CompetenceModel(**comp_data.dict())
                 new_comp.sync_status = SyncStatus.SYNCED
-                new_comp.last_sync_at = datetime.now()
+                new_comp.last_sync_at = utc_now()
                 db.add(new_comp)
             
             synced_count["competences"] += 1
@@ -98,11 +99,11 @@ async def push_sync_data(
                 for key, value in reg_data.dict(exclude={'id'}).items():
                     setattr(existing, key, value)
                 existing.sync_status = SyncStatus.SYNCED
-                existing.last_sync_at = datetime.now()
+                existing.last_sync_at = utc_now()
             else:
                 new_reg = CompetitionRegistrationModel(**reg_data.dict())
                 new_reg.sync_status = SyncStatus.SYNCED
-                new_reg.last_sync_at = datetime.now()
+                new_reg.last_sync_at = utc_now()
                 db.add(new_reg)
             
             synced_count["registrations"] += 1
@@ -115,11 +116,11 @@ async def push_sync_data(
                 for key, value in tr_data.dict(exclude={'id'}).items():
                     setattr(existing, key, value)
                 existing.sync_status = SyncStatus.SYNCED
-                existing.last_sync_at = datetime.now()
+                existing.last_sync_at = utc_now()
             else:
                 new_tr = TimeRecordModel(**tr_data.dict())
                 new_tr.sync_status = SyncStatus.SYNCED
-                new_tr.last_sync_at = datetime.now()
+                new_tr.last_sync_at = utc_now()
                 db.add(new_tr)
             
             synced_count["time_records"] += 1

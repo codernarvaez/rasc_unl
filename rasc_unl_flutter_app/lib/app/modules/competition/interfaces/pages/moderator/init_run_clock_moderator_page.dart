@@ -7,6 +7,7 @@ import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/compe
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competition_registration_model.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 import 'package:uuid/uuid.dart';
+import 'package:rasc_unl_flutter_app/core/utils/timezone_utils.dart';
 
 class InitRunClockModeratorPage extends ConsumerStatefulWidget {
   const InitRunClockModeratorPage({super.key});
@@ -94,7 +95,7 @@ class _InitRunClockModeratorState
       // Obtener todas las competencias activas
       final allCompetences = await repository.competenceRepository
           .getAllCompetences();
-      final now = DateTime.now();
+      final now = utcNow();
 
       // Filtrar competencias activas futuras (incluyendo hoy)
       final futureCompetences = allCompetences.where((comp) {
@@ -160,8 +161,10 @@ class _InitRunClockModeratorState
   void _checkTimeAndStart() {
     if (_competitionDateTime == null) return;
 
-    final now = DateTime.now();
-    final difference = _competitionDateTime!.difference(now);
+    // CRÍTICO: Usar UTC para cálculos de tiempo precisos
+    final now = utcNow();
+    final competitionDateUtc = toUtc(_competitionDateTime!);
+    final difference = competitionDateUtc.difference(now);
 
     if (difference.inMilliseconds > 0) {
       // Iniciar cuenta regresiva
@@ -854,7 +857,7 @@ class _InitRunClockModeratorState
         name: '${currentUser.firstName} ${currentUser.lastName}',
         userDni: currentUser.dni,
         competenceId: _nextCompetence!.id,
-        createdAt: DateTime.now(),
+        createdAt: utcNow(),
       );
 
       await repository.competitionRegistrationRepository.createRegistration(

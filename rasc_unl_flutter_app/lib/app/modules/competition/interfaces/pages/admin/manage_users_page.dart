@@ -5,6 +5,7 @@ import 'package:rasc_unl_flutter_app/app/modules/auth/domain/models/user_model.d
 import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/admin/forms/user_form_dialog.dart';
 import 'package:rasc_unl_flutter_app/app/modules/main_repository.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
+import 'package:rasc_unl_flutter_app/core/utils/timezone_utils.dart';
 
 enum UserRole { admin, user, moderator }
 
@@ -74,7 +75,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
         email: userModel.email,
         role: role,
         isActive: userModel.isActive,
-        birthDate: userModel.birthDate ?? DateTime.now(),
+        birthDate: userModel.birthDate ?? utcNow(),
       );
     }).toList();
   }
@@ -196,7 +197,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
             
 
             final newUser = UserModel(
-              id: DateTime.now().millisecondsSinceEpoch,
+              id: utcNow().millisecondsSinceEpoch,
               dni: formData.dni,
               firstName: formData.firstName,
               lastName: formData.lastName,

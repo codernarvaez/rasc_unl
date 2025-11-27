@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competence_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competition_registration_model.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
+import 'package:rasc_unl_flutter_app/core/utils/timezone_utils.dart';
 import 'package:uuid/uuid.dart';
 
 class CompetenceDetailsPage extends ConsumerStatefulWidget {
@@ -715,7 +716,7 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
         name: '${currentUser.firstName} ${currentUser.lastName}',
         userDni: currentUser.dni,
         competenceId: widget.competenceId,
-        createdAt: DateTime.now(),
+        createdAt: utcNow(),
       );
 
       await repository.competitionRegistrationRepository.createRegistration(

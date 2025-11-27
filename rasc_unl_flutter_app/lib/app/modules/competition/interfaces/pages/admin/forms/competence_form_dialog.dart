@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competence_model.dart';
+import 'package:rasc_unl_flutter_app/core/utils/timezone_utils.dart';
 
 class CompetenceFormDialog extends StatefulWidget {
   final CompetenceModel? competence;
@@ -36,7 +37,13 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
     _nameController = TextEditingController(
       text: widget.competence?.name ?? '',
     );
-    _selectedDate = widget.competence?.competitionDate ?? DateTime.now();
+    // Si hay una competencia existente, convertir de UTC a hora de Ecuador para edición
+    // Si es nueva, usar hora actual de Ecuador
+    if (widget.competence?.competitionDate != null) {
+      _selectedDate = toEcuadorTime(widget.competence!.competitionDate!);
+    } else {
+      _selectedDate = toEcuadorTime(utcNow());
+    }
     _isActive = widget.competence?.isActive ?? true;
   }
 
@@ -51,9 +58,12 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
       return;
     }
 
+    // Convertir la fecha de Ecuador a UTC antes de guardar
+    final utcDate = fromEcuadorTimeToUtc(_selectedDate);
+
     final formData = CompetenceFormData(
       name: _nameController.text.trim(),
-      competitionDate: _selectedDate,
+      competitionDate: utcDate,
       isActive: _isActive,
     );
 
@@ -168,11 +178,19 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
 
                       // Fecha de la competencia
                       Text(
-                        'Fecha y Hora de la Competencia',
+                        'Fecha y Hora de la Competencia (Hora Ecuador)',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Zona horaria: UTC-5',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
                         ),
                       ),
                       SizedBox(height: 8),
@@ -181,7 +199,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
                           final date = await showDatePicker(
                             context: context,
                             initialDate: _selectedDate,
-                            firstDate: DateTime.now(),
+                            firstDate: toEcuadorTime(utcNow()),
                             lastDate: DateTime(2100),
                             builder: (context, child) {
                               return Theme(
@@ -217,6 +235,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
 
                             if (time != null) {
                               setState(() {
+                                // Crear fecha en hora de Ecuador (sin timezone)
                                 _selectedDate = DateTime(
                                   date.year,
                                   date.month,

@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/time_record_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/repositories/competition_time_record_repository.dart';
 import 'package:rasc_unl_flutter_app/database/local_database/app_local_database.dart';
+import 'package:rasc_unl_flutter_app/core/utils/timezone_utils.dart';
 
 class LocalCompetitionTimeRecordRepositoryImpl
     implements CompetitionTimeRecordRepository {
@@ -88,7 +89,7 @@ class LocalCompetitionTimeRecordRepositoryImpl
 
   @override
   Future<TimeRecordModel> updateTimeRecord(TimeRecordModel timeRecord) async {
-    final now = DateTime.now();
+    final now = utcNow();
 
     await (_localDatabase.update(
       _localDatabase.competitionTimeRecordTable,

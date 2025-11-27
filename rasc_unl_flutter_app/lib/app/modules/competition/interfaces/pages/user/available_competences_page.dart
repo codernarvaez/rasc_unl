@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competence_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competition_registration_model.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
+import 'package:rasc_unl_flutter_app/core/utils/timezone_utils.dart';
 import 'package:uuid/uuid.dart';
 
 class AvailableCompetencesPage extends ConsumerStatefulWidget {
@@ -55,7 +56,7 @@ class _AvailableCompetencesPageState
       // Obtener todas las competencias
       final allCompetences = await repository.competenceRepository
           .getAllCompetences();
-      final now = DateTime.now();
+      final now = utcNow();
 
       // Filtrar competencias activas (futuras hasta la fecha, incluyendo hoy)
       final active = allCompetences.where((comp) {
@@ -619,7 +620,7 @@ class _AvailableCompetencesPageState
         name: '${currentUser.firstName} ${currentUser.lastName}',
         userDni: currentUser.dni,
         competenceId: competence.id,
-        createdAt: DateTime.now(),
+        createdAt: utcNow(),
       );
 
       await repository.competitionRegistrationRepository.createRegistration(

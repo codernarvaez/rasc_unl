@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:rasc_unl_flutter_app/core/utils/timezone_utils.dart';
 import 'package:rasc_unl_flutter_app/database/local_database/app_local_database.dart';
 
 /// Repositorio para gestionar sesiones locales en Drift
@@ -62,7 +63,7 @@ class SessionLocalRepository {
         accessToken: Value(accessToken),
         refreshToken: Value(refreshToken),
         tokenExpiresAt: Value(tokenExpiresAt),
-        lastLoginAt: Value(DateTime.now()),
+        lastLoginAt: Value(utcNow()),
       ),
     );
   }
@@ -72,7 +73,7 @@ class SessionLocalRepository {
     await (_db.update(_db.sessionTable)..where((t) => t.id.equals(sessionId)))
         .write(
       SessionTableCompanion(
-        lastLoginAt: Value(DateTime.now()),
+        lastLoginAt: Value(utcNow()),
       ),
     );
   }
