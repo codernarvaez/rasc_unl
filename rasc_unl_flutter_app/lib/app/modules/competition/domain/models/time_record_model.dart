@@ -5,7 +5,7 @@ part 'time_record_model.g.dart';
 @JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
 class TimeRecordModel {
   final String id;
-  @DurationConverter()
+  @DurationMillisecondsConverter()
   final Duration time; // Time in milliseconds
   final String competitionRegistrationId;
   final DateTime createdAt;
@@ -64,13 +64,12 @@ class TimeRecordModel {
   Map<String, dynamic> toJson() => _$TimeRecordModelToJson(this);
 }
 
-class DurationConverter implements JsonConverter<Duration?, int?> {
-  const DurationConverter();
+class DurationMillisecondsConverter implements JsonConverter<Duration, int> {
+  const DurationMillisecondsConverter();
 
   @override
-  Duration? fromJson(int? json) =>
-      json != null ? Duration(milliseconds: json) : null;
+  Duration fromJson(int json) => Duration(milliseconds: json);
 
   @override
-  int? toJson(Duration? object) => object?.inMilliseconds;
+  int toJson(Duration object) => object.inMilliseconds;
 }

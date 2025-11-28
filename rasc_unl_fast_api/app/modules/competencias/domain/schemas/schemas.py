@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict, field_serializer
+from pydantic import BaseModel, Field, ConfigDict, field_serializer, field_validator
 from datetime import datetime, date, timezone
 from typing import Optional, List
 
@@ -29,14 +29,13 @@ class CompetenceCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255, description="Nombre de la competencia")
     competition_date: datetime = Field(..., description="Fecha y hora de inicio de la competencia en UTC")
     
-    @field_serializer('competition_date')
-    def serialize_competition_date(self, dt: datetime) -> str:
-        """Serializar fecha en UTC ISO 8601"""
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        else:
-            dt = dt.astimezone(timezone.utc)
-        return dt.isoformat()
+    @field_validator('competition_date', mode='before')
+    @classmethod
+    def parse_competition_date(cls, v):
+        """Parsear string ISO 8601 a datetime si es necesario"""
+        if isinstance(v, str):
+            return datetime.fromisoformat(v.replace('Z', '+00:00'))
+        return v
 
 
 class CompetenceUpdate(BaseModel):
@@ -153,8 +152,26 @@ class TimeRecordBase(BaseModel):
 
 class TimeRecordCreate(BaseModel):
     """Schema para crear un registro de tiempo - Moderadores"""
+    id: str = Field(..., min_length=1, description="ID único del registro")
     time: int = Field(..., ge=0, description="Tiempo en milisegundos")
     competition_registration_id: str = Field(..., min_length=1, description="ID del registro de competencia")
+    sync_status: Optional[str] = Field(default="pending", description="Estado de sincronización")
+    last_sync_at: Optional[datetime] = Field(default=None, description="Última sincronización")
+    version: Optional[int] = Field(default=1, description="Versión del registro")
+    device_id: Optional[str] = Field(default=None, description="ID del dispositivo")
+    is_deleted: Optional[bool] = Field(default=False, description="Registro eliminado")
+    
+    @field_validator('last_sync_at', mode='before')
+    @classmethod
+    def parse_last_sync_at(cls, v):
+        """Parsear string ISO 8601 a datetime si es necesario"""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            return datetime.fromisoformat(v.replace('Z', '+00:00'))
+        return v
+    is_deleted: Optional[bool] = Field(default=False, description="Registro eliminado")
+    
 
 
 class TimeRecordUpdate(BaseModel):
@@ -170,10 +187,18 @@ class TimeRecordResponse(BaseModel):
     time: int
     competition_registration_id: str
     created_at: datetime
+    updated_at: datetime
+    sync_status: str
+    last_sync_at: Optional[datetime] = None
+    version: int
+    device_id: Optional[str] = None
+    is_deleted: bool
     
-    @field_serializer('created_at')
-    def serialize_datetime(self, dt: datetime) -> str:
+    @field_serializer('created_at', 'updated_at', 'last_sync_at')
+    def serialize_datetime(self, dt: Optional[datetime]) -> Optional[str]:
         """Serializar fechas en UTC ISO 8601"""
+        if dt is None:
+            return None
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
         else:

@@ -9,7 +9,9 @@ part of 'time_record_model.dart';
 TimeRecordModel _$TimeRecordModelFromJson(Map<String, dynamic> json) =>
     TimeRecordModel(
       id: json['id'] as String,
-      time: Duration(microseconds: (json['time'] as num).toInt()),
+      time: const DurationMillisecondsConverter().fromJson(
+        (json['time'] as num).toInt(),
+      ),
       competitionRegistrationId: json['competition_registration_id'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
@@ -25,7 +27,7 @@ TimeRecordModel _$TimeRecordModelFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$TimeRecordModelToJson(TimeRecordModel instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'time': instance.time.inMicroseconds,
+      'time': const DurationMillisecondsConverter().toJson(instance.time),
       'competition_registration_id': instance.competitionRegistrationId,
       'created_at': instance.createdAt.toIso8601String(),
       'updated_at': instance.updatedAt.toIso8601String(),

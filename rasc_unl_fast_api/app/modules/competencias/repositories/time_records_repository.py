@@ -3,6 +3,7 @@ from sqlalchemy.future import select
 from sqlalchemy import func
 from typing import List, Optional
 from app.modules.competencias.domain.models.time_record_model import TimeRecordModel
+from app.modules.competencias.domain.models.competence_model import SyncStatus
 from app.modules.competencias.domain.schemas.schemas import TimeRecordCreate, TimeRecordUpdate
 
 
@@ -14,9 +15,23 @@ class TimeRecordRepository:
 
     async def create(self, time_record_data: TimeRecordCreate) -> TimeRecordModel:
         """Crea un nuevo registro de tiempo"""
+        # Convertir sync_status string a Enum
+        sync_status_enum = SyncStatus.PENDING
+        if time_record_data.sync_status:
+            try:
+                sync_status_enum = SyncStatus(time_record_data.sync_status.lower())
+            except ValueError:
+                sync_status_enum = SyncStatus.PENDING
+        
         time_record = TimeRecordModel(
+            id=time_record_data.id,
             time=time_record_data.time,
             competition_registration_id=time_record_data.competition_registration_id,
+            sync_status=sync_status_enum,
+            last_sync_at=time_record_data.last_sync_at,
+            version=time_record_data.version,
+            device_id=time_record_data.device_id,
+            is_deleted=time_record_data.is_deleted,
         )
         self.session.add(time_record)
         await self.session.flush()

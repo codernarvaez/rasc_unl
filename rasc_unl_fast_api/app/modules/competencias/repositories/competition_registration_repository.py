@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
+from sqlalchemy.orm import joinedload
 from typing import List, Optional
 from app.modules.competencias.domain.models import CompetitionRegistrationModel
 from app.modules.competencias.domain.schemas.schemas import CompetitionRegistrationCreate, CompetitionRegistrationUpdate
@@ -29,9 +30,11 @@ class CompetitionRegistrationRepository:
         return registration
 
     async def get_by_id(self, registration_id: str) -> Optional[CompetitionRegistrationModel]:
-        """Gets a registration by its ID"""
+        """Gets a registration by its ID with eager loading of competence"""
         result = await self.session.execute(
-            select(CompetitionRegistrationModel).where(CompetitionRegistrationModel.id == registration_id)
+            select(CompetitionRegistrationModel)
+            .options(joinedload(CompetitionRegistrationModel.competence))
+            .where(CompetitionRegistrationModel.id == registration_id)
         )
         return result.scalar_one_or_none()
 
