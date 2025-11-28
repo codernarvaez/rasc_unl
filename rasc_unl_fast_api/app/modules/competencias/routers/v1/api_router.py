@@ -65,8 +65,7 @@ async def get_competences(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     is_active: Optional[bool] = Query(None),
-    service: CompetenceService = Depends(get_competence_service),
-    current_user: CurrentUser = None
+    service: CompetenceService = Depends(get_competence_service)
 ):
     """Obtiene todas las competencias con paginación y filtros opcionales."""
     return await service.get_all_competences(skip=skip, limit=limit, is_active=is_active)
@@ -79,7 +78,6 @@ async def get_competences(
 )
 async def get_competence(
     competence_id: str,
-    current_user: CurrentUser,
     service: CompetenceService = Depends(get_competence_service)
 ):
     """Obtiene una competencia específica por su ID."""
@@ -151,8 +149,7 @@ async def get_registrations_by_competence(
     competence_id: str,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    service: CompetitionRegistrationService = Depends(get_competition_registration_service),
-    current_user: CurrentUser = None
+    service: CompetitionRegistrationService = Depends(get_competition_registration_service)
 ):
     """Obtiene todos los registros de una competencia específica."""
     return await service.get_registrations_by_competence(competence_id, skip, limit)
@@ -165,7 +162,6 @@ async def get_registrations_by_competence(
 )
 async def get_registration(
     registration_id: str,
-    current_user: CurrentUser,
     service: CompetitionRegistrationService = Depends(get_competition_registration_service)
 ):
     """Obtiene un registro específico por su ID."""
@@ -233,8 +229,7 @@ async def get_time_records_by_registration(
     registration_id: str,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    service: TimeRecordService = Depends(get_time_record_service),
-    current_user: CurrentUser = None
+    service: TimeRecordService = Depends(get_time_record_service)
 ):
     """Obtiene todos los registros de tiempo de un competition registration."""
     return await service.get_time_records_by_registration(registration_id, skip, limit)
@@ -247,7 +242,6 @@ async def get_time_records_by_registration(
 )
 async def get_time_record(
     time_record_id: str,
-    current_user: CurrentUser,
     service: TimeRecordService = Depends(get_time_record_service)
 ):
     """Obtiene un registro de tiempo específico."""

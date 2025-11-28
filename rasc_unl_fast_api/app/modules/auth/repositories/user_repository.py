@@ -53,7 +53,7 @@ class UserRepository:
         await self.session.refresh(user)
         return user
 
-    async def get_by_id(self, user_id: int) -> Optional[UserModel]:
+    async def get_by_id(self, user_id: str) -> Optional[UserModel]:
         """Get user by ID."""
         result = await self.session.execute(
             select(UserModel).where(UserModel.id == user_id)
@@ -106,7 +106,7 @@ class UserRepository:
         result = await self.session.execute(query)
         return list(result.scalars().all())
 
-    async def update(self, user_id: int, user_data: UserUpdate) -> Optional[UserModel]:
+    async def update(self, user_id: str, user_data: UserUpdate) -> Optional[UserModel]:
         """Update user information."""
         user = await self.get_by_id(user_id)
         if not user:
@@ -123,7 +123,7 @@ class UserRepository:
         await self.session.refresh(user)
         return user
 
-    async def update_password(self, user_id: int, new_password: str) -> Optional[UserModel]:
+    async def update_password(self, user_id: str, new_password: str) -> Optional[UserModel]:
         """Update user password."""
         user = await self.get_by_id(user_id)
         if not user:
@@ -136,7 +136,7 @@ class UserRepository:
         await self.session.refresh(user)
         return user
 
-    async def delete(self, user_id: int) -> bool:
+    async def delete(self, user_id: str) -> bool:
         """Delete user by ID."""
         user = await self.get_by_id(user_id)
         if not user:
@@ -146,7 +146,7 @@ class UserRepository:
         await self.session.commit()
         return True
 
-    async def deactivate(self, user_id: int) -> Optional[UserModel]:
+    async def deactivate(self, user_id: str) -> Optional[UserModel]:
         """Deactivate user (soft delete)."""
         user = await self.get_by_id(user_id)
         if not user:
@@ -157,7 +157,7 @@ class UserRepository:
         await self.session.refresh(user)
         return user
 
-    async def activate(self, user_id: int) -> Optional[UserModel]:
+    async def activate(self, user_id: str) -> Optional[UserModel]:
         """Activate user."""
         user = await self.get_by_id(user_id)
         if not user:

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rasc_unl_flutter_app/app/shared/interfaces/wirgets/connection_banner.dart';
+import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 import 'package:rasc_unl_flutter_app/core/router/router.dart';
 import 'package:flutter/foundation.dart'; // ya lo tienes
 
@@ -21,6 +22,9 @@ class App extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Inicializar autenticación (auto-login)
+    ref.watch(authInitializationProvider);
+
     final appRouter = ref.watch(routerProvider);
 
     return MaterialApp.router(

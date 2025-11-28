@@ -18,7 +18,8 @@ class ParticipantFormDialog extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  ConsumerState<ParticipantFormDialog> createState() => _ParticipantFormDialogState();
+  ConsumerState<ParticipantFormDialog> createState() =>
+      _ParticipantFormDialogState();
 }
 
 class _ParticipantFormDialogState extends ConsumerState<ParticipantFormDialog> {
@@ -26,7 +27,7 @@ class _ParticipantFormDialogState extends ConsumerState<ParticipantFormDialog> {
   final _dorsalController = TextEditingController();
   final _nameController = TextEditingController();
   final _nParticipantsController = TextEditingController();
-  
+
   List<UserModel> _moderators = [];
   UserModel? _selectedModerator;
   bool _isLoadingModerators = true;
@@ -39,8 +40,8 @@ class _ParticipantFormDialogState extends ConsumerState<ParticipantFormDialog> {
     if (isEditing) {
       _dorsalController.text = widget.participantToEdit!.dorsalNumber;
       _nameController.text = widget.participantToEdit!.name;
-      _nParticipantsController.text =
-          widget.participantToEdit!.nParticipants.toString();
+      _nParticipantsController.text = widget.participantToEdit!.nParticipants
+          .toString();
     } else {
       _nParticipantsController.text = '1';
     }
@@ -49,26 +50,39 @@ class _ParticipantFormDialogState extends ConsumerState<ParticipantFormDialog> {
 
   Future<void> _loadModerators() async {
     setState(() => _isLoadingModerators = true);
-    
+
     try {
       final repository = ref.read(rascUNLMainProvider);
       final allUsers = await repository.userRepository.getAllUsers();
-      
-      // Filtrar solo moderadores activos
-      final moderators = allUsers.where((user) => 
-        user.role == 'MODERATOR' && user.isActive
-      ).toList();
-      
+      final registrations = await repository.competitionRegistrationRepository
+          .getRegistrationsByCompetenceId(widget.competenceId);
+
+      // Obtener DNIs ya asignados
+      final assignedDnis = registrations
+          .where((r) => !isEditing || r.id != widget.participantToEdit!.id)
+          .map((r) => r.userDni)
+          .toSet();
+
+      // Filtrar solo moderadores activos y no asignados
+      final moderators = allUsers
+          .where((user) => 
+              user.role == 'MODERATOR' && 
+              user.isActive &&
+              !assignedDnis.contains(user.dni))
+          .toList();
+
       // Ordenar por nombre
-      moderators.sort((a, b) => 
-        '${a.firstName} ${a.lastName}'.compareTo('${b.firstName} ${b.lastName}')
+      moderators.sort(
+        (a, b) => '${a.firstName} ${a.lastName}'.compareTo(
+          '${b.firstName} ${b.lastName}',
+        ),
       );
-      
+
       if (mounted) {
         setState(() {
           _moderators = moderators;
           _isLoadingModerators = false;
-          
+
           // Si estamos editando, seleccionar el moderador actual
           if (isEditing) {
             _selectedModerator = moderators.firstWhere(
@@ -99,7 +113,7 @@ class _ParticipantFormDialogState extends ConsumerState<ParticipantFormDialog> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedModerator == null) {
@@ -112,23 +126,60 @@ class _ParticipantFormDialogState extends ConsumerState<ParticipantFormDialog> {
       return;
     }
 
-    final registration = CompetitionRegistrationModel(
-      id: isEditing ? widget.participantToEdit!.id : const Uuid().v4(),
-      dorsalNumber: _dorsalController.text.trim(),
-      name: _nameController.text.trim(),
-      nParticipants: int.parse(_nParticipantsController.text.trim()),
-      userDni: _selectedModerator!.dni,
-      competenceId: widget.competenceId,
-      createdAt: isEditing
-          ? widget.participantToEdit!.createdAt
-          : utcNow(),
-      updatedAt: utcNow(),
-      syncStatus: 'pending',
-      version: isEditing ? widget.participantToEdit!.version + 1 : 1,
-      isDeleted: false,
-    );
+    // Validar unicidad de dorsal
+    try {
+      final repository = ref.read(rascUNLMainProvider);
+      final registrations = await repository.competitionRegistrationRepository
+          .getRegistrationsByCompetenceId(widget.competenceId);
 
-    Navigator.of(context).pop(registration);
+      final dorsal = _dorsalController.text.trim();
+      final isDuplicate = registrations.any(
+        (r) =>
+            r.dorsalNumber == dorsal &&
+            (!isEditing || r.id != widget.participantToEdit!.id),
+      );
+
+      if (isDuplicate) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'El dorsal $dorsal ya está asignado en esta competencia',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      final registration = CompetitionRegistrationModel(
+        id: isEditing ? widget.participantToEdit!.id : const Uuid().v4(),
+        dorsalNumber: dorsal,
+        name: _nameController.text.trim(),
+        nParticipants: int.parse(_nParticipantsController.text.trim()),
+        userDni: _selectedModerator!.dni,
+        competenceId: widget.competenceId,
+        createdAt: isEditing ? widget.participantToEdit!.createdAt : utcNow(),
+        updatedAt: utcNow(),
+        syncStatus: 'pending',
+        version: isEditing ? widget.participantToEdit!.version + 1 : 1,
+        isDeleted: false,
+      );
+
+      if (mounted) {
+        Navigator.of(context).pop(registration);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al validar: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -190,9 +241,7 @@ class _ParticipantFormDialogState extends ConsumerState<ParticipantFormDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                isEditing
-                    ? 'Editar Participante'
-                    : 'Registrar Participante',
+                isEditing ? 'Editar Participante' : 'Registrar Participante',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 22,
@@ -237,10 +286,7 @@ class _ParticipantFormDialogState extends ConsumerState<ParticipantFormDialog> {
               ),
             ),
             const SizedBox(width: 4),
-            const Text(
-              '*',
-              style: TextStyle(color: Colors.red, fontSize: 16),
-            ),
+            const Text('*', style: TextStyle(color: Colors.red, fontSize: 16)),
           ],
         ),
         const SizedBox(height: 8),
@@ -307,7 +353,10 @@ class _ParticipantFormDialogState extends ConsumerState<ParticipantFormDialog> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFD50000), width: 2),
+                borderSide: const BorderSide(
+                  color: Color(0xFFD50000),
+                  width: 2,
+                ),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -381,10 +430,7 @@ class _ParticipantFormDialogState extends ConsumerState<ParticipantFormDialog> {
               ),
             ),
             const SizedBox(width: 4),
-            const Text(
-              '*',
-              style: TextStyle(color: Colors.red, fontSize: 16),
-            ),
+            const Text('*', style: TextStyle(color: Colors.red, fontSize: 16)),
           ],
         ),
         const SizedBox(height: 8),
@@ -449,10 +495,7 @@ class _ParticipantFormDialogState extends ConsumerState<ParticipantFormDialog> {
               ),
             ),
             const SizedBox(width: 4),
-            const Text(
-              '*',
-              style: TextStyle(color: Colors.red, fontSize: 16),
-            ),
+            const Text('*', style: TextStyle(color: Colors.red, fontSize: 16)),
           ],
         ),
         const SizedBox(height: 8),
@@ -520,10 +563,7 @@ class _ParticipantFormDialogState extends ConsumerState<ParticipantFormDialog> {
               ),
             ),
             const SizedBox(width: 4),
-            const Text(
-              '*',
-              style: TextStyle(color: Colors.red, fontSize: 16),
-            ),
+            const Text('*', style: TextStyle(color: Colors.red, fontSize: 16)),
           ],
         ),
         const SizedBox(height: 8),

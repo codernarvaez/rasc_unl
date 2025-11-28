@@ -1,3 +1,4 @@
+import uuid
 import enum
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, Boolean, Enum, Date, DateTime
@@ -13,7 +14,7 @@ class RoleEnum(str, enum.Enum):
 class UserModel(Base):
     __tablename__ = "user"
     
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
     dni = Column(String, unique=True, index=True, nullable=False)
     role = Column(Enum(RoleEnum), nullable=False, default=RoleEnum.MODERATOR)
     first_name = Column(String, nullable=False)
@@ -24,4 +25,11 @@ class UserModel(Base):
     password = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Sync fields
+    sync_status = Column(String, default='synced', nullable=False)
+    last_sync_at = Column(DateTime(timezone=True), nullable=True)
+    version = Column(Integer, default=1, nullable=False)
+    device_id = Column(String, nullable=True)
+    is_deleted = Column(Boolean, default=False, nullable=False)
     

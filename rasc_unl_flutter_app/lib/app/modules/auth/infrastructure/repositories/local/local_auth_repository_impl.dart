@@ -43,7 +43,7 @@ class LocalAuthRepositoryImpl implements AuthRepository {
       }
 
       // Obtener usuario de la base de datos local
-      final user = await _userRepo.getUserById(session.userId);
+      final user = await _userRepo.getUserByDni(session.dni);
       
       if (user == null) {
         return AuthResult(

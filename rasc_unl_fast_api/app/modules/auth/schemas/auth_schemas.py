@@ -51,7 +51,7 @@ class LoginRequest(BaseModel):
 # Response schemas
 class UserResponse(BaseModel):
     """Schema de respuesta para usuarios - Fechas en UTC"""
-    id: int
+    id: str
     email: EmailStr
     first_name: str
     last_name: str

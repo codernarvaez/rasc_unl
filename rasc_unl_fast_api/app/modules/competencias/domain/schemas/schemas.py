@@ -88,6 +88,7 @@ class CompetitionRegistrationBase(BaseModel):
 class CompetitionRegistrationCreate(CompetitionRegistrationBase):
     """Schema para crear un registro de equipo en competencia - Moderadores"""
     competence_id: str = Field(..., min_length=1, description="ID de la competencia")
+    user_dni: Optional[str] = Field(None, description="DNI del moderador responsable (opcional, por defecto el usuario actual)")
 
 
 class CompetitionRegistrationUpdate(BaseModel):
@@ -95,6 +96,7 @@ class CompetitionRegistrationUpdate(BaseModel):
     dorsal_number: Optional[str] = Field(None, min_length=1, max_length=100)
     name: Optional[str] = Field(None, min_length=1, max_length=500)
     n_participants: Optional[int] = Field(None, ge=1)
+    user_dni: Optional[str] = Field(None, description="DNI del moderador responsable")
 
 
 class CompetitionRegistrationResponse(BaseModel):

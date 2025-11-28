@@ -91,7 +91,7 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
                 name: formData.name,
                 competitionDate: formData.competitionDate,
                 isActive: formData.isActive,
-                isFinished: false,
+                isFinished: formData.isFinished,
                 createdBy: admin.dni,
                 createdAt: utcNow(),
                 updatedAt: null,
@@ -113,7 +113,7 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
                 name: formData.name,
                 competitionDate: formData.competitionDate,
                 isActive: formData.isActive,
-                isFinished: competence.isFinished,
+                isFinished: formData.isFinished,
                 createdBy: competence.createdBy,
                 createdAt: competence.createdAt,
                 updatedAt: utcNow(),
@@ -516,7 +516,9 @@ class ManageCompetencesPageState extends ConsumerState<ManageCompetencesPage>
                     Text(
                       competence.competitionDate != null
                           ? () {
-                              final ecuadorDate = toEcuadorTime(competence.competitionDate!);
+                              final ecuadorDate = toEcuadorTime(
+                                competence.competitionDate!,
+                              );
                               return '${ecuadorDate.day.toString().padLeft(2, '0')}/${ecuadorDate.month.toString().padLeft(2, '0')}/${ecuadorDate.year} ${ecuadorDate.hour.toString().padLeft(2, '0')}:${ecuadorDate.minute.toString().padLeft(2, '0')}';
                             }()
                           : 'Sin fecha',

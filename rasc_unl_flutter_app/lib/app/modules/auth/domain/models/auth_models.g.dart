@@ -59,7 +59,7 @@ Map<String, dynamic> _$LoginResponseToJson(LoginResponse instance) =>
 
 UserApiResponse _$UserApiResponseFromJson(Map<String, dynamic> json) =>
     UserApiResponse(
-      id: (json['id'] as num).toInt(),
+      id: json['id'] as String,
       email: json['email'] as String,
       firstName: json['first_name'] as String,
       lastName: json['last_name'] as String,

@@ -1,6 +1,6 @@
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:rasc_unl_flutter_app/app/modules/sync/presentation/widgets/sync_indicator_widget.dart';
 
 class ModernNavBar extends ConsumerStatefulWidget
     implements PreferredSizeWidget {
@@ -217,6 +217,8 @@ class _ModernNavBarState extends ConsumerState<ModernNavBar>
               //     ),
               //   ),
               // ),
+              const Spacer(),
+              const SyncIndicatorWidget(),
             ],
           ),
         ),

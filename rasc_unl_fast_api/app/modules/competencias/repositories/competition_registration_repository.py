@@ -21,7 +21,7 @@ class CompetitionRegistrationRepository:
     ) -> CompetitionRegistrationModel:
         """Crea un nuevo registro de equipo en competencia"""
         registration = CompetitionRegistrationModel(
-            **registration_data.model_dump(),
+            **registration_data.model_dump(exclude={'user_dni'}),
             user_dni=user_dni
         )
         self.session.add(registration)
@@ -119,6 +119,32 @@ class CompetitionRegistrationRepository:
         conditions = [
             CompetitionRegistrationModel.competence_id == competence_id,
             CompetitionRegistrationModel.dorsal_number == dorsal_number
+        ]
+        
+        if exclude_id:
+            conditions.append(CompetitionRegistrationModel.id != exclude_id)
+        
+        result = await self.session.execute(
+            select(CompetitionRegistrationModel).where(and_(*conditions))
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_user_and_competence(
+        self,
+        user_dni: str,
+        competence_id: str,
+        exclude_id: Optional[str] = None
+    ) -> Optional[CompetitionRegistrationModel]:
+        """Verifica si un usuario ya tiene un equipo registrado en una competencia
+        
+        Args:
+            user_dni: DNI del usuario a verificar
+            competence_id: ID de la competencia
+            exclude_id: ID del registro a excluir (útil al editar)
+        """
+        conditions = [
+            CompetitionRegistrationModel.competence_id == competence_id,
+            CompetitionRegistrationModel.user_dni == user_dni
         ]
         
         if exclude_id:

@@ -80,7 +80,7 @@ class LoginResponse {
 /// Modelo para la respuesta del usuario desde la API
 @JsonSerializable(fieldRename: FieldRename.snake)
 class UserApiResponse {
-  final int id;
+  final String id;
   final String email;
   final String firstName;
   final String lastName;

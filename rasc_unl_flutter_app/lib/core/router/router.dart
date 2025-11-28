@@ -13,6 +13,7 @@ import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/ho
 import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/actions_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/user/available_competences_page.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/user/components/competence_details_page.dart';
+import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/public/public_results_page.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 
 enum AppRouterNames {
@@ -88,7 +89,7 @@ class RouterNotifier extends ChangeNotifier {
     GoRoute(
       path: '/',
       name: AppRouterNames.welcome.name,
-      builder: (context, state) => RascUnlPage(),
+      builder: (context, state) => PublicResultsPage(),
     ),
     GoRoute(
       path: '/login',
@@ -170,6 +171,11 @@ class RouterNotifier extends ChangeNotifier {
       path: '/generate-reports',
       name: AppRouterNames.generateReports.name,
       builder: (context, state) => GenerateReportsPage(),
+    ),
+    GoRoute(
+      path: '/session',
+      name: 'Session',
+      builder: (context, state) => const RascUnlPage(),
     ),
   ];
 }

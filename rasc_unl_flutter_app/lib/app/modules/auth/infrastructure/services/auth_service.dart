@@ -37,10 +37,10 @@ class AuthService {
     required UserRepository localUserRepo,
     required SessionLocalRepository sessionRepo,
     required bool isOffline,
-  })  : _remoteRepo = remoteRepo,
-        _localUserRepo = localUserRepo,
-        _sessionRepo = sessionRepo,
-        _isOffline = isOffline;
+  }) : _remoteRepo = remoteRepo,
+       _localUserRepo = localUserRepo,
+       _sessionRepo = sessionRepo,
+       _isOffline = isOffline;
 
   /// Registra un nuevo usuario
   /// Solo funciona online
@@ -125,16 +125,15 @@ class AuthService {
     required String dni,
   }) async {
     try {
-      final loginRequest = LoginRequest(
-        username: email,
-        password: password,
-      );
+      final loginRequest = LoginRequest(username: email, password: password);
 
       // Autenticar con API
       final loginResponse = await _remoteRepo.login(loginRequest);
 
       // Obtener información del usuario
-      final userApiResponse = await _remoteRepo.getCurrentUser(loginResponse.accessToken);
+      final userApiResponse = await _remoteRepo.getCurrentUser(
+        loginResponse.accessToken,
+      );
       final user = _mapApiResponseToUserModel(userApiResponse);
 
       // Guardar o actualizar usuario en BD local
@@ -195,12 +194,13 @@ class AuthService {
       if (session == null) {
         return AuthResult(
           success: false,
-          message: 'No se encontró una sesión previa. Debe conectarse a Internet para iniciar sesión por primera vez.',
+          message:
+              'No se encontró una sesión previa. Debe conectarse a Internet para iniciar sesión por primera vez.',
         );
       }
 
       // Obtener usuario de BD local
-      final user = await _localUserRepo.getUserById(session.userId);
+      final user = await _localUserRepo.getUserById(session.userId.toString());
 
       if (user == null) {
         return AuthResult(
@@ -210,10 +210,7 @@ class AuthService {
       }
 
       if (!user.isActive) {
-        return AuthResult(
-          success: false,
-          message: 'Usuario inactivo',
-        );
+        return AuthResult(success: false, message: 'Usuario inactivo');
       }
 
       // Actualizar último login
@@ -253,10 +250,7 @@ class AuthService {
 
       logging.i('Logout exitoso');
 
-      return AuthResult(
-        success: true,
-        message: 'Sesión cerrada exitosamente',
-      );
+      return AuthResult(success: true, message: 'Sesión cerrada exitosamente');
     } catch (e) {
       logging.e('Error al cerrar sesión: $e');
       return AuthResult(
@@ -272,19 +266,13 @@ class AuthService {
       final session = await _sessionRepo.getActiveSession();
 
       if (session == null) {
-        return AuthResult(
-          success: false,
-          message: 'No hay sesión activa',
-        );
+        return AuthResult(success: false, message: 'No hay sesión activa');
       }
 
       final user = await _localUserRepo.getUserById(session.userId);
 
       if (user == null) {
-        return AuthResult(
-          success: false,
-          message: 'Usuario no encontrado',
-        );
+        return AuthResult(success: false, message: 'Usuario no encontrado');
       }
 
       return AuthResult(
@@ -300,6 +288,55 @@ class AuthService {
         success: false,
         message: 'Error al obtener sesión: ${e.toString()}',
       );
+    }
+  }
+
+  /// Intenta iniciar sesión automáticamente usando la sesión almacenada
+  Future<AuthResult> tryAutoLogin() async {
+    try {
+      // 1. Obtener sesión activa local
+      final session = await _sessionRepo.getActiveSession();
+
+      if (session == null) {
+        return AuthResult(success: false, message: 'No hay sesión activa');
+      }
+
+      // 2. Verificar si el token ha expirado
+      final now = utcNow();
+      final expiresAt = session.tokenExpiresAt;
+
+      // Si no hay expiración o ya expiró (o está por expirar en < 5 min)
+      if (expiresAt == null || expiresAt.difference(now).inMinutes < 5) {
+        // Intentar refrescar si estamos online
+        if (!_isOffline && session.refreshToken != null) {
+          try {
+            logging.i('Token expirado o próximo a expirar. Refrescando...');
+            return await refreshAccessToken(session.refreshToken!);
+          } catch (e) {
+            logging.w('Error al refrescar token en auto-login: $e');
+            // Si falla el refresh, tal vez podamos usar la sesión local offline
+            // pero si el servidor rechazó el refresh, deberíamos pedir login
+          }
+        }
+      }
+
+      // 3. Retornar usuario local si la sesión es válida (o offline)
+      final user = await _localUserRepo.getUserById(session.userId);
+
+      if (user == null) {
+        return AuthResult(success: false, message: 'Usuario no encontrado');
+      }
+
+      return AuthResult(
+        success: true,
+        user: user,
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+        isOffline: _isOffline || session.accessToken == null,
+      );
+    } catch (e) {
+      logging.e('Error en auto-login: $e');
+      return AuthResult(success: false, message: 'Error en auto-login: $e');
     }
   }
 
@@ -356,35 +393,6 @@ class AuthService {
       birthDate: apiResponse.dateOfBirth != null
           ? DateTime.tryParse(apiResponse.dateOfBirth!)
           : null,
-    );
-  }
-}
-
-/// Extension para copiar UserModel con cambios
-extension UserModelCopyWith on UserModel {
-  UserModel copyWith({
-    int? id,
-    String? dni,
-    String? rol,
-    String? name,
-    String? lastName,
-    String? email,
-    bool? isActive,
-    DateTime? birthDate,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
-    return UserModel(
-      id: id ?? this.id,
-      dni: dni ?? this.dni,
-      role: role ?? this.role,
-      firstName: firstName ?? this.firstName,
-      lastName: lastName ?? this.lastName,
-      email: email ?? this.email,
-      isActive: isActive ?? this.isActive,
-      birthDate: birthDate ?? this.birthDate,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }

@@ -11,16 +11,12 @@ class $UserTableTable extends UserTable
   $UserTableTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _dniMeta = const VerificationMeta('dni');
   @override
@@ -124,6 +120,78 @@ class $UserTableTable extends UserTable
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _lastSyncAtMeta = const VerificationMeta(
+    'lastSyncAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastSyncAt = GeneratedColumn<DateTime>(
+    'last_sync_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _passwordMeta = const VerificationMeta(
+    'password',
+  );
+  @override
+  late final GeneratedColumn<String> password = GeneratedColumn<String>(
+    'password',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -136,6 +204,12 @@ class $UserTableTable extends UserTable
     isActive,
     createdAt,
     updatedAt,
+    syncStatus,
+    lastSyncAt,
+    version,
+    deviceId,
+    isDeleted,
+    password,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -151,6 +225,8 @@ class $UserTableTable extends UserTable
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
     }
     if (data.containsKey('dni')) {
       context.handle(
@@ -214,6 +290,45 @@ class $UserTableTable extends UserTable
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('last_sync_at')) {
+      context.handle(
+        _lastSyncAtMeta,
+        lastSyncAt.isAcceptableOrUnknown(
+          data['last_sync_at']!,
+          _lastSyncAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('password')) {
+      context.handle(
+        _passwordMeta,
+        password.isAcceptableOrUnknown(data['password']!, _passwordMeta),
+      );
+    }
     return context;
   }
 
@@ -224,7 +339,7 @@ class $UserTableTable extends UserTable
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return user_drift_model(
       id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
       dni: attachedDatabase.typeMapping.read(
@@ -263,6 +378,30 @@ class $UserTableTable extends UserTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      lastSyncAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_sync_at'],
+      ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      password: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}password'],
+      ),
     );
   }
 
@@ -274,7 +413,7 @@ class $UserTableTable extends UserTable
 
 class user_drift_model extends DataClass
     implements Insertable<user_drift_model> {
-  final int id;
+  final String id;
   final String dni;
   final String role;
   final String firstName;
@@ -284,6 +423,12 @@ class user_drift_model extends DataClass
   final bool isActive;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String syncStatus;
+  final DateTime? lastSyncAt;
+  final int version;
+  final String? deviceId;
+  final bool isDeleted;
+  final String? password;
   const user_drift_model({
     required this.id,
     required this.dni,
@@ -295,11 +440,17 @@ class user_drift_model extends DataClass
     required this.isActive,
     required this.createdAt,
     required this.updatedAt,
+    required this.syncStatus,
+    this.lastSyncAt,
+    required this.version,
+    this.deviceId,
+    required this.isDeleted,
+    this.password,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['dni'] = Variable<String>(dni);
     map['role'] = Variable<String>(role);
     map['first_name'] = Variable<String>(firstName);
@@ -311,6 +462,18 @@ class user_drift_model extends DataClass
     map['is_active'] = Variable<bool>(isActive);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || lastSyncAt != null) {
+      map['last_sync_at'] = Variable<DateTime>(lastSyncAt);
+    }
+    map['version'] = Variable<int>(version);
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    if (!nullToAbsent || password != null) {
+      map['password'] = Variable<String>(password);
+    }
     return map;
   }
 
@@ -328,6 +491,18 @@ class user_drift_model extends DataClass
       isActive: Value(isActive),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      syncStatus: Value(syncStatus),
+      lastSyncAt: lastSyncAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncAt),
+      version: Value(version),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+      isDeleted: Value(isDeleted),
+      password: password == null && nullToAbsent
+          ? const Value.absent()
+          : Value(password),
     );
   }
 
@@ -337,7 +512,7 @@ class user_drift_model extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return user_drift_model(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       dni: serializer.fromJson<String>(json['dni']),
       role: serializer.fromJson<String>(json['role']),
       firstName: serializer.fromJson<String>(json['firstName']),
@@ -347,13 +522,19 @@ class user_drift_model extends DataClass
       isActive: serializer.fromJson<bool>(json['isActive']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      lastSyncAt: serializer.fromJson<DateTime?>(json['lastSyncAt']),
+      version: serializer.fromJson<int>(json['version']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      password: serializer.fromJson<String?>(json['password']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'dni': serializer.toJson<String>(dni),
       'role': serializer.toJson<String>(role),
       'firstName': serializer.toJson<String>(firstName),
@@ -363,11 +544,17 @@ class user_drift_model extends DataClass
       'isActive': serializer.toJson<bool>(isActive),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'lastSyncAt': serializer.toJson<DateTime?>(lastSyncAt),
+      'version': serializer.toJson<int>(version),
+      'deviceId': serializer.toJson<String?>(deviceId),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'password': serializer.toJson<String?>(password),
     };
   }
 
   user_drift_model copyWith({
-    int? id,
+    String? id,
     String? dni,
     String? role,
     String? firstName,
@@ -377,6 +564,12 @@ class user_drift_model extends DataClass
     bool? isActive,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? syncStatus,
+    Value<DateTime?> lastSyncAt = const Value.absent(),
+    int? version,
+    Value<String?> deviceId = const Value.absent(),
+    bool? isDeleted,
+    Value<String?> password = const Value.absent(),
   }) => user_drift_model(
     id: id ?? this.id,
     dni: dni ?? this.dni,
@@ -388,6 +581,12 @@ class user_drift_model extends DataClass
     isActive: isActive ?? this.isActive,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    syncStatus: syncStatus ?? this.syncStatus,
+    lastSyncAt: lastSyncAt.present ? lastSyncAt.value : this.lastSyncAt,
+    version: version ?? this.version,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+    isDeleted: isDeleted ?? this.isDeleted,
+    password: password.present ? password.value : this.password,
   );
   user_drift_model copyWithCompanion(UserTableCompanion data) {
     return user_drift_model(
@@ -401,6 +600,16 @@ class user_drift_model extends DataClass
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      lastSyncAt: data.lastSyncAt.present
+          ? data.lastSyncAt.value
+          : this.lastSyncAt,
+      version: data.version.present ? data.version.value : this.version,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      password: data.password.present ? data.password.value : this.password,
     );
   }
 
@@ -416,7 +625,13 @@ class user_drift_model extends DataClass
           ..write('birthDate: $birthDate, ')
           ..write('isActive: $isActive, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncAt: $lastSyncAt, ')
+          ..write('version: $version, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('password: $password')
           ..write(')'))
         .toString();
   }
@@ -433,6 +648,12 @@ class user_drift_model extends DataClass
     isActive,
     createdAt,
     updatedAt,
+    syncStatus,
+    lastSyncAt,
+    version,
+    deviceId,
+    isDeleted,
+    password,
   );
   @override
   bool operator ==(Object other) =>
@@ -447,11 +668,17 @@ class user_drift_model extends DataClass
           other.birthDate == this.birthDate &&
           other.isActive == this.isActive &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.syncStatus == this.syncStatus &&
+          other.lastSyncAt == this.lastSyncAt &&
+          other.version == this.version &&
+          other.deviceId == this.deviceId &&
+          other.isDeleted == this.isDeleted &&
+          other.password == this.password);
 }
 
 class UserTableCompanion extends UpdateCompanion<user_drift_model> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<String> dni;
   final Value<String> role;
   final Value<String> firstName;
@@ -461,6 +688,13 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
   final Value<bool> isActive;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<String> syncStatus;
+  final Value<DateTime?> lastSyncAt;
+  final Value<int> version;
+  final Value<String?> deviceId;
+  final Value<bool> isDeleted;
+  final Value<String?> password;
+  final Value<int> rowid;
   const UserTableCompanion({
     this.id = const Value.absent(),
     this.dni = const Value.absent(),
@@ -472,9 +706,16 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
     this.isActive = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncAt = const Value.absent(),
+    this.version = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.password = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   UserTableCompanion.insert({
-    this.id = const Value.absent(),
+    required String id,
     required String dni,
     this.role = const Value.absent(),
     required String firstName,
@@ -484,12 +725,20 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
     this.isActive = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
-  }) : dni = Value(dni),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncAt = const Value.absent(),
+    this.version = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.password = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       dni = Value(dni),
        firstName = Value(firstName),
        lastName = Value(lastName),
        email = Value(email);
   static Insertable<user_drift_model> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<String>? dni,
     Expression<String>? role,
     Expression<String>? firstName,
@@ -499,6 +748,13 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
     Expression<bool>? isActive,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<String>? syncStatus,
+    Expression<DateTime>? lastSyncAt,
+    Expression<int>? version,
+    Expression<String>? deviceId,
+    Expression<bool>? isDeleted,
+    Expression<String>? password,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -511,11 +767,18 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
       if (isActive != null) 'is_active': isActive,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (lastSyncAt != null) 'last_sync_at': lastSyncAt,
+      if (version != null) 'version': version,
+      if (deviceId != null) 'device_id': deviceId,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (password != null) 'password': password,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   UserTableCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<String>? dni,
     Value<String>? role,
     Value<String>? firstName,
@@ -525,6 +788,13 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
     Value<bool>? isActive,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
+    Value<String>? syncStatus,
+    Value<DateTime?>? lastSyncAt,
+    Value<int>? version,
+    Value<String?>? deviceId,
+    Value<bool>? isDeleted,
+    Value<String?>? password,
+    Value<int>? rowid,
   }) {
     return UserTableCompanion(
       id: id ?? this.id,
@@ -537,6 +807,13 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      lastSyncAt: lastSyncAt ?? this.lastSyncAt,
+      version: version ?? this.version,
+      deviceId: deviceId ?? this.deviceId,
+      isDeleted: isDeleted ?? this.isDeleted,
+      password: password ?? this.password,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -544,7 +821,7 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (dni.present) {
       map['dni'] = Variable<String>(dni.value);
@@ -573,6 +850,27 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (lastSyncAt.present) {
+      map['last_sync_at'] = Variable<DateTime>(lastSyncAt.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (password.present) {
+      map['password'] = Variable<String>(password.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
@@ -588,7 +886,14 @@ class UserTableCompanion extends UpdateCompanion<user_drift_model> {
           ..write('birthDate: $birthDate, ')
           ..write('isActive: $isActive, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncAt: $lastSyncAt, ')
+          ..write('version: $version, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('password: $password, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -615,11 +920,11 @@ class $SessionTableTable extends SessionTable
   );
   static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
   @override
-  late final GeneratedColumn<int> userId = GeneratedColumn<int>(
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
     'user_id',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES user_table (id) ON DELETE CASCADE',
@@ -811,7 +1116,7 @@ class $SessionTableTable extends SessionTable
         data['${effectivePrefix}id'],
       )!,
       userId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}user_id'],
       )!,
       dni: attachedDatabase.typeMapping.read(
@@ -854,7 +1159,7 @@ class $SessionTableTable extends SessionTable
 class SessionDriftModel extends DataClass
     implements Insertable<SessionDriftModel> {
   final int id;
-  final int userId;
+  final String userId;
   final String dni;
   final String email;
   final DateTime lastLoginAt;
@@ -877,7 +1182,7 @@ class SessionDriftModel extends DataClass
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
-    map['user_id'] = Variable<int>(userId);
+    map['user_id'] = Variable<String>(userId);
     map['dni'] = Variable<String>(dni);
     map['email'] = Variable<String>(email);
     map['last_login_at'] = Variable<DateTime>(lastLoginAt);
@@ -921,7 +1226,7 @@ class SessionDriftModel extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SessionDriftModel(
       id: serializer.fromJson<int>(json['id']),
-      userId: serializer.fromJson<int>(json['userId']),
+      userId: serializer.fromJson<String>(json['userId']),
       dni: serializer.fromJson<String>(json['dni']),
       email: serializer.fromJson<String>(json['email']),
       lastLoginAt: serializer.fromJson<DateTime>(json['lastLoginAt']),
@@ -936,7 +1241,7 @@ class SessionDriftModel extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'userId': serializer.toJson<int>(userId),
+      'userId': serializer.toJson<String>(userId),
       'dni': serializer.toJson<String>(dni),
       'email': serializer.toJson<String>(email),
       'lastLoginAt': serializer.toJson<DateTime>(lastLoginAt),
@@ -949,7 +1254,7 @@ class SessionDriftModel extends DataClass
 
   SessionDriftModel copyWith({
     int? id,
-    int? userId,
+    String? userId,
     String? dni,
     String? email,
     DateTime? lastLoginAt,
@@ -1037,7 +1342,7 @@ class SessionDriftModel extends DataClass
 
 class SessionTableCompanion extends UpdateCompanion<SessionDriftModel> {
   final Value<int> id;
-  final Value<int> userId;
+  final Value<String> userId;
   final Value<String> dni;
   final Value<String> email;
   final Value<DateTime> lastLoginAt;
@@ -1058,7 +1363,7 @@ class SessionTableCompanion extends UpdateCompanion<SessionDriftModel> {
   });
   SessionTableCompanion.insert({
     this.id = const Value.absent(),
-    required int userId,
+    required String userId,
     required String dni,
     required String email,
     this.lastLoginAt = const Value.absent(),
@@ -1071,7 +1376,7 @@ class SessionTableCompanion extends UpdateCompanion<SessionDriftModel> {
        email = Value(email);
   static Insertable<SessionDriftModel> custom({
     Expression<int>? id,
-    Expression<int>? userId,
+    Expression<String>? userId,
     Expression<String>? dni,
     Expression<String>? email,
     Expression<DateTime>? lastLoginAt,
@@ -1095,7 +1400,7 @@ class SessionTableCompanion extends UpdateCompanion<SessionDriftModel> {
 
   SessionTableCompanion copyWith({
     Value<int>? id,
-    Value<int>? userId,
+    Value<String>? userId,
     Value<String>? dni,
     Value<String>? email,
     Value<DateTime>? lastLoginAt,
@@ -1124,7 +1429,7 @@ class SessionTableCompanion extends UpdateCompanion<SessionDriftModel> {
       map['id'] = Variable<int>(id.value);
     }
     if (userId.present) {
-      map['user_id'] = Variable<int>(userId.value);
+      map['user_id'] = Variable<String>(userId.value);
     }
     if (dni.present) {
       map['dni'] = Variable<String>(dni.value);
@@ -3395,7 +3700,7 @@ abstract class _$AppLocalDatabase extends GeneratedDatabase {
 
 typedef $$UserTableTableCreateCompanionBuilder =
     UserTableCompanion Function({
-      Value<int> id,
+      required String id,
       required String dni,
       Value<String> role,
       required String firstName,
@@ -3405,10 +3710,17 @@ typedef $$UserTableTableCreateCompanionBuilder =
       Value<bool> isActive,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
+      Value<String> syncStatus,
+      Value<DateTime?> lastSyncAt,
+      Value<int> version,
+      Value<String?> deviceId,
+      Value<bool> isDeleted,
+      Value<String?> password,
+      Value<int> rowid,
     });
 typedef $$UserTableTableUpdateCompanionBuilder =
     UserTableCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<String> dni,
       Value<String> role,
       Value<String> firstName,
@@ -3418,6 +3730,13 @@ typedef $$UserTableTableUpdateCompanionBuilder =
       Value<bool> isActive,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
+      Value<String> syncStatus,
+      Value<DateTime?> lastSyncAt,
+      Value<int> version,
+      Value<String?> deviceId,
+      Value<bool> isDeleted,
+      Value<String?> password,
+      Value<int> rowid,
     });
 
 final class $$UserTableTableReferences
@@ -3439,7 +3758,7 @@ final class $$UserTableTableReferences
     final manager = $$SessionTableTableTableManager(
       $_db,
       $_db.sessionTable,
-    ).filter((f) => f.userId.id.sqlEquals($_itemColumn<int>('id')!));
+    ).filter((f) => f.userId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_sessionTableRefsTable($_db));
     return ProcessedTableManager(
@@ -3457,7 +3776,7 @@ class $$UserTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
@@ -3507,6 +3826,36 @@ class $$UserTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastSyncAt => $composableBuilder(
+    column: $table.lastSyncAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get password => $composableBuilder(
+    column: $table.password,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> sessionTableRefs(
     Expression<bool> Function($$SessionTableTableFilterComposer f) f,
   ) {
@@ -3542,7 +3891,7 @@ class $$UserTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
@@ -3591,6 +3940,36 @@ class $$UserTableTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastSyncAt => $composableBuilder(
+    column: $table.lastSyncAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get password => $composableBuilder(
+    column: $table.password,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$UserTableTableAnnotationComposer
@@ -3602,7 +3981,7 @@ class $$UserTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<String> get dni =>
@@ -3631,6 +4010,28 @@ class $$UserTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastSyncAt => $composableBuilder(
+    column: $table.lastSyncAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<String> get password =>
+      $composableBuilder(column: $table.password, builder: (column) => column);
 
   Expression<T> sessionTableRefs<T extends Object>(
     Expression<T> Function($$SessionTableTableAnnotationComposer a) f,
@@ -3686,7 +4087,7 @@ class $$UserTableTableTableManager
               $$UserTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<String> dni = const Value.absent(),
                 Value<String> role = const Value.absent(),
                 Value<String> firstName = const Value.absent(),
@@ -3696,6 +4097,13 @@ class $$UserTableTableTableManager
                 Value<bool> isActive = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<DateTime?> lastSyncAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<String?> password = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => UserTableCompanion(
                 id: id,
                 dni: dni,
@@ -3707,10 +4115,17 @@ class $$UserTableTableTableManager
                 isActive: isActive,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                lastSyncAt: lastSyncAt,
+                version: version,
+                deviceId: deviceId,
+                isDeleted: isDeleted,
+                password: password,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                required String id,
                 required String dni,
                 Value<String> role = const Value.absent(),
                 required String firstName,
@@ -3720,6 +4135,13 @@ class $$UserTableTableTableManager
                 Value<bool> isActive = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<DateTime?> lastSyncAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<String?> password = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => UserTableCompanion.insert(
                 id: id,
                 dni: dni,
@@ -3731,6 +4153,13 @@ class $$UserTableTableTableManager
                 isActive: isActive,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                lastSyncAt: lastSyncAt,
+                version: version,
+                deviceId: deviceId,
+                isDeleted: isDeleted,
+                password: password,
+                rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -3791,7 +4220,7 @@ typedef $$UserTableTableProcessedTableManager =
 typedef $$SessionTableTableCreateCompanionBuilder =
     SessionTableCompanion Function({
       Value<int> id,
-      required int userId,
+      required String userId,
       required String dni,
       required String email,
       Value<DateTime> lastLoginAt,
@@ -3803,7 +4232,7 @@ typedef $$SessionTableTableCreateCompanionBuilder =
 typedef $$SessionTableTableUpdateCompanionBuilder =
     SessionTableCompanion Function({
       Value<int> id,
-      Value<int> userId,
+      Value<String> userId,
       Value<String> dni,
       Value<String> email,
       Value<DateTime> lastLoginAt,
@@ -3828,7 +4257,7 @@ final class $$SessionTableTableReferences
       );
 
   $$UserTableTableProcessedTableManager get userId {
-    final $_column = $_itemColumn<int>('user_id')!;
+    final $_column = $_itemColumn<String>('user_id')!;
 
     final manager = $$UserTableTableTableManager(
       $_db,
@@ -4084,7 +4513,7 @@ class $$SessionTableTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
-                Value<int> userId = const Value.absent(),
+                Value<String> userId = const Value.absent(),
                 Value<String> dni = const Value.absent(),
                 Value<String> email = const Value.absent(),
                 Value<DateTime> lastLoginAt = const Value.absent(),
@@ -4106,7 +4535,7 @@ class $$SessionTableTableTableManager
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
-                required int userId,
+                required String userId,
                 required String dni,
                 required String email,
                 Value<DateTime> lastLoginAt = const Value.absent(),

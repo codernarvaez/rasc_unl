@@ -10,7 +10,7 @@ class SessionLocalRepository {
 
   /// Crea una nueva sesión local
   Future<SessionDriftModel> createSession({
-    required int userId,
+    required String userId,
     required String dni,
     required String email,
     String? accessToken,

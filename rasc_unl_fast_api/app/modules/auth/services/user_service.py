@@ -18,7 +18,7 @@ class UserService:
         self.session = session
         self.repository = UserRepository(session)
     
-    async def get_user_by_id(self, user_id: int) -> UserModel:
+    async def get_user_by_id(self, user_id: str) -> UserModel:
         """Get user by ID."""
         user = await self.repository.get_by_id(user_id)
         if not user:
@@ -45,7 +45,7 @@ class UserService:
             search=search
         )
     
-    async def update_user(self, user_id: int, user_data: UserUpdate) -> UserModel:
+    async def update_user(self, user_id: str, user_data: UserUpdate) -> UserModel:
         """Actualizar la información del usuario con validación."""
         # Obtener solo los campos que fueron enviados en la solicitud
         update_data = user_data.model_dump(exclude_unset=True)
@@ -93,7 +93,7 @@ class UserService:
         
         await self.repository.update_password(user.id, new_password)
     
-    async def delete_user(self, user_id: int, current_user_id: int) -> None:
+    async def delete_user(self, user_id: str, current_user_id: str) -> None:
         """Eliminar usuario con validación."""
         if user_id == current_user_id:
             raise HTTPException(
@@ -109,7 +109,7 @@ class UserService:
                 detail="UserModel not found"
             )
     
-    async def activate_user(self, user_id: int) -> UserModel:
+    async def activate_user(self, user_id: str) -> UserModel:
         """Activar la cuenta del usuario.""" 
         user = await self.repository.activate(user_id)
         
@@ -121,7 +121,7 @@ class UserService:
         
         return user
     
-    async def deactivate_user(self, user_id: int, current_user_id: int) -> UserModel:
+    async def deactivate_user(self, user_id: str, current_user_id: str) -> UserModel:
         """Desactivar la cuenta del usuario con validación.""" 
         if user_id == current_user_id:
             raise HTTPException(

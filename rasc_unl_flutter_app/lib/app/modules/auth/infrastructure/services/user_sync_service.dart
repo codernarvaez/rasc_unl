@@ -3,6 +3,7 @@ import 'package:rasc_unl_flutter_app/app/modules/auth/domain/repositories/auth_r
 import 'package:rasc_unl_flutter_app/app/modules/auth/domain/repositories/user_repository.dart';
 import 'package:rasc_unl_flutter_app/app/modules/auth/infrastructure/repositories/local/session_local_repository.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
+import 'package:rasc_unl_flutter_app/core/utils/timezone_utils.dart';
 
 /// Resultado de sincronización
 class SyncResult {
@@ -22,23 +23,23 @@ class SyncResult {
 }
 
 /// Servicio para sincronización bidireccional de datos
-class SyncService {
+class UserSyncService {
   final AuthRemoteRepository _remoteRepo;
   final UserRepository _localUserRepo;
   final SessionLocalRepository _sessionRepo;
 
-  SyncService({
+  UserSyncService({
     required AuthRemoteRepository remoteRepo,
     required UserRepository localUserRepo,
     required SessionLocalRepository sessionRepo,
-  })  : _remoteRepo = remoteRepo,
-        _localUserRepo = localUserRepo,
-        _sessionRepo = sessionRepo;
+  }) : _remoteRepo = remoteRepo,
+       _localUserRepo = localUserRepo,
+       _sessionRepo = sessionRepo;
 
   /// Sincroniza todos los datos cuando se recupera conexión
   Future<SyncResult> syncAll({required String accessToken}) async {
     logging.i('Iniciando sincronización completa...');
-    
+
     final errors = <String>[];
     int usersDownloaded = 0;
     int usersUploaded = 0;
@@ -47,13 +48,17 @@ class SyncService {
       // 1. Sincronizar datos del usuario actual
       final currentUserResult = await _syncCurrentUser(accessToken);
       if (!currentUserResult.success) {
-        errors.add(currentUserResult.message ?? 'Error al sincronizar usuario actual');
+        errors.add(
+          currentUserResult.message ?? 'Error al sincronizar usuario actual',
+        );
       }
 
       // 2. Para administradores: sincronizar todos los usuarios
       final session = await _sessionRepo.getActiveSession();
       if (session != null) {
-        final localUser = await _localUserRepo.getUserById(session.userId);
+        final localUser = await _localUserRepo.getUserById(
+          session.userId.toString(),
+        );
         if (localUser != null && localUser.role == 'ADMINISTRATOR') {
           final allUsersResult = await _syncAllUsers(accessToken);
           usersDownloaded = allUsersResult.usersDownloaded;
@@ -65,12 +70,14 @@ class SyncService {
       // 3. TODO: Sincronizar competencias
       // 4. TODO: Sincronizar registros
 
-      logging.i('Sincronización completada: $usersDownloaded descargados, $usersUploaded subidos');
+      logging.i(
+        'Sincronización completada: $usersDownloaded descargados, $usersUploaded subidos',
+      );
 
       return SyncResult(
         success: errors.isEmpty,
-        message: errors.isEmpty 
-            ? 'Sincronización exitosa' 
+        message: errors.isEmpty
+            ? 'Sincronización exitosa'
             : 'Sincronización con errores',
         usersDownloaded: usersDownloaded,
         usersUploaded: usersUploaded,
@@ -91,7 +98,7 @@ class SyncService {
     try {
       // Obtener datos actualizados del servidor
       final userApiResponse = await _remoteRepo.getCurrentUser(accessToken);
-      
+
       // Mapear a UserModel
       final user = UserModel(
         id: userApiResponse.id,
@@ -108,7 +115,7 @@ class SyncService {
 
       // Buscar usuario local por DNI
       final localUser = await _localUserRepo.getUserByDni(user.dni);
-      
+
       if (localUser == null) {
         // Usuario no existe localmente, insertarlo
         await _localUserRepo.insertUser(user);
@@ -119,10 +126,7 @@ class SyncService {
         logging.i('Usuario actual sincronizado (actualizado): ${user.email}');
       }
 
-      return SyncResult(
-        success: true,
-        message: 'Usuario actual sincronizado',
-      );
+      return SyncResult(success: true, message: 'Usuario actual sincronizado');
     } catch (e) {
       logging.e('Error al sincronizar usuario actual: $e');
       return SyncResult(
@@ -142,7 +146,10 @@ class SyncService {
     try {
       // 1. Descargar todos los usuarios del servidor
       logging.i('Descargando usuarios del servidor...');
-      final remoteUsers = await _remoteRepo.getAllUsers(accessToken, limit: 1000);
+      final remoteUsers = await _remoteRepo.getAllUsers(
+        accessToken,
+        limit: 1000,
+      );
 
       for (final userApiResponse in remoteUsers) {
         try {
@@ -160,7 +167,7 @@ class SyncService {
           );
 
           final localUser = await _localUserRepo.getUserByDni(user.dni);
-          
+
           if (localUser == null) {
             await _localUserRepo.insertUser(user);
             downloaded++;
@@ -169,16 +176,47 @@ class SyncService {
             downloaded++;
           }
         } catch (e) {
-          errors.add('Error al sincronizar usuario ${userApiResponse.email}: $e');
+          errors.add(
+            'Error al sincronizar usuario ${userApiResponse.email}: $e',
+          );
           logging.w('Error al sincronizar usuario: $e');
         }
       }
 
-      // 2. TODO: Subir cambios locales al servidor
-      // Esto requeriría un campo "needs_sync" en la BD local
-      // y endpoints de actualización masiva en el backend
+      // 2. Subir cambios locales al servidor
+      logging.i('Subiendo cambios locales de usuarios...');
+      logging.i('Subiendo cambios locales de usuarios...');
+      final pendingUsers = await _localUserRepo.getPendingSyncUsers();
 
-      logging.i('Usuarios sincronizados: $downloaded descargados, $uploaded subidos');
+      for (final user in pendingUsers) {
+        try {
+          // Intentar actualizar en el servidor
+          // Nota: La API actual solo permite actualizar, no crear usuarios offline (por ahora)
+          // Si el usuario fue creado offline, deberíamos usar un endpoint de registro o create_user_by_admin
+          // Asumimos por ahora que son actualizaciones de usuarios existentes
+
+          await _remoteRepo.updateUser(accessToken, user.id, {
+            'first_name': user.firstName,
+            'last_name': user.lastName,
+            'role': user.role,
+            'is_active': user.isActive,
+            'date_of_birth': user.birthDate?.toIso8601String(),
+          });
+
+          // Marcar como sincronizado
+          await _localUserRepo.updateUser(
+            user.copyWith(syncStatus: 'synced', lastSyncAt: utcNow()),
+          );
+          uploaded++;
+        } catch (e) {
+          errors.add('Error al subir usuario ${user.email}: $e');
+          logging.w('Error al subir usuario: $e');
+        }
+      }
+
+      logging.i(
+        'Usuarios sincronizados: $downloaded descargados, $uploaded subidos',
+      );
 
       return SyncResult(
         success: errors.isEmpty,
@@ -198,31 +236,29 @@ class SyncService {
   }
 
   /// Marca un usuario como pendiente de sincronización
-  Future<void> markUserForSync(int userId) async {
-    // TODO: Implementar actualización del campo needs_sync
-    // await _localDatabase.update(_localDatabase.userTable)
-    //   ..where((t) => t.id.equals(userId))
-    //   .write(UserTableCompanion(needsSync: Value(true)));
-    logging.i('Usuario $userId marcado para sincronización');
+  Future<void> markUserForSync(String userId) async {
+    final user = await _localUserRepo.getUserById(userId);
+    if (user != null) {
+      await _localUserRepo.updateUser(
+        user.copyWith(syncStatus: 'pending', version: user.version + 1),
+      );
+      logging.i('Usuario $userId marcado para sincronización');
+    }
   }
 
   /// Verifica si hay datos pendientes de sincronizar
   Future<bool> hasPendingSync() async {
-    // TODO: Consultar si hay registros con needs_sync = true
-    // final count = await (_localDatabase.select(_localDatabase.userTable)
-    //   ..where((t) => t.needsSync.equals(true)))
-    //   .get();
-    // return count.isNotEmpty;
-    return false;
+    final pendingUsers = await _localUserRepo.getPendingSyncUsers();
+    return pendingUsers.isNotEmpty;
   }
 
   /// Sincronización automática en segundo plano
   Future<void> autoSync(String accessToken) async {
     logging.i('Ejecutando sincronización automática...');
-    
+
     try {
       final hasPending = await hasPendingSync();
-      
+
       if (hasPending) {
         await syncAll(accessToken: accessToken);
       } else {
@@ -231,34 +267,5 @@ class SyncService {
     } catch (e) {
       logging.w('Error en sincronización automática: $e');
     }
-  }
-}
-
-/// Extension para copiar UserModel con cambios
-extension UserModelCopyWithSync on UserModel {
-  UserModel copyWith({
-    int? id,
-    String? dni,
-    String? rol,
-    String? name,
-    String? lastName,
-    String? email,
-    bool? isActive,
-    DateTime? birthDate,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
-    return UserModel(
-      id: id ?? this.id,
-      dni: dni ?? this.dni,
-      role: role ?? this.role,
-      firstName: firstName ?? this.firstName,
-      lastName: lastName ?? this.lastName,
-      email: email ?? this.email,
-      isActive: isActive ?? this.isActive,
-      birthDate: birthDate ?? this.birthDate,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-    );
   }
 }

@@ -6,6 +6,7 @@ import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/ad
 import 'package:rasc_unl_flutter_app/app/modules/main_repository.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
 import 'package:rasc_unl_flutter_app/core/utils/timezone_utils.dart';
+import 'package:uuid/uuid.dart';
 
 enum UserRole { admin, user, moderator }
 
@@ -64,9 +65,9 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
       final role = userModel.role == 'ADMINISTRATOR'
           ? UserRole.admin
           : userModel.role == 'MODERATOR'
-              ? UserRole.moderator
-              : UserRole.user;
-      
+          ? UserRole.moderator
+          : UserRole.user;
+
       return UserData(
         id: userModel.id,
         dni: userModel.dni,
@@ -82,14 +83,16 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
 
   List<UserData> _filterUsers(List<UserData> users) {
     return users.where((user) {
-      bool matchesSearch = _searchQuery.isEmpty ||
+      bool matchesSearch =
+          _searchQuery.isEmpty ||
           user.firstName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           user.lastName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           user.dni.contains(_searchQuery) ||
           user.email.toLowerCase().contains(_searchQuery.toLowerCase());
 
       bool matchesRole = _filterRole == null || user.role == _filterRole;
-      bool matchesActive = _filterActive == null || user.isActive == _filterActive;
+      bool matchesActive =
+          _filterActive == null || user.isActive == _filterActive;
 
       return matchesSearch && matchesRole && matchesActive;
     }).toList();
@@ -98,7 +101,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
   @override
   Widget build(BuildContext context) {
     MainRepository? repository;
-    
+
     try {
       repository = ref.watch(rascUNLMainProvider);
     } catch (e) {
@@ -112,9 +115,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
             ),
           ),
           child: Center(
-            child: CircularProgressIndicator(
-              color: Color(0xFFD50000),
-            ),
+            child: CircularProgressIndicator(color: Color(0xFFD50000)),
           ),
         ),
       );
@@ -142,31 +143,38 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                         ),
                       )
                     : _usersList == null || _usersList!.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.people_outline, size: 60, color: Colors.white.withOpacity(0.3)),
-                                SizedBox(height: 16),
-                                Text(
-                                  'No se encontraron usuarios',
-                                  style: TextStyle(color: Colors.white, fontSize: 18),
-                                ),
-                              ],
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.people_outline,
+                              size: 60,
+                              color: Colors.white.withOpacity(0.3),
                             ),
-                          )
-                        : Builder(
-                            builder: (context) {
-                              final filteredUsers = _filterUsers(_usersList!);
-                              return Column(
-                                children: [
-                                  _buildStats(_usersList!),
-                                  SizedBox(height: 16),
-                                  Expanded(child: _buildUsersList(filteredUsers)),
-                                ],
-                              );
-                            },
-                          ),
+                            SizedBox(height: 16),
+                            Text(
+                              'No se encontraron usuarios',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : Builder(
+                        builder: (context) {
+                          final filteredUsers = _filterUsers(_usersList!);
+                          return Column(
+                            children: [
+                              _buildStats(_usersList!),
+                              SizedBox(height: 16),
+                              Expanded(child: _buildUsersList(filteredUsers)),
+                            ],
+                          );
+                        },
+                      ),
               ),
             ],
           ),
@@ -194,10 +202,9 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
         onSave: (formData) async {
           try {
             // Convertir el rol de string a UserRoleType enum
-            
 
             final newUser = UserModel(
-              id: utcNow().millisecondsSinceEpoch,
+              id: Uuid().v4(),
               dni: formData.dni,
               firstName: formData.firstName,
               lastName: formData.lastName,
@@ -205,6 +212,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
               role: formData.role,
               isActive: true,
               birthDate: formData.birthDate,
+              password: formData.dni, // Default password is DNI
             );
 
             await repository.userRepository.insertUser(newUser);
@@ -222,7 +230,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
             }
           } catch (e) {
             Navigator.of(context).pop();
-            
+
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -240,7 +248,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
   Widget _buildHeader(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    
+
     return Padding(
       padding: EdgeInsets.all(isMobile ? 12 : 20),
       child: Row(
@@ -264,7 +272,10 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
           ),
           SizedBox(width: 8),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 12, vertical: 6),
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 8 : 12,
+              vertical: 6,
+            ),
             decoration: BoxDecoration(
               color: Color(0xFFD50000).withOpacity(0.2),
               borderRadius: BorderRadius.circular(20),
@@ -328,7 +339,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
   Widget _buildSearchAndFilters() {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 20),
       child: Column(
@@ -350,10 +361,16 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
               decoration: InputDecoration(
                 hintText: 'Buscar por nombre, DNI o email...',
                 hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-                prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.5)),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: Colors.white.withOpacity(0.5),
+                ),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                        icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.5)),
+                        icon: Icon(
+                          Icons.clear,
+                          color: Colors.white.withOpacity(0.5),
+                        ),
                         onPressed: () {
                           setState(() {
                             _searchController.clear();
@@ -363,7 +380,10 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                       )
                     : null,
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
               ),
             ),
           ),
@@ -388,7 +408,9 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                   isSelected: _filterRole == UserRole.admin,
                   onTap: () {
                     setState(() {
-                      _filterRole = _filterRole == UserRole.admin ? null : UserRole.admin;
+                      _filterRole = _filterRole == UserRole.admin
+                          ? null
+                          : UserRole.admin;
                     });
                   },
                 ),
@@ -398,7 +420,9 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                   isSelected: _filterRole == UserRole.moderator,
                   onTap: () {
                     setState(() {
-                      _filterRole = _filterRole == UserRole.moderator ? null : UserRole.moderator;
+                      _filterRole = _filterRole == UserRole.moderator
+                          ? null
+                          : UserRole.moderator;
                     });
                   },
                 ),
@@ -408,7 +432,9 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                   isSelected: _filterRole == UserRole.user,
                   onTap: () {
                     setState(() {
-                      _filterRole = _filterRole == UserRole.user ? null : UserRole.user;
+                      _filterRole = _filterRole == UserRole.user
+                          ? null
+                          : UserRole.user;
                     });
                   },
                 ),
@@ -441,7 +467,11 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
     );
   }
 
-  Widget _buildFilterChip({required String label, required bool isSelected, required VoidCallback onTap}) {
+  Widget _buildFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -453,7 +483,9 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
           color: isSelected ? null : Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? Color(0xFFD50000) : Colors.white.withOpacity(0.2),
+            color: isSelected
+                ? Color(0xFFD50000)
+                : Colors.white.withOpacity(0.2),
           ),
         ),
         child: Text(
@@ -471,7 +503,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
   Widget _buildStats(List<UserData> users) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    
+
     int activeUsers = users.where((u) => u.isActive).length;
     int admins = users.where((u) => u.role == UserRole.admin).length;
 
@@ -501,7 +533,12 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
     );
   }
 
-  Widget _buildStatCard({required IconData icon, required String value, required String label, required Color color}) {
+  Widget _buildStatCard({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+  }) {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -541,13 +578,17 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
   Widget _buildUsersList(List<UserData> users) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    
+
     if (users.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off, size: 80, color: Colors.white.withOpacity(0.3)),
+            Icon(
+              Icons.search_off,
+              size: 80,
+              color: Colors.white.withOpacity(0.3),
+            ),
             SizedBox(height: 16),
             Text(
               'No se encontraron usuarios',
@@ -570,7 +611,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
   Widget _buildUserCard(UserData user) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    
+
     return Container(
       margin: EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -659,7 +700,10 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                   ),
                 ),
                 SizedBox(height: 12),
-                IconButton(onPressed: () => _showDeleteConfirmation(user), icon: Icon(Icons.delete_forever, color: Colors.red[900])),
+                IconButton(
+                  onPressed: () => _showDeleteConfirmation(user),
+                  icon: Icon(Icons.delete_forever, color: Colors.red[900]),
+                ),
               ],
             ),
             SizedBox(height: 16),
@@ -667,18 +711,32 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
             SizedBox(height: 16),
             Row(
               children: [
-                Icon(Icons.badge, color: Colors.white.withOpacity(0.5), size: 16),
+                Icon(
+                  Icons.badge,
+                  color: Colors.white.withOpacity(0.5),
+                  size: 16,
+                ),
                 SizedBox(width: 8),
                 Text(
                   'DNI: ${user.dni}',
-                  style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 13,
+                  ),
                 ),
                 Spacer(),
-                Icon(Icons.cake, color: Colors.white.withOpacity(0.5), size: 16),
+                Icon(
+                  Icons.cake,
+                  color: Colors.white.withOpacity(0.5),
+                  size: 16,
+                ),
                 SizedBox(width: 8),
                 Text(
                   _formatDate(user.birthDate),
-                  style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),
@@ -723,9 +781,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
         backgroundColor: color ?? Color(0xFFD50000),
         foregroundColor: Colors.white,
         padding: EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -755,7 +811,10 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
             SizedBox(width: 12),
             Text(
               'Cambiar Rol',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -787,7 +846,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                   await repository!.userRepository.updateUser(updatedUser);
 
                   Navigator.pop(context);
-                  
+
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -835,7 +894,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                   await repository!.userRepository.updateUser(updatedUser);
 
                   Navigator.pop(context);
-                  
+
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -883,7 +942,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                   await repository!.userRepository.updateUser(updatedUser);
 
                   Navigator.pop(context);
-                  
+
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -921,7 +980,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
     Function(UserRole) onTap,
   ) {
     final isSelected = currentRole == value;
-    
+
     return InkWell(
       onTap: () => onTap(value),
       borderRadius: BorderRadius.circular(12),
@@ -968,10 +1027,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                   SizedBox(height: 4),
                   Text(
                     description,
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],
               ),
@@ -992,8 +1048,8 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
       final roleType = user.role == UserRole.admin
           ? 'ADMINISTRATOR'
           : user.role == UserRole.moderator
-              ? 'MODERATOR'
-              : 'MODERATOR';
+          ? 'MODERATOR'
+          : 'MODERATOR';
 
       final updatedUser = UserModel(
         id: user.id,
@@ -1012,7 +1068,9 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              !user.isActive ? 'Usuario activado exitosamente' : 'Usuario desactivado exitosamente',
+              !user.isActive
+                  ? 'Usuario activado exitosamente'
+                  : 'Usuario desactivado exitosamente',
             ),
             backgroundColor: !user.isActive ? Colors.green : Colors.orange,
           ),
@@ -1044,7 +1102,10 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
             Expanded(
               child: Text(
                 '¿Eliminar Usuario?',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -1152,17 +1213,23 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
 
   Color _getRoleColor(UserRole role) {
     switch (role) {
-      case UserRole.admin: return Color(0xFFD50000);
-      case UserRole.moderator: return Color(0xFFFF9800);
-      case UserRole.user: return Color(0xFF4CAF50);
+      case UserRole.admin:
+        return Color(0xFFD50000);
+      case UserRole.moderator:
+        return Color(0xFFFF9800);
+      case UserRole.user:
+        return Color(0xFF4CAF50);
     }
   }
 
   String _getRoleLabel(UserRole role) {
     switch (role) {
-      case UserRole.admin: return 'Admin';
-      case UserRole.moderator: return 'Moderador';
-      case UserRole.user: return 'Usuario';
+      case UserRole.admin:
+        return 'Admin';
+      case UserRole.moderator:
+        return 'Moderador';
+      case UserRole.user:
+        return 'Usuario';
     }
   }
 
@@ -1172,7 +1239,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
 }
 
 class UserData {
-  final int id;
+  final String id;
   final String dni;
   final String firstName;
   final String lastName;

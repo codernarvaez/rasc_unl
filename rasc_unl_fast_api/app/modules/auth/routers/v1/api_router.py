@@ -145,7 +145,7 @@ async def get_users(
 
 @router.get("/users/{user_id}", response_model=UserResponse)
 async def get_user(
-    user_id: int,
+    user_id: str,
     current_user: AdminUser,
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
@@ -157,7 +157,7 @@ async def get_user(
 
 @router.put("/users/{user_id}", response_model=UserResponse)
 async def update_user(
-    user_id: int,
+    user_id: str,
     user_data: UserUpdateAdmin,
     current_user: AdminUser,
     session: Annotated[AsyncSession, Depends(get_session)]
@@ -180,7 +180,7 @@ async def update_user(
 
 @router.delete("/users/{user_id}", response_model=MessageResponse)
 async def delete_user(
-    user_id: int,
+    user_id: str,
     current_user: AdminUser,
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
@@ -192,7 +192,7 @@ async def delete_user(
 
 @router.put("/users/{user_id}/deactivate", response_model=UserResponse)
 async def deactivate_user(
-    user_id: int,
+    user_id: str,
     current_user: AdminUser,
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
@@ -204,7 +204,7 @@ async def deactivate_user(
 
 @router.put("/users/{user_id}/activate", response_model=UserResponse)
 async def activate_user(
-    user_id: int,
+    user_id: str,
     current_user: AdminUser,
     session: Annotated[AsyncSession, Depends(get_session)]
 ):

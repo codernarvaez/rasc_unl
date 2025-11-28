@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from datetime import datetime
 from typing import Optional
 
@@ -30,26 +31,32 @@ async def pull_sync_data(
     Optionally filter by timestamp (since) or user (user_dni).
     """
     # Query competences
-    competence_query = db.query(CompetenceModel).filter(CompetenceModel.is_deleted == False)
+    competence_stmt = select(CompetenceModel).where(CompetenceModel.is_deleted == False)
     if since:
-        competence_query = competence_query.filter(CompetenceModel.updated_at > since)
+        competence_stmt = competence_stmt.where(CompetenceModel.updated_at > since)
     if user_dni:
-        competence_query = competence_query.filter(CompetenceModel.created_by == user_dni)
-    competences = competence_query.all()
+        competence_stmt = competence_stmt.where(CompetenceModel.created_by == user_dni)
+    
+    competence_result = await db.execute(competence_stmt)
+    competences = competence_result.scalars().all()
 
     # Query registrations
-    registration_query = db.query(CompetitionRegistrationModel).filter(CompetitionRegistrationModel.is_deleted == False)
+    registration_stmt = select(CompetitionRegistrationModel).where(CompetitionRegistrationModel.is_deleted == False)
     if since:
-        registration_query = registration_query.filter(CompetitionRegistrationModel.updated_at > since)
+        registration_stmt = registration_stmt.where(CompetitionRegistrationModel.updated_at > since)
     if user_dni:
-        registration_query = registration_query.filter(CompetitionRegistrationModel.user_dni == user_dni)
-    registrations = registration_query.all()
+        registration_stmt = registration_stmt.where(CompetitionRegistrationModel.user_dni == user_dni)
+    
+    registration_result = await db.execute(registration_stmt)
+    registrations = registration_result.scalars().all()
 
     # Query time records
-    time_record_query = db.query(TimeRecordModel).filter(TimeRecordModel.is_deleted == False)
+    time_record_stmt = select(TimeRecordModel).where(TimeRecordModel.is_deleted == False)
     if since:
-        time_record_query = time_record_query.filter(TimeRecordModel.updated_at > since)
-    time_records = time_record_query.all()
+        time_record_stmt = time_record_stmt.where(TimeRecordModel.updated_at > since)
+    
+    time_record_result = await db.execute(time_record_stmt)
+    time_records = time_record_result.scalars().all()
 
     return SyncPullResponse(
         competences=[CompetenceSyncData.from_orm(c) for c in competences],
@@ -72,7 +79,9 @@ async def push_sync_data(
     try:
         # Process competences
         for comp_data in sync_data.competences:
-            existing = db.query(CompetenceModel).filter(CompetenceModel.id == comp_data.id).first()
+            stmt = select(CompetenceModel).where(CompetenceModel.id == comp_data.id)
+            result = await db.execute(stmt)
+            existing = result.scalars().first()
             
             if existing:
                 # Update existing
@@ -91,9 +100,9 @@ async def push_sync_data(
 
         # Process registrations
         for reg_data in sync_data.registrations:
-            existing = db.query(CompetitionRegistrationModel).filter(
-                CompetitionRegistrationModel.id == reg_data.id
-            ).first()
+            stmt = select(CompetitionRegistrationModel).where(CompetitionRegistrationModel.id == reg_data.id)
+            result = await db.execute(stmt)
+            existing = result.scalars().first()
             
             if existing:
                 for key, value in reg_data.dict(exclude={'id'}).items():
@@ -110,7 +119,9 @@ async def push_sync_data(
 
         # Process time records
         for tr_data in sync_data.time_records:
-            existing = db.query(TimeRecordModel).filter(TimeRecordModel.id == tr_data.id).first()
+            stmt = select(TimeRecordModel).where(TimeRecordModel.id == tr_data.id)
+            result = await db.execute(stmt)
+            existing = result.scalars().first()
             
             if existing:
                 for key, value in tr_data.dict(exclude={'id'}).items():
@@ -125,7 +136,7 @@ async def push_sync_data(
             
             synced_count["time_records"] += 1
 
-        db.commit()
+        await db.commit()
 
         return SyncPushResponse(
             success=True,
@@ -134,5 +145,5 @@ async def push_sync_data(
         )
 
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(status_code=500, detail=f"Sync failed: {str(e)}")

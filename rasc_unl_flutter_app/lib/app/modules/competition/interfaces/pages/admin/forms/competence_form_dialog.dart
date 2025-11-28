@@ -17,11 +17,13 @@ class CompetenceFormData {
   final String name;
   final DateTime? competitionDate;
   final bool isActive;
+  final bool isFinished;
 
   CompetenceFormData({
     required this.name,
     this.competitionDate,
     required this.isActive,
+    required this.isFinished,
   });
 }
 
@@ -30,6 +32,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
   late TextEditingController _nameController;
   late DateTime _selectedDate;
   late bool _isActive;
+  late bool _isFinished;
 
   @override
   void initState() {
@@ -45,6 +48,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
       _selectedDate = toEcuadorTime(utcNow());
     }
     _isActive = widget.competence?.isActive ?? true;
+    _isFinished = widget.competence?.isFinished ?? false;
   }
 
   @override
@@ -65,6 +69,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
       name: _nameController.text.trim(),
       competitionDate: utcDate,
       isActive: _isActive,
+      isFinished: _isFinished,
     );
 
     widget.onSave(formData);
@@ -188,10 +193,7 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
                       SizedBox(height: 4),
                       Text(
                         'Zona horaria: UTC-5',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
                       ),
                       SizedBox(height: 8),
                       InkWell(
@@ -328,6 +330,60 @@ class _CompetenceFormDialogState extends State<CompetenceFormDialog> {
                                 setState(() => _isActive = value);
                               },
                               activeColor: Color(0xFFD50000),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: 16),
+
+                      // Estado finalizado
+                      Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.white24),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              _isFinished ? Icons.flag : Icons.flag_outlined,
+                              color: _isFinished ? Colors.blue : Colors.grey,
+                              size: 24,
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Competencia Finalizada',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    _isFinished
+                                        ? 'La competencia ha concluido'
+                                        : 'La competencia está en curso o pendiente',
+                                    style: TextStyle(
+                                      color: Colors.white60,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Switch(
+                              value: _isFinished,
+                              onChanged: (value) {
+                                setState(() => _isFinished = value);
+                              },
+                              activeColor: Colors.blue,
                             ),
                           ],
                         ),

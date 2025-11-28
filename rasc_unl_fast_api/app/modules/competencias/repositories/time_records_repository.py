@@ -102,7 +102,7 @@ class TimeRecordRepository:
         await self.session.refresh(time_record)
         return time_record
 
-    async def delete(self, time_record_id: int) -> bool:
+    async def delete(self, time_record_id: str) -> bool:
         """Elimina un registro de tiempo"""
         time_record = await self.get_by_id(time_record_id)
         if not time_record:

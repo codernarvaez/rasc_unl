@@ -31,7 +31,7 @@ class RemoteCompetitionTimeRecordRepositoryImpl
       'version': timeRecord.version,
       'is_deleted': timeRecord.isDeleted,
     };
-    
+
     // Agregar campos opcionales solo si no son null
     if (timeRecord.lastSyncAt != null) {
       bodyMap['last_sync_at'] = timeRecord.lastSyncAt!.toIso8601String();
@@ -39,7 +39,7 @@ class RemoteCompetitionTimeRecordRepositoryImpl
     if (timeRecord.deviceId != null) {
       bodyMap['device_id'] = timeRecord.deviceId;
     }
-    
+
     final body = jsonEncode(bodyMap);
 
     final response = await http.post(url, headers: _headers, body: body);
@@ -86,11 +86,11 @@ class RemoteCompetitionTimeRecordRepositoryImpl
     if (response.statusCode == 200) {
       final jsonData = jsonDecode(response.body);
       final timeRecordsList = jsonData['time_records'];
-      
+
       if (timeRecordsList == null) {
         return [];
       }
-      
+
       final timeRecords = (timeRecordsList as List)
           .map((tr) => TimeRecordModel.fromJson(tr))
           .toList();
@@ -109,7 +109,7 @@ class RemoteCompetitionTimeRecordRepositoryImpl
     );
 
     final body = jsonEncode({
-      'time_in_milliseconds': timeRecord.time.inMilliseconds,
+      'time': timeRecord.time.inMilliseconds,
       'sync_status': timeRecord.syncStatus,
       'last_sync_at': timeRecord.lastSyncAt?.toIso8601String(),
       'version': timeRecord.version,

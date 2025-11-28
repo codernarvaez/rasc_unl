@@ -69,7 +69,7 @@ async def get_current_user(
         
         # Buscar usuario en la base de datos
         repository = UserRepository(session)
-        user = await repository.get_by_id(int(user_id))
+        user = await repository.get_by_id(user_id)
         
         if not user:
             raise HTTPException(

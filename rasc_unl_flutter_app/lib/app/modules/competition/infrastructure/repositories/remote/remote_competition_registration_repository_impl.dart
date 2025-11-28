@@ -107,6 +107,7 @@ class RemoteCompetitionRegistrationRepositoryImpl
           'dorsal_number': registration.dorsalNumber,
           'n_participants': registration.nParticipants,
           'name': registration.name,
+          'user_dni': registration.userDni,
           'sync_status': registration.syncStatus.toString().split('.').last,
           'last_sync_at': registration.lastSyncAt?.toIso8601String(),
           'version': registration.version,
@@ -157,7 +158,8 @@ class RemoteCompetitionRegistrationRepositoryImpl
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final registrations = (data['competition_registrations'] as List?) ?? [];
+        final registrations =
+            (data['competition_registrations'] as List?) ?? [];
         return registrations
             .map((json) => CompetitionRegistrationModel.fromJson(json))
             .toList();
@@ -241,6 +243,7 @@ class RemoteCompetitionRegistrationRepositoryImpl
           'dorsal_number': registration.dorsalNumber,
           'n_participants': registration.nParticipants,
           'name': registration.name,
+          'user_dni': registration.userDni,
           'sync_status': registration.syncStatus.toString().split('.').last,
           'last_sync_at': registration.lastSyncAt?.toIso8601String(),
           'version': registration.version,

@@ -47,6 +47,20 @@ class _RascUnlPageState extends ConsumerState<RascUnlPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'RASC UNL',
+          style: TextStyle(color: Color(0xFFD50000)),
+        ),
+        backgroundColor: Color(0xFF1A1A1A),
+        leading: IconButton(
+          onPressed: () {
+            context.go('/');
+          },
+          icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
+        ),
+      ),
+
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -144,6 +158,24 @@ class _RascUnlPageState extends ConsumerState<RascUnlPage>
                         onPressed: () {
                           context.go('/signup');
                         },
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Botón de Resultados Públicos
+                      TextButton(
+                        onPressed: () {
+                          context.go('/');
+                        },
+                        child: Text(
+                          'Ver Resultados',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
                       ),
 
                       const SizedBox(height: 40),

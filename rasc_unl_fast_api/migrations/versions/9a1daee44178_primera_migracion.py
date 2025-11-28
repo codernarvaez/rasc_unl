@@ -1,8 +1,8 @@
 """Primera migracion
 
-Revision ID: f6436f01b0ec
+Revision ID: 9a1daee44178
 Revises: 
-Create Date: 2025-11-26 02:10:54.281920
+Create Date: 2025-11-28 01:15:26.950899
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'f6436f01b0ec'
+revision: str = '9a1daee44178'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -40,7 +40,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_competence_id'), 'competence', ['id'], unique=False)
     op.create_index(op.f('ix_competence_name'), 'competence', ['name'], unique=False)
     op.create_table('user',
-    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('id', sa.String(), nullable=False),
     sa.Column('dni', sa.String(), nullable=False),
     sa.Column('role', sa.Enum('ADMINISTRATOR', 'MODERATOR', name='roleenum'), nullable=False),
     sa.Column('first_name', sa.String(), nullable=False),
@@ -51,6 +51,11 @@ def upgrade() -> None:
     sa.Column('password', sa.String(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('sync_status', sa.String(), nullable=False),
+    sa.Column('last_sync_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('version', sa.Integer(), nullable=False),
+    sa.Column('device_id', sa.String(), nullable=True),
+    sa.Column('is_deleted', sa.Boolean(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_user_dni'), 'user', ['dni'], unique=True)

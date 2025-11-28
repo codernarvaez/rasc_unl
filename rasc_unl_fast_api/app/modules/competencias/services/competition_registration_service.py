@@ -71,7 +71,23 @@ class CompetitionRegistrationService:
             )
 
         # Crear el registro con el DNI del moderador
-        registration = await self.repository.create(registration_data, user_dni)
+        # Si viene user_dni en registration_data, usar ese (para admin que asigna moderador)
+        # Si no, usar el del usuario actual
+        # Si no, usar el del usuario actual
+        final_user_dni = registration_data.user_dni if registration_data.user_dni else user_dni
+
+        # Verificar que el moderador no tenga ya un equipo en esta competencia
+        existing_moderator_reg = await self.repository.get_by_user_and_competence(
+            final_user_dni,
+            registration_data.competence_id
+        )
+        if existing_moderator_reg:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"El moderador con DNI {final_user_dni} ya tiene un equipo asignado en esta competencia"
+            )
+        
+        registration = await self.repository.create(registration_data, final_user_dni)
         await self.session.commit()
         
         return CompetitionRegistrationResponse.model_validate(registration)
@@ -154,6 +170,19 @@ class CompetitionRegistrationService:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"El número de dorsal {registration_data.dorsal_number} ya está registrado en esta competencia"
+                )
+
+        # Si se está actualizando el moderador, verificar que no tenga ya un equipo
+        if registration_data.user_dni and registration_data.user_dni != current_registration.user_dni:
+            existing_moderator_reg = await self.repository.get_by_user_and_competence(
+                registration_data.user_dni,
+                current_registration.competence_id,
+                exclude_id=registration_id
+            )
+            if existing_moderator_reg:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"El moderador con DNI {registration_data.user_dni} ya tiene un equipo asignado en esta competencia"
                 )
 
         registration = await self.repository.update(registration_id, registration_data)
