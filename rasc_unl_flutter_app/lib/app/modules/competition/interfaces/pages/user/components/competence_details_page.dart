@@ -526,6 +526,7 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
 
   String _formatDate(DateTime? date) {
     if (date == null) return 'Sin fecha';
+    final ecuadorDate = toEcuadorTime(date);
     List<String> months = [
       'Ene',
       'Feb',
@@ -540,23 +541,25 @@ class _CompetenceDetailsPageState extends ConsumerState<CompetenceDetailsPage> {
       'Nov',
       'Dic',
     ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
+    return '${ecuadorDate.day} ${months[ecuadorDate.month - 1]} ${ecuadorDate.year}';
   }
 
   String _formatTime(DateTime? date) {
     if (date == null) return '--:--';
+    final ecuadorDate = toEcuadorTime(date);
     String twoDigits(int n) => n.toString().padLeft(2, '0');
-    return '${twoDigits(date.hour)}:${twoDigits(date.minute)}';
+    return '${twoDigits(ecuadorDate.hour)}:${twoDigits(ecuadorDate.minute)}';
   }
 
   String _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return 'Sin fecha';
 
-    final day = dateTime.day.toString().padLeft(2, '0');
-    final month = dateTime.month.toString().padLeft(2, '0');
-    final year = dateTime.year;
-    final hour = dateTime.hour.toString().padLeft(2, '0');
-    final minute = dateTime.minute.toString().padLeft(2, '0');
+    final ecuadorDate = toEcuadorTime(dateTime);
+    final day = ecuadorDate.day.toString().padLeft(2, '0');
+    final month = ecuadorDate.month.toString().padLeft(2, '0');
+    final year = ecuadorDate.year;
+    final hour = ecuadorDate.hour.toString().padLeft(2, '0');
+    final minute = ecuadorDate.minute.toString().padLeft(2, '0');
 
     return '$day/$month/$year $hour:$minute';
   }

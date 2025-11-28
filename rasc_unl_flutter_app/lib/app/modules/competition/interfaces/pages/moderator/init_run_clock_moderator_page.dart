@@ -40,6 +40,10 @@ class _InitRunClockModeratorState
       _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
         _loadNextCompetence();
       });
+      // Clock update timer
+      Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (mounted) setState(() {});
+      });
     });
   }
 
@@ -156,25 +160,32 @@ class _InitRunClockModeratorState
 
     if (difference.inMilliseconds > 0) {
       // Cuenta regresiva
-      _startCountdown(difference.inMilliseconds);
+      _startCountdown();
     } else if (difference.inMilliseconds > -7200000) {
       // Menos de 2 horas desde inicio, iniciar cronómetro
-      _startTimer(initialMilliseconds: -difference.inMilliseconds);
+      _startTimer();
     }
   }
 
-  void _startCountdown(int milliseconds) {
+  void _startCountdown() {
     _timer?.cancel();
 
     setState(() {
       _isCountdown = true;
-      _countdownMilliseconds = milliseconds;
       _isRunning = false;
     });
 
     _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      if (_competitionDateTime == null) {
+        timer.cancel();
+        return;
+      }
+
+      final now = utcNow();
+      final difference = _competitionDateTime!.difference(now);
+
       setState(() {
-        _countdownMilliseconds -= 100;
+        _countdownMilliseconds = difference.inMilliseconds;
 
         if (_countdownMilliseconds <= 0) {
           _timer?.cancel();
@@ -185,18 +196,25 @@ class _InitRunClockModeratorState
     });
   }
 
-  void _startTimer({int initialMilliseconds = 0}) {
+  void _startTimer() {
     _timer?.cancel();
 
     setState(() {
       _isRunning = true;
       _isCountdown = false;
-      _elapsedMilliseconds = initialMilliseconds;
     });
 
-    _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+    _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) {
+      if (_competitionDateTime == null) {
+        timer.cancel();
+        return;
+      }
+
+      final now = utcNow();
+      final difference = now.difference(_competitionDateTime!);
+
       setState(() {
-        _elapsedMilliseconds += 100;
+        _elapsedMilliseconds = difference.inMilliseconds;
       });
     });
   }
@@ -475,45 +493,87 @@ class _InitRunClockModeratorState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFD50000).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.flag,
-                              color: Color(0xFFD50000),
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Row(
                               children: [
-                                Text(
-                                  _nextCompetence!.name,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.5,
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFFD50000,
+                                    ).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.flag,
+                                    color: Color(0xFFD50000),
+                                    size: 20,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _myRegistration!.name,
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
-                                    fontSize: 14,
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _nextCompetence!.name,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        _myRegistration!.name,
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.7),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.white10),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.access_time,
+                              color: Colors.white70,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Hora Ecuador: ${_formatTimeOfDay(toEcuadorTime(utcNow()))}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                fontFeatures: [FontFeature.tabularFigures()],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 20),
                       Row(
@@ -928,5 +988,10 @@ class _InitRunClockModeratorState
         fontWeight: FontWeight.w600,
       ),
     );
+  }
+
+  String _formatTimeOfDay(DateTime date) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    return '${twoDigits(date.hour)}:${twoDigits(date.minute)}:${twoDigits(date.second)}';
   }
 }

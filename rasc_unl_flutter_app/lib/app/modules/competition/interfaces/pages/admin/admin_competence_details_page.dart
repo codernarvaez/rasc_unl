@@ -5,6 +5,7 @@ import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/compe
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competition_registration_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/interfaces/pages/admin/forms/participant_form_dialog.dart';
 import 'package:rasc_unl_flutter_app/core/dependencies/dependencies_inyection.dart';
+import 'package:rasc_unl_flutter_app/core/utils/timezone_utils.dart';
 
 class AdminCompetenceDetailsPage extends ConsumerStatefulWidget {
   final String competenceId;
@@ -111,16 +112,17 @@ class _AdminCompetenceDetailsPageState
 
     final result = await showDialog<CompetitionRegistrationModel>(
       context: context,
-      builder: (context) => ParticipantFormDialog(
-        competenceId: widget.competenceId,
-      ),
+      builder: (context) =>
+          ParticipantFormDialog(competenceId: widget.competenceId),
     );
 
     if (result == null) return;
 
     try {
       final repository = ref.read(rascUNLMainProvider);
-      await repository.competitionRegistrationRepository.createRegistration(result);
+      await repository.competitionRegistrationRepository.createRegistration(
+        result,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -143,12 +145,14 @@ class _AdminCompetenceDetailsPageState
     }
   }
 
-  Future<void> _showEditParticipantDialog(ParticipantRegistration participant) async {
+  Future<void> _showEditParticipantDialog(
+    ParticipantRegistration participant,
+  ) async {
     // Obtener el registro completo
     final repository = ref.read(rascUNLMainProvider);
     final registrations = await repository.competitionRegistrationRepository
         .getRegistrationsByCompetenceId(widget.competenceId);
-    
+
     final currentRegistration = registrations.firstWhere(
       (r) => r.id == participant.registrationId,
     );
@@ -166,7 +170,9 @@ class _AdminCompetenceDetailsPageState
     if (result == null) return;
 
     try {
-      await repository.competitionRegistrationRepository.updateRegistration(result);
+      await repository.competitionRegistrationRepository.updateRegistration(
+        result,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -601,7 +607,7 @@ class _AdminCompetenceDetailsPageState
               ),
             ),
             const SizedBox(width: 16),
-            
+
             // Información del equipo y moderador
             Expanded(
               child: Column(
@@ -609,7 +615,11 @@ class _AdminCompetenceDetailsPageState
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.groups, color: Color(0xFFD50000), size: 16),
+                      const Icon(
+                        Icons.groups,
+                        color: Color(0xFFD50000),
+                        size: 16,
+                      ),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
@@ -664,18 +674,23 @@ class _AdminCompetenceDetailsPageState
                 ],
               ),
             ),
-            
+
             // Botones de acción
             Column(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.edit, color: Color(0xFFD50000), size: 22),
+                  icon: const Icon(
+                    Icons.edit,
+                    color: Color(0xFFD50000),
+                    size: 22,
+                  ),
                   onPressed: () => _showEditParticipantDialog(participant),
                   tooltip: 'Editar',
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red, size: 22),
-                  onPressed: () => _deleteParticipant(participant.registrationId),
+                  onPressed: () =>
+                      _deleteParticipant(participant.registrationId),
                   tooltip: 'Eliminar',
                 ),
               ],
@@ -689,11 +704,12 @@ class _AdminCompetenceDetailsPageState
   String _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return 'Sin fecha';
 
-    final day = dateTime.day.toString().padLeft(2, '0');
-    final month = dateTime.month.toString().padLeft(2, '0');
-    final year = dateTime.year;
-    final hour = dateTime.hour.toString().padLeft(2, '0');
-    final minute = dateTime.minute.toString().padLeft(2, '0');
+    final ecuadorDate = toEcuadorTime(dateTime);
+    final day = ecuadorDate.day.toString().padLeft(2, '0');
+    final month = ecuadorDate.month.toString().padLeft(2, '0');
+    final year = ecuadorDate.year;
+    final hour = ecuadorDate.hour.toString().padLeft(2, '0');
+    final minute = ecuadorDate.minute.toString().padLeft(2, '0');
 
     return '$day/$month/$year $hour:$minute';
   }

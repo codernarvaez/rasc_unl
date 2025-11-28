@@ -36,7 +36,7 @@
 ### Página Pública
 - [x] Crear página pública de resultados (`/public/competition-results`)
 - [x] Implementar tab "Orden de Llegada"
-- [/] Implementar tab "Clasificación General" (Cálculo de promedios en tiempo real)
+- [x] Implementar tab "Clasificación General" (Cálculo de promedios en tiempo real)
 - [x] Actualizaciones en tiempo real
 
 ### UI/UX y Pulido

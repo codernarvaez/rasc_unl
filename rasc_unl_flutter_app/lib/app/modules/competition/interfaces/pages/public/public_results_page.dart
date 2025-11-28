@@ -450,25 +450,313 @@ class _GeneralClassificationView extends ConsumerStatefulWidget {
 
 class _GeneralClassificationViewState
     extends ConsumerState<_GeneralClassificationView> {
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _results = [];
+  Timer? _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadResults();
+    _startAutoRefresh();
+  }
+
+  void _startAutoRefresh() {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (mounted) {
+        _loadResults(silent: true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant _GeneralClassificationView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.competence.id != widget.competence.id) {
+      _loadResults();
+    }
+  }
+
+  Future<void> _loadResults({bool silent = false}) async {
+    if (!silent) setState(() => _isLoading = true);
+    try {
+      final repository = ref.read(rascUNLMainProvider);
+
+      // 1. Get registrations for this competence
+      final registrations = await repository.competitionRegistrationRepository
+          .getRegistrationsByCompetenceId(widget.competence.id);
+
+      // 2. Calculate average for each team
+      final List<Map<String, dynamic>> results = [];
+
+      for (var reg in registrations) {
+        final times = await repository.competitionTimeRecordRepository
+            .getTimeRecordsByRegistrationId(reg.id);
+
+        if (times.isNotEmpty) {
+          final totalMilliseconds = times.fold<int>(
+            0,
+            (sum, record) => sum + record.time.inMilliseconds,
+          );
+
+          final averageMilliseconds = totalMilliseconds ~/ times.length;
+          final averageDuration = Duration(milliseconds: averageMilliseconds);
+
+          results.add({
+            'registration': reg,
+            'averageTime': averageDuration,
+            'totalTime': Duration(milliseconds: totalMilliseconds),
+            'recordedCount': times.length,
+            'totalParticipants': reg.nParticipants,
+          });
+        }
+      }
+
+      // Sort by average time (ascending)
+      results.sort(
+        (a, b) => (a['averageTime'] as Duration).compareTo(
+          b['averageTime'] as Duration,
+        ),
+      );
+
+      if (mounted) {
+        setState(() {
+          _results = results;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.leaderboard, size: 64, color: Colors.white24),
-          const SizedBox(height: 16),
-          Text(
-            'Clasificación General',
-            style: const TextStyle(color: Colors.white, fontSize: 18),
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFFD50000)),
+      );
+    }
+
+    if (_results.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.leaderboard,
+              size: 64,
+              color: Colors.white.withOpacity(0.2),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Aún no hay tiempos suficientes para clasificar',
+              style: TextStyle(color: Colors.white.withOpacity(0.5)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _results.length,
+      itemBuilder: (context, index) {
+        final result = _results[index];
+        final rank = index + 1;
+        final isTop3 = rank <= 3;
+        final reg = result['registration'];
+        final averageTime = result['averageTime'] as Duration;
+        final recordedCount = result['recordedCount'] as int;
+        final totalParticipants = result['totalParticipants'] as int;
+
+        return TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: Duration(milliseconds: 400 + (index * 50).clamp(0, 1000)),
+          curve: Curves.easeOutQuart,
+          builder: (context, value, child) {
+            return Transform.translate(
+              offset: Offset(0, 20 * (1 - value)),
+              child: Opacity(opacity: value, child: child),
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            decoration: BoxDecoration(
+              gradient: isTop3
+                  ? LinearGradient(
+                      colors: [
+                        const Color(0xFFD50000).withOpacity(0.2),
+                        const Color(0xFFD50000).withOpacity(0.05),
+                      ],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    )
+                  : null,
+              color: isTop3 ? null : Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isTop3
+                    ? const Color(0xFFD50000).withOpacity(0.5)
+                    : Colors.white.withOpacity(0.1),
+              ),
+            ),
+            child: Row(
+              children: [
+                // Rank Badge
+                Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isTop3 ? const Color(0xFFD50000) : Colors.white10,
+                    boxShadow: isTop3
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFFD50000).withOpacity(0.4),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: isTop3
+                      ? Icon(
+                          rank == 1
+                              ? Icons.emoji_events
+                              : rank == 2
+                              ? Icons.looks_two
+                              : Icons.looks_3,
+                          color: Colors.white,
+                          size: 24,
+                        )
+                      : Text(
+                          '#$rank',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                ),
+                const SizedBox(width: 16),
+
+                // Team Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        reg.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'Dorsal ${reg.dorsalNumber}',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '$recordedCount/$totalParticipants llegadas',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.5),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Average Time
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'PROMEDIO',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.5),
+                        fontSize: 10,
+                        letterSpacing: 1,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black45,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isTop3
+                              ? const Color(0xFFD50000).withOpacity(0.3)
+                              : Colors.white.withOpacity(0.1),
+                        ),
+                      ),
+                      child: Text(
+                        _formatDuration(averageTime),
+                        style: TextStyle(
+                          color: isTop3
+                              ? const Color(0xFFD50000)
+                              : Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'monospace',
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'Se mostrará al finalizar la competencia',
-            style: TextStyle(color: Colors.white54),
-          ),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
+    String threeDigitMilliseconds = duration.inMilliseconds
+        .remainder(1000)
+        .toString()
+        .padLeft(3, "0");
+    return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds.$threeDigitMilliseconds";
   }
 }
