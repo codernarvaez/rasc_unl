@@ -57,7 +57,13 @@ class CompetenceResponse(BaseModel):
     is_finished: bool
     created_by: str
     created_at: datetime
+    created_at: datetime
     updated_at: datetime
+    version: int
+    sync_status: str
+    last_sync_at: Optional[datetime] = None
+    device_id: Optional[str] = None
+    is_deleted: bool
     
     @field_serializer('competition_date', 'created_at', 'updated_at')
     def serialize_datetime(self, dt: datetime) -> str:
@@ -110,7 +116,13 @@ class CompetitionRegistrationResponse(BaseModel):
     user_dni: str
     competence_id: str
     created_at: datetime
+    created_at: datetime
     updated_at: datetime
+    version: int
+    sync_status: str
+    last_sync_at: Optional[datetime] = None
+    device_id: Optional[str] = None
+    is_deleted: bool
     
     @field_serializer('created_at', 'updated_at')
     def serialize_datetime(self, dt: datetime) -> str:

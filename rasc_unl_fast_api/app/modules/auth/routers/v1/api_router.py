@@ -87,6 +87,10 @@ async def update_current_user(
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Update current user information (users can only update their own basic data)."""
+    # Check version
+    if user_data.version is not None and user_data.version <= current_user.version:
+        return current_user
+
     service = UserService(session)
     updated_user = await service.update_user(current_user.id, user_data)
     return updated_user
@@ -174,6 +178,11 @@ async def update_user(
             detail="Admin cannot update DNI or email"
         )
     
+    # Check version
+    existing_user = await service.get_user_by_id(user_id)
+    if user_data.version is not None and user_data.version <= existing_user.version:
+        return existing_user
+
     updated_user = await service.update_user(user_id, user_data)
     return updated_user
 

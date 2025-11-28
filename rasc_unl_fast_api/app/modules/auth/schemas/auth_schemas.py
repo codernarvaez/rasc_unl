@@ -29,6 +29,7 @@ class UserUpdate(BaseModel):
     first_name: Optional[str] = Field(None, min_length=1, max_length=100)
     last_name: Optional[str] = Field(None, min_length=1, max_length=100)
     birth_date: Optional[date] = Field(None, description="Fecha de nacimiento (YYYY-MM-DD)")
+    version: Optional[int] = None
 
 
 class UserUpdateAdmin(UserUpdate):
@@ -61,6 +62,7 @@ class UserResponse(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+    version: int
     
     model_config = ConfigDict(from_attributes=True)
     

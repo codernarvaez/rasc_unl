@@ -79,14 +79,21 @@ class _PublicResultsPageState extends ConsumerState<PublicResultsPage>
           _competences = visibleCompetences;
 
           if (_competences.isNotEmpty) {
-            // Default to the one that is Active AND Not Finished
+            // Prioritize Active AND Not Finished (Current)
+            // Then Active (maybe finished but still marked active?)
+            // Then just the first one (most recent)
             try {
               _selectedCompetence = _competences.firstWhere(
                 (c) => c.isActive && !c.isFinished,
               );
             } catch (e) {
-              // If no active & unfinished competition found, default to the most recent one
-              _selectedCompetence = _competences.first;
+              try {
+                _selectedCompetence = _competences.firstWhere(
+                  (c) => c.isActive,
+                );
+              } catch (e) {
+                _selectedCompetence = _competences.first;
+              }
             }
           }
           _isLoading = false;

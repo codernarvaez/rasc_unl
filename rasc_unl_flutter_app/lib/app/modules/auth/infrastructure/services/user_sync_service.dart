@@ -54,17 +54,36 @@ class UserSyncService {
       }
 
       // 2. Para administradores: sincronizar todos los usuarios
+      // 2. Para administradores: sincronizar todos los usuarios
       final session = await _sessionRepo.getActiveSession();
       if (session != null) {
+        logging.i('Sesión activa encontrada: userId=${session.userId}');
         final localUser = await _localUserRepo.getUserById(
           session.userId.toString(),
         );
-        if (localUser != null && localUser.role == 'ADMINISTRATOR') {
-          final allUsersResult = await _syncAllUsers(accessToken);
-          usersDownloaded = allUsersResult.usersDownloaded;
-          usersUploaded = allUsersResult.usersUploaded;
-          errors.addAll(allUsersResult.errors);
+
+        if (localUser != null) {
+          logging.i('Usuario local encontrado: role=${localUser.role}');
+          if (localUser.role == 'ADMINISTRATOR') {
+            logging.i(
+              'Usuario es ADMINISTRATOR, iniciando descarga de todos los usuarios...',
+            );
+            final allUsersResult = await _syncAllUsers(accessToken);
+            usersDownloaded = allUsersResult.usersDownloaded;
+            usersUploaded = allUsersResult.usersUploaded;
+            errors.addAll(allUsersResult.errors);
+          } else {
+            logging.w(
+              'El usuario no es ADMINISTRATOR, se omite la descarga de usuarios.',
+            );
+          }
+        } else {
+          logging.w('No se encontró usuario local con ID: ${session.userId}');
         }
+      } else {
+        logging.w(
+          'No se encontró sesión activa para verificar rol de administrador.',
+        );
       }
 
       // 3. TODO: Sincronizar competencias
@@ -111,6 +130,7 @@ class UserSyncService {
         birthDate: userApiResponse.dateOfBirth != null
             ? DateTime.tryParse(userApiResponse.dateOfBirth!)
             : null,
+        version: userApiResponse.version,
       );
 
       // Buscar usuario local por DNI
@@ -121,9 +141,17 @@ class UserSyncService {
         await _localUserRepo.insertUser(user);
         logging.i('Usuario actual sincronizado (nuevo): ${user.email}');
       } else {
-        // Usuario existe, actualizarlo manteniendo el ID local
-        await _localUserRepo.updateUser(user.copyWith(id: localUser.id));
-        logging.i('Usuario actual sincronizado (actualizado): ${user.email}');
+        // Usuario existe, actualizarlo manteniendo el ID local si la versión es mayor
+        if (user.version > localUser.version) {
+          await _localUserRepo.updateUser(user.copyWith(id: localUser.id));
+          logging.i(
+            'Usuario actual sincronizado (actualizado v${user.version}): ${user.email}',
+          );
+        } else {
+          logging.i(
+            'Usuario actual ya está actualizado (v${localUser.version} >= v${user.version})',
+          );
+        }
       }
 
       return SyncResult(success: true, message: 'Usuario actual sincronizado');
@@ -164,6 +192,7 @@ class UserSyncService {
             birthDate: userApiResponse.dateOfBirth != null
                 ? DateTime.tryParse(userApiResponse.dateOfBirth!)
                 : null,
+            version: userApiResponse.version,
           );
 
           final localUser = await _localUserRepo.getUserByDni(user.dni);
@@ -172,8 +201,15 @@ class UserSyncService {
             await _localUserRepo.insertUser(user);
             downloaded++;
           } else {
-            await _localUserRepo.updateUser(user.copyWith(id: localUser.id));
-            downloaded++;
+            // Check version: only update if remote version is higher
+            if (user.version > localUser.version) {
+              await _localUserRepo.updateUser(user.copyWith(id: localUser.id));
+              downloaded++;
+            } else {
+              logging.i(
+                'Usuario ${user.email} ya está actualizado (v${localUser.version} >= v${user.version})',
+              );
+            }
           }
         } catch (e) {
           errors.add(
@@ -201,6 +237,7 @@ class UserSyncService {
             'role': user.role,
             'is_active': user.isActive,
             'date_of_birth': user.birthDate?.toIso8601String(),
+            'version': user.version,
           });
 
           // Marcar como sincronizado
@@ -257,13 +294,9 @@ class UserSyncService {
     logging.i('Ejecutando sincronización automática...');
 
     try {
-      final hasPending = await hasPendingSync();
-
-      if (hasPending) {
-        await syncAll(accessToken: accessToken);
-      } else {
-        logging.i('No hay datos pendientes de sincronización');
-      }
+      // Always sync to ensure we get latest data from server (Pull)
+      // and push any pending changes (Push)
+      await syncAll(accessToken: accessToken);
     } catch (e) {
       logging.w('Error en sincronización automática: $e');
     }

@@ -153,7 +153,17 @@ class _InitRunClockModeratorState
   }
 
   void _checkTimeAndStart() {
-    if (_competitionDateTime == null) return;
+    if (_competitionDateTime == null || _nextCompetence == null) return;
+
+    // Don't start if finished or inactive
+    if (_nextCompetence!.isFinished || !_nextCompetence!.isActive) {
+      _timer?.cancel();
+      setState(() {
+        _isRunning = false;
+        _isCountdown = false;
+      });
+      return;
+    }
 
     final currentTime = utcNow();
     final difference = _competitionDateTime!.difference(currentTime);
@@ -269,8 +279,9 @@ class _InitRunClockModeratorState
 
       // Si completó todos los tiempos
       if (_recordedTimes.length >= totalParticipants) {
-        _timer?.cancel();
-        setState(() => _isRunning = false);
+        // No detenemos el timer para permitir correcciones
+        // _timer?.cancel();
+        // setState(() => _isRunning = false);
 
         if (mounted) {
           showDialog(
@@ -957,6 +968,10 @@ class _InitRunClockModeratorState
       await repository.competenceRepository.updateCompetence(updatedCompetence);
 
       if (mounted) {
+        // Stop timer immediately
+        _timer?.cancel();
+        setState(() => _isRunning = false);
+
         Navigator.pop(context); // Close dialog
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

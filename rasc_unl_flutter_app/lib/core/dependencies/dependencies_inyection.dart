@@ -15,7 +15,9 @@ import 'package:rasc_unl_flutter_app/app/modules/auth/infrastructure/services/au
 
 import 'package:rasc_unl_flutter_app/app/modules/auth/infrastructure/repositories/remote/auth_remote_repository_impl.dart';
 import 'package:rasc_unl_flutter_app/app/modules/sync/application/services/sync_service.dart';
+import 'package:rasc_unl_flutter_app/app/modules/sync/infrastructure/repositories/remote/remote_sync_repository_impl.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:rasc_unl_flutter_app/app/modules/composite_repository.dart';
 
 final logging = Logger(
   level: kReleaseMode ? Level.nothing : Level.debug,
@@ -174,9 +176,13 @@ final authInitializationProvider = FutureProvider<void>((ref) async {
   }
 });
 
+final remoteSyncRepositoryProvider = Provider<RemoteSyncRepository>((ref) {
+  final accessToken = ref.watch(accessTokenProvider);
+  return RemoteSyncRepositoryImpl(accessToken: accessToken);
+});
+
 final syncServiceProvider = Provider<SyncService>((ref) {
   final localDbAsync = ref.watch(localDatabaseProvider);
-  final accessToken = ref.watch(accessTokenProvider);
 
   final localDb = localDbAsync.value;
   if (localDb == null) {
@@ -184,15 +190,13 @@ final syncServiceProvider = Provider<SyncService>((ref) {
   }
 
   final localRepo = LocalRepository(localDb);
-  final remoteRepo = RemoteRepository(accessToken: accessToken);
+  final remoteSyncRepo = ref.watch(remoteSyncRepositoryProvider);
 
   return SyncService(
     localCompetenceRepository: localRepo.competenceRepository,
-    remoteCompetenceRepository: remoteRepo.competenceRepository,
     localRegistrationRepository: localRepo.competitionRegistrationRepository,
-    remoteRegistrationRepository: remoteRepo.competitionRegistrationRepository,
     localTimeRecordRepository: localRepo.competitionTimeRecordRepository,
-    remoteTimeRecordRepository: remoteRepo.competitionTimeRecordRepository,
+    remoteSyncRepository: remoteSyncRepo,
   );
 });
 
@@ -235,13 +239,18 @@ final rascUNLMainProvider = Provider<MainRepository>((ref) {
     }
   }
 
-  if (isOffline) {
-    return localDbAsync.when(
-      data: (localDb) => LocalRepository(localDb),
-      loading: () => throw Exception('Database is loading...'),
-      error: (error, stack) => throw error,
-    );
-  } else {
-    return RemoteRepository(accessToken: accessToken);
-  }
+  // Always create both repositories
+  final localRepo = localDbAsync.when(
+    data: (localDb) => LocalRepository(localDb),
+    loading: () => throw Exception('Database is loading...'),
+    error: (error, stack) => throw error,
+  );
+
+  final remoteRepo = RemoteRepository(accessToken: accessToken);
+
+  return CompositeRepository(
+    local: localRepo,
+    remote: remoteRepo,
+    isOffline: isOffline,
+  );
 });

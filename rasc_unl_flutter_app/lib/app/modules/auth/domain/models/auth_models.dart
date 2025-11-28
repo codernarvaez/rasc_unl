@@ -90,6 +90,7 @@ class UserApiResponse {
   final bool isActive;
   final String? createdAt;
   final String? updatedAt;
+  final int version;
 
   UserApiResponse({
     required this.id,
@@ -102,6 +103,7 @@ class UserApiResponse {
     required this.isActive,
     this.createdAt,
     this.updatedAt,
+    this.version = 1,
   });
 
   factory UserApiResponse.fromJson(Map<String, dynamic> json) =>

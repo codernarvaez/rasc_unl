@@ -84,11 +84,13 @@ async def push_sync_data(
             existing = result.scalars().first()
             
             if existing:
-                # Update existing
-                for key, value in comp_data.dict(exclude={'id'}).items():
-                    setattr(existing, key, value)
-                existing.sync_status = SyncStatus.SYNCED
-                existing.last_sync_at = utc_now()
+                # Check version
+                if comp_data.version > existing.version:
+                    # Update existing
+                    for key, value in comp_data.dict(exclude={'id'}).items():
+                        setattr(existing, key, value)
+                    existing.sync_status = SyncStatus.SYNCED
+                    existing.last_sync_at = utc_now()
             else:
                 # Create new
                 new_comp = CompetenceModel(**comp_data.dict())
@@ -105,10 +107,12 @@ async def push_sync_data(
             existing = result.scalars().first()
             
             if existing:
-                for key, value in reg_data.dict(exclude={'id'}).items():
-                    setattr(existing, key, value)
-                existing.sync_status = SyncStatus.SYNCED
-                existing.last_sync_at = utc_now()
+                # Check version
+                if reg_data.version > existing.version:
+                    for key, value in reg_data.dict(exclude={'id'}).items():
+                        setattr(existing, key, value)
+                    existing.sync_status = SyncStatus.SYNCED
+                    existing.last_sync_at = utc_now()
             else:
                 new_reg = CompetitionRegistrationModel(**reg_data.dict())
                 new_reg.sync_status = SyncStatus.SYNCED
@@ -124,10 +128,12 @@ async def push_sync_data(
             existing = result.scalars().first()
             
             if existing:
-                for key, value in tr_data.dict(exclude={'id'}).items():
-                    setattr(existing, key, value)
-                existing.sync_status = SyncStatus.SYNCED
-                existing.last_sync_at = utc_now()
+                # Check version
+                if tr_data.version > existing.version:
+                    for key, value in tr_data.dict(exclude={'id'}).items():
+                        setattr(existing, key, value)
+                    existing.sync_status = SyncStatus.SYNCED
+                    existing.last_sync_at = utc_now()
             else:
                 new_tr = TimeRecordModel(**tr_data.dict())
                 new_tr.sync_status = SyncStatus.SYNCED

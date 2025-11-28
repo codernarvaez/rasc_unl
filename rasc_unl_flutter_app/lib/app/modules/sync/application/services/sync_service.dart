@@ -1,34 +1,31 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competence_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/competition_registration_model.dart';
+import 'package:rasc_unl_flutter_app/app/modules/competition/domain/models/time_record_model.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/repositories/competence_repository.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/repositories/competition_registration_repository.dart';
 import 'package:rasc_unl_flutter_app/app/modules/competition/domain/repositories/competition_time_record_repository.dart';
+import 'package:rasc_unl_flutter_app/app/modules/sync/infrastructure/repositories/remote/remote_sync_repository_impl.dart';
 import 'package:rasc_unl_flutter_app/core/utils/timezone_utils.dart';
 
 enum SyncStatus { syncing, synced, error, pending }
 
 class SyncService {
   final CompetenceRepository _localCompetenceRepository;
-  final CompetenceRepository _remoteCompetenceRepository;
   final CompetitionRegistrationRepository _localRegistrationRepository;
-  final CompetitionRegistrationRepository _remoteRegistrationRepository;
   final CompetitionTimeRecordRepository _localTimeRecordRepository;
-  final CompetitionTimeRecordRepository _remoteTimeRecordRepository;
+  final RemoteSyncRepository _remoteSyncRepository;
 
   SyncService({
     required CompetenceRepository localCompetenceRepository,
-    required CompetenceRepository remoteCompetenceRepository,
     required CompetitionRegistrationRepository localRegistrationRepository,
-    required CompetitionRegistrationRepository remoteRegistrationRepository,
     required CompetitionTimeRecordRepository localTimeRecordRepository,
-    required CompetitionTimeRecordRepository remoteTimeRecordRepository,
+    required RemoteSyncRepository remoteSyncRepository,
   }) : _localCompetenceRepository = localCompetenceRepository,
-       _remoteCompetenceRepository = remoteCompetenceRepository,
        _localRegistrationRepository = localRegistrationRepository,
-       _remoteRegistrationRepository = remoteRegistrationRepository,
        _localTimeRecordRepository = localTimeRecordRepository,
-       _remoteTimeRecordRepository = remoteTimeRecordRepository;
+       _remoteSyncRepository = remoteSyncRepository;
 
   final _statusController = ValueNotifier<SyncStatus>(SyncStatus.synced);
   ValueNotifier<SyncStatus> get statusNotifier => _statusController;
@@ -54,196 +51,143 @@ class SyncService {
   }
 
   Future<void> syncUp() async {
-    await _pushCompetences();
-    await _pushRegistrations();
-    await _pushTimeRecords();
-  }
+    try {
+      // 1. Collect pending items
+      final competences = await _localCompetenceRepository.getAllCompetences();
+      final pendingCompetences = competences
+          .where((c) => c.syncStatus == 'pending')
+          .toList();
 
-  Future<void> syncDown() async {
-    await _pullCompetences();
-    await _pullRegistrations();
-    await _pullTimeRecords();
-  }
+      final registrations = await _localRegistrationRepository
+          .getAllRegistrations();
+      final pendingRegistrations = registrations
+          .where((r) => r.syncStatus == 'pending')
+          .toList();
 
-  Future<void> _pushCompetences() async {
-    final localCompetences = await _localCompetenceRepository
-        .getAllCompetences();
-    final pendingCompetences = localCompetences
-        .where((c) => c.syncStatus == 'pending')
-        .toList();
-
-    for (var competence in pendingCompetences) {
-      try {
-        final remoteComp = await _remoteCompetenceRepository.getCompetenceById(
-          competence.id,
-        );
-
-        if (remoteComp == null) {
-          await _remoteCompetenceRepository.createCompetence(competence);
-        } else {
-          await _remoteCompetenceRepository.updateCompetence(competence);
-        }
-
-        final syncedCompetence = competence.copyWith(
-          syncStatus: 'synced',
-          lastSyncAt: utcNow(),
-        );
-        await _localCompetenceRepository.updateCompetence(syncedCompetence);
-      } catch (e) {
-        debugPrint('Error syncing competence ${competence.id}: $e');
-      }
-    }
-  }
-
-  Future<void> _pullCompetences() async {
-    final remoteCompetences = await _remoteCompetenceRepository
-        .getAllCompetences();
-    for (var remoteComp in remoteCompetences) {
-      final localComp = await _localCompetenceRepository.getCompetenceById(
-        remoteComp.id,
-      );
-
-      if (localComp == null) {
-        await _localCompetenceRepository.createCompetence(
-          remoteComp.copyWith(syncStatus: 'synced'),
-        );
-      } else {
-        if (remoteComp.updatedAt != null &&
-            (localComp.updatedAt == null ||
-                remoteComp.updatedAt!.isAfter(localComp.updatedAt!))) {
-          await _localCompetenceRepository.updateCompetence(
-            remoteComp.copyWith(syncStatus: 'synced'),
+      // For time records, we need to iterate through registrations to find them
+      final allTimeRecords = <TimeRecordModel>[];
+      for (var comp in competences) {
+        final regs = await _localRegistrationRepository
+            .getRegistrationsByCompetenceId(comp.id);
+        for (var reg in regs) {
+          final records = await _localTimeRecordRepository
+              .getTimeRecordsByRegistrationId(reg.id);
+          allTimeRecords.addAll(
+            records.where((r) => r.syncStatus == 'pending'),
           );
         }
       }
-    }
-  }
 
-  Future<void> _pushRegistrations() async {
-    final localRegistrations = await _localRegistrationRepository
-        .getAllRegistrations();
-    final pendingRegistrations = localRegistrations
-        .where((r) => r.syncStatus == 'pending')
-        .toList();
-
-    for (var reg in pendingRegistrations) {
-      try {
-        // Check if exists remotely to decide create vs update
-        // Assuming createRegistration handles upsert or we check existence
-        // For now, let's try create, if fails, update?
-        // Or better, check existence if possible.
-        // The previous code just called createRegistration.
-        // Let's stick to that but be aware.
-        // Ideally we should have getRegistrationById in remote repo.
-
-        // For now, let's assume createRegistration is idempotent or handles it.
-        await _remoteRegistrationRepository.createRegistration(reg);
-
-        final syncedReg = reg.copyWith(
-          syncStatus: 'synced',
-          lastSyncAt: utcNow(),
-        );
-        await _localRegistrationRepository.updateRegistration(syncedReg);
-      } catch (e) {
-        debugPrint('Error syncing registration ${reg.id}: $e');
+      if (pendingCompetences.isEmpty &&
+          pendingRegistrations.isEmpty &&
+          allTimeRecords.isEmpty) {
+        debugPrint('Nothing to push.');
+        return;
       }
+
+      // 2. Create Push Request
+      final pushRequest = SyncPushRequest(
+        competences: pendingCompetences,
+        registrations: pendingRegistrations,
+        timeRecords: allTimeRecords,
+      );
+
+      // 3. Send to Server
+      await _remoteSyncRepository.pushSyncData(pushRequest);
+
+      // 4. Update local status to synced
+      for (var c in pendingCompetences) {
+        await _localCompetenceRepository.updateCompetence(
+          c.copyWith(syncStatus: 'synced', lastSyncAt: utcNow()),
+        );
+      }
+
+      for (var r in pendingRegistrations) {
+        await _localRegistrationRepository.updateRegistration(
+          r.copyWith(syncStatus: 'synced', lastSyncAt: utcNow()),
+        );
+      }
+
+      for (var t in allTimeRecords) {
+        await _localTimeRecordRepository.updateTimeRecord(
+          t.copyWith(syncStatus: 'synced', lastSyncAt: utcNow()),
+        );
+      }
+
+      debugPrint('Push completed successfully.');
+    } catch (e) {
+      debugPrint('Error during syncUp: $e');
+      rethrow;
     }
   }
 
-  Future<void> _pullRegistrations() async {
-    final competences = await _localCompetenceRepository.getAllCompetences();
-    for (var comp in competences) {
-      if (comp.isActive) {
-        final remoteRegs = await _remoteRegistrationRepository
-            .getRegistrationsByCompetenceId(comp.id);
-        for (var remoteReg in remoteRegs) {
-          final localRegs = await _localRegistrationRepository
-              .getRegistrationsByCompetenceId(comp.id);
-          final localReg = localRegs
-              .cast<CompetitionRegistrationModel?>()
-              .firstWhere((r) => r?.id == remoteReg.id, orElse: () => null);
+  Future<void> syncDown() async {
+    try {
+      // 1. Pull data from server
+      final response = await _remoteSyncRepository.pullSyncData();
 
-          if (localReg == null) {
-            await _localRegistrationRepository.createRegistration(
+      // 2. Process Competences
+      for (var remoteComp in response.competences) {
+        final localComp = await _localCompetenceRepository.getCompetenceById(
+          remoteComp.id,
+        );
+        if (localComp == null) {
+          await _localCompetenceRepository.createCompetence(
+            remoteComp.copyWith(syncStatus: 'synced'),
+          );
+        } else {
+          // HIGHEST VERSION WINS
+          if (remoteComp.version > localComp.version) {
+            await _localCompetenceRepository.updateCompetence(
+              remoteComp.copyWith(syncStatus: 'synced'),
+            );
+          }
+        }
+      }
+
+      // 3. Process Registrations
+      for (var remoteReg in response.registrations) {
+        final localRegs = await _localRegistrationRepository
+            .getRegistrationsByCompetenceId(remoteReg.competenceId);
+        final localReg = localRegs
+            .cast<CompetitionRegistrationModel?>()
+            .firstWhere((r) => r?.id == remoteReg.id, orElse: () => null);
+
+        if (localReg == null) {
+          await _localRegistrationRepository.createRegistration(
+            remoteReg.copyWith(syncStatus: 'synced'),
+          );
+        } else {
+          if (remoteReg.version > localReg.version) {
+            await _localRegistrationRepository.updateRegistration(
               remoteReg.copyWith(syncStatus: 'synced'),
             );
-          } else {
-            if (remoteReg.updatedAt != null &&
-                (localReg.updatedAt == null ||
-                    remoteReg.updatedAt!.isAfter(localReg.updatedAt!))) {
-              await _localRegistrationRepository.updateRegistration(
-                remoteReg.copyWith(syncStatus: 'synced'),
-              );
-            }
           }
         }
       }
-    }
-  }
 
-  Future<void> _pushTimeRecords() async {
-    final competences = await _localCompetenceRepository.getAllCompetences();
-    for (var comp in competences) {
-      if (comp.isActive) {
-        final registrations = await _localRegistrationRepository
-            .getRegistrationsByCompetenceId(comp.id);
-        for (var reg in registrations) {
-          final records = await _localTimeRecordRepository
-              .getTimeRecordsByRegistrationId(reg.id);
-          final pendingRecords = records
-              .where((r) => r.syncStatus == 'pending')
-              .toList();
-
-          for (var record in pendingRecords) {
-            try {
-              await _remoteTimeRecordRepository.createTimeRecord(record);
-
-              final syncedRecord = record.copyWith(
-                syncStatus: 'synced',
-                lastSyncAt: utcNow(),
-              );
-              await _localTimeRecordRepository.updateTimeRecord(syncedRecord);
-            } catch (e) {
-              debugPrint('Error syncing time record ${record.id}: $e');
-            }
-          }
-        }
-      }
-    }
-  }
-
-  Future<void> _pullTimeRecords() async {
-    final competences = await _localCompetenceRepository.getAllCompetences();
-    for (var comp in competences) {
-      if (comp.isActive) {
-        final registrations = await _localRegistrationRepository
-            .getRegistrationsByCompetenceId(comp.id);
-        for (var reg in registrations) {
-          try {
-            final remoteRecords = await _remoteTimeRecordRepository
-                .getTimeRecordsByRegistrationId(reg.id);
-            for (var remoteRecord in remoteRecords) {
-              final localRecord = await _localTimeRecordRepository
-                  .getTimeRecordById(remoteRecord.id);
-              if (localRecord == null) {
-                await _localTimeRecordRepository.createTimeRecord(
-                  remoteRecord.copyWith(syncStatus: 'synced'),
-                );
-              } else {
-                if (remoteRecord.updatedAt.isAfter(localRecord.updatedAt)) {
-                  await _localTimeRecordRepository.updateTimeRecord(
-                    remoteRecord.copyWith(syncStatus: 'synced'),
-                  );
-                }
-              }
-            }
-          } catch (e) {
-            debugPrint(
-              'Error pulling time records for registration ${reg.id}: $e',
+      // 4. Process Time Records
+      for (var remoteTR in response.timeRecords) {
+        final localTR = await _localTimeRecordRepository.getTimeRecordById(
+          remoteTR.id,
+        );
+        if (localTR == null) {
+          await _localTimeRecordRepository.createTimeRecord(
+            remoteTR.copyWith(syncStatus: 'synced'),
+          );
+        } else {
+          if (remoteTR.version > localTR.version) {
+            await _localTimeRecordRepository.updateTimeRecord(
+              remoteTR.copyWith(syncStatus: 'synced'),
             );
           }
         }
       }
+
+      debugPrint('Pull completed successfully.');
+    } catch (e) {
+      debugPrint('Error during syncDown: $e');
+      rethrow;
     }
   }
 }
